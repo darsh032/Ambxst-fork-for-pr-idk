@@ -24,10 +24,9 @@ PanelWindow {
         color: Colors.background
         radius: 0
         border.color: "#333333"
-        border.width: 3
+        border.width: 0
 
-        Workspaces {
-        }
+        Workspaces {}
 
         Text {
             visible: Hyprland.workspaces.length === 0

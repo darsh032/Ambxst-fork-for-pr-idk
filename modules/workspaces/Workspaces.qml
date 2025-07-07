@@ -19,7 +19,7 @@ Row {
             width: 24
             height: 24
             radius: 8
-            color: modelData.active ? "#4a9eff" : "#333333"
+            color: modelData.active ? Colors.primary : Colors.secondary
             border.color: "#555555"
             border.width: 0
 
