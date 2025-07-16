@@ -18,7 +18,7 @@ StyledContainer {
         text: clockContainer.currentTime
         color: Colors.foreground
         font.pixelSize: 14
-        font.family: "Iosevka Nerd Font"
+        font.family: "Iosevka Nerd Font Propo"
         font.bold: true
     }
 
@@ -28,7 +28,7 @@ StyledContainer {
         repeat: true
         onTriggered: {
             var now = new Date();
-            clockContainer.currentTime = Qt.formatDateTime(now, "hh:mm:ss");
+            clockContainer.currentTime = Qt.formatDateTime(now, " hh:mm:ss");
         }
     }
 }
