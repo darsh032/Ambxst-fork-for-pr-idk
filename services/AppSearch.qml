@@ -20,6 +20,23 @@ Singleton {
     readonly property list<DesktopEntry> list: Array.from(DesktopEntries.applications.values)
         .sort((a, b) => a.name.localeCompare(b.name))
     
+    function getAllApps() {
+        const results = [];
+        
+        for (let i = 0; i < list.length; i++) {
+            const app = list[i];
+            results.push({
+                name: app.name,
+                icon: app.icon || "application-x-executable",
+                execute: () => {
+                    app.execute();
+                }
+            });
+        }
+        
+        return results.slice(0, 10); // Limit to first 10 apps
+    }
+    
     function fuzzyQuery(search) {
         if (!search || search.length === 0) return [];
         

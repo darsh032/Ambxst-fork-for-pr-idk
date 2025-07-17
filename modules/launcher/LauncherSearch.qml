@@ -12,7 +12,7 @@ Rectangle {
     signal itemSelected
 
     width: 500
-    height: showResults ? Math.min(400, searchInput.height + resultsList.contentHeight + 20) : searchInput.height + 20
+    height: searchInput.height + (3 * 50) + 20
     color: Colors.surface
     radius: 12
     border.color: Colors.outline
@@ -87,11 +87,11 @@ Rectangle {
         ListView {
             id: resultsList
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            visible: root.showResults
+            Layout.preferredHeight: 3 * 50
+            visible: true
             clip: true
 
-            model: AppSearch.fuzzyQuery(root.searchText)
+            model: root.searchText.length > 0 ? AppSearch.fuzzyQuery(root.searchText) : AppSearch.getAllApps()
 
             delegate: Rectangle {
                 required property var modelData
