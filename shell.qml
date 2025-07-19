@@ -2,8 +2,6 @@
 import QtQuick
 import Quickshell
 import "./modules/bar/"
-import "./modules/launcher/"
-import "./modules/notch/"
 import "./modules/workspaces/"
 import "./modules/notifications/"
 import "./modules/wallpaper/"
@@ -44,11 +42,6 @@ ShellRoot {
                 screen: barLoader.modelData
             }
         }
-    }
-
-    Loader {
-        active: true
-        sourceComponent: NotchFinal {}
     }
 
     Loader {
