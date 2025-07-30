@@ -34,7 +34,7 @@ Rectangle {
         sourceComponent: Text {
             text: NotificationUtils.findSuitableMaterialSymbol(root.summary)
             anchors.fill: parent
-            color: (root.urgency == NotificationUrgency.Critical) ? Colors.error : Colors.primary
+            color: (root.urgency == NotificationUrgency.Critical) ? Colors.adapter.error : Colors.adapter.primary
             font.family: Styling.defaultFont
             font.pixelSize: root.materialIconSize
             horizontalAlignment: Text.AlignHCenter

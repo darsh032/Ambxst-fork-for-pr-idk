@@ -19,14 +19,14 @@ QtObject {
     }
 
     readonly property QtObject colors: QtObject {
-        readonly property color colPrimary: Colors.primary
-        readonly property color colOnLayer1Inactive: Colors.surfaceBright
+        readonly property color colPrimary: Colors.adapter.primary
+        readonly property color colOnLayer1Inactive: Colors.adapter.surfaceBright
     }
 
     readonly property QtObject m3colors: QtObject {
-        readonly property color m3secondaryContainer: Colors.outline
-        readonly property color m3onPrimary: Colors.background
-        readonly property color m3onSecondaryContainer: Colors.overBackground
+        readonly property color m3secondaryContainer: Colors.adapter.outline
+        readonly property color m3onPrimary: Colors.adapter.background
+        readonly property color m3onSecondaryContainer: Colors.adapter.overBackground
     }
 
     readonly property QtObject animation: QtObject {

@@ -4,9 +4,9 @@ import qs.modules.theme
 import qs.modules.globals
 
 Rectangle {
-    color: Colors.background
+    color: Colors.adapter.background
     radius: GlobalStates.roundness
-    border.color: Colors.surfaceBright
+    border.color: Colors.adapter.surfaceBright
     border.width: 0
 
     layer.enabled: true
@@ -15,7 +15,7 @@ Rectangle {
         verticalOffset: 0
         radius: 8
         samples: 16
-        color: Qt.rgba(Colors.shadow.r, Colors.shadow.g, Colors.shadow.b, 0.5)
+        color: Qt.rgba(Colors.adapter.shadow.r, Colors.adapter.shadow.g, Colors.adapter.shadow.b, 0.5)
         transparentBorder: true
     }
 }

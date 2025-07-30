@@ -74,7 +74,7 @@ PanelWindow {
                 id: userHostText
                 anchors.centerIn: parent
                 text: `${Quickshell.env("USER")}@${hostnameCollector.text.trim()}`
-                color: userHostArea.pressed ? Colors.overBackground : (userHostArea.containsMouse ? Colors.primary : Colors.overBackground)
+                color: userHostArea.pressed ? Colors.adapter.overBackground : (userHostArea.containsMouse ? Colors.adapter.primary : Colors.adapter.overBackground)
                 font.family: Styling.defaultFont
                 font.pixelSize: 14
                 font.weight: Font.Bold
@@ -159,7 +159,7 @@ PanelWindow {
             verticalOffset: 0
             radius: (GlobalStates.launcherOpen || GlobalStates.dashboardOpen) ? 16 : 8
             samples: (GlobalStates.launcherOpen || GlobalStates.dashboardOpen) ? 32 : 16
-            color: (GlobalStates.launcherOpen || GlobalStates.dashboardOpen) ? Qt.rgba(Colors.shadow.r, Colors.shadow.g, Colors.shadow.b, 0.7) : Qt.rgba(Colors.shadow.r, Colors.shadow.g, Colors.shadow.b, 0.5)
+            color: (GlobalStates.launcherOpen || GlobalStates.dashboardOpen) ? Qt.rgba(Colors.adapter.shadow.r, Colors.adapter.shadow.g, Colors.adapter.shadow.b, 0.7) : Qt.rgba(Colors.adapter.shadow.r, Colors.adapter.shadow.g, Colors.adapter.shadow.b, 0.5)
             transparentBorder: true
         }
 

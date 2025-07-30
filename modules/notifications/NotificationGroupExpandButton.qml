@@ -13,7 +13,7 @@ Button {
     height: 20
 
     background: Rectangle {
-        color: root.pressed ? Colors.primary : (root.hovered ? Colors.surfaceBright : Colors.surfaceContainerHigh)
+        color: root.pressed ? Colors.adapter.primary : (root.hovered ? Colors.adapter.surfaceBright : Colors.adapter.surfaceContainerHigh)
         radius: 10
 
         Behavior on color {
@@ -27,7 +27,7 @@ Button {
         text: root.expanded ? "−" : "+"
         font.family: Styling.defaultFont
         font.pixelSize: 20
-        color: Colors.overBackground
+        color: Colors.adapter.overBackground
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }

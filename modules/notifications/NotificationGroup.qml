@@ -93,7 +93,7 @@ Item {
         id: background
         anchors.left: parent.left
         width: parent.width
-        color: Colors.background
+        color: Colors.adapter.background
         radius: 16
         anchors.leftMargin: root.xOffset
 
@@ -163,7 +163,7 @@ Item {
                             font.family: Styling.defaultFont
                             font.pixelSize: topRow.showAppName ? topRow.fontSize : 14
                             font.weight: Font.Bold
-                            color: topRow.showAppName ? Colors.outline : Colors.primary
+                            color: topRow.showAppName ? Colors.adapter.outline : Colors.adapter.primary
                         }
                         Text {
                             id: timeText
@@ -172,7 +172,7 @@ Item {
                             text: NotificationUtils.getFriendlyNotifTimeString(notificationGroup?.time)
                             font.family: Styling.defaultFont
                             font.pixelSize: topRow.fontSize
-                            color: Colors.overBackground
+                            color: Colors.adapter.overBackground
                         }
                     }
                     NotificationGroupExpandButton {

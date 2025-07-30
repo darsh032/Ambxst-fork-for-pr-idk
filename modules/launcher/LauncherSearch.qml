@@ -23,7 +23,7 @@ Rectangle {
     implicitHeight: mainLayout.implicitHeight + 32
     color: "transparent"
     radius: 32
-    border.color: Colors.outline
+    border.color: Colors.adapter.outline
     border.width: 0
 
     Behavior on height {
@@ -44,9 +44,9 @@ Rectangle {
             id: searchInputContainer
             Layout.fillWidth: true
             implicitHeight: 48
-            color: Colors.surfaceContainerHigh
+            color: Colors.adapter.surfaceContainerHigh
             radius: 16
-            border.color: searchInput.activeFocus ? Colors.primary : Colors.outline
+            border.color: searchInput.activeFocus ? Colors.adapter.primary : Colors.adapter.outline
             border.width: 0
 
             RowLayout {
@@ -58,17 +58,17 @@ Rectangle {
                     text: ""
                     font.family: Styling.defaultFont
                     font.pixelSize: 20
-                    color: Colors.primary
+                    color: Colors.adapter.primary
                 }
 
                 TextField {
                     id: searchInput
                     Layout.fillWidth: true
                     placeholderText: "Search applications..."
-                    placeholderTextColor: Colors.outline
+                    placeholderTextColor: Colors.adapter.outline
                     font.family: Styling.defaultFont
                     font.pixelSize: 14
-                    color: Colors.overBackground
+                    color: Colors.adapter.overBackground
                     background: null
 
                     onTextChanged: {
@@ -182,7 +182,7 @@ Rectangle {
 
                 width: resultsList.width
                 height: 48
-                color: mouseArea.containsMouse ? Colors.surfaceVariant : "transparent"
+                color: "transparent"
                 radius: 16
 
                 MouseArea {
@@ -214,7 +214,7 @@ Rectangle {
                         Rectangle {
                             anchors.fill: parent
                             color: "transparent"
-                            border.color: Colors.outline
+                            border.color: Colors.adapter.outline
                             border.width: parent.status === Image.Error ? 1 : 0
                             radius: 4
 
@@ -222,7 +222,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 text: "?"
                                 visible: parent.parent.status === Image.Error
-                                color: Colors.overBackground
+                                color: Colors.adapter.overBackground
                                 font.family: Styling.defaultFont
                             }
                         }
@@ -231,7 +231,7 @@ Rectangle {
                     Text {
                         Layout.fillWidth: true
                         text: modelData.name
-                        color: Colors.overBackground
+                        color: Colors.adapter.overBackground
                         font.family: Styling.defaultFont
                         font.pixelSize: 14
                         font.weight: Font.Bold
@@ -241,12 +241,12 @@ Rectangle {
             }
 
             highlight: Rectangle {
-                color: Colors.surfaceBright
+                color: Colors.adapter.surfaceBright
                 radius: 16
                 visible: root.selectedIndex >= 0
             }
 
-            highlightMoveDuration: 100
+            highlightMoveDuration: 150
             highlightMoveVelocity: -1
         }
     }

@@ -39,9 +39,9 @@ Item {
                 flat: true
 
                 background: Rectangle {
-                    color: root.state.currentTab === index ? Colors.primary : "transparent"
+                    color: root.state.currentTab === index ? Colors.adapter.primary : "transparent"
                     radius: 8
-                    border.color: Colors.outline
+                    border.color: Colors.adapter.outline
                     border.width: root.state.currentTab === index ? 0 : 1
 
                     Behavior on color {
@@ -54,7 +54,7 @@ Item {
 
                 contentItem: Text {
                     text: parent.text
-                    color: root.state.currentTab === index ? Colors.onPrimary : Colors.onSurface
+                    color: root.state.currentTab === index ? Colors.adapter.onPrimary : Colors.adapter.onSurface
                     font.family: Styling.defaultFont
                     font.pixelSize: 12
                     font.weight: Font.Medium
@@ -102,7 +102,7 @@ Item {
         anchors.topMargin: 12
 
         radius: 12
-        color: Colors.surfaceContainer
+        color: Colors.adapter.surfaceContainer
         clip: true
 
         layer.enabled: true
@@ -263,7 +263,7 @@ Item {
 
                 Text {
                     text: Qt.formatDateTime(parent.currentTime, "dddd, MMMM d")
-                    color: Colors.onSurface
+                    color: Colors.adapter.onSurface
                     font.family: Styling.defaultFont
                     font.pixelSize: 16
                     font.weight: Font.Bold
@@ -271,7 +271,7 @@ Item {
 
                 Text {
                     text: Qt.formatDateTime(parent.currentTime, "h:mm AP")
-                    color: Colors.onSurfaceVariant
+                    color: Colors.adapter.onSurfaceVariant
                     font.family: Styling.defaultFont
                     font.pixelSize: 14
                 }
@@ -286,12 +286,12 @@ Item {
                     width: 48
                     height: 48
                     radius: 24
-                    color: Colors.primary
+                    color: Colors.adapter.primary
 
                     Text {
                         anchors.centerIn: parent
                         text: Quickshell.env("USER").charAt(0).toUpperCase()
-                        color: Colors.onPrimary
+                        color: Colors.adapter.onPrimary
                         font.family: Styling.defaultFont
                         font.pixelSize: 20
                         font.weight: Font.Bold
@@ -304,7 +304,7 @@ Item {
 
                     Text {
                         text: Quickshell.env("USER")
-                        color: Colors.onSurface
+                        color: Colors.adapter.onSurface
                         font.family: Styling.defaultFont
                         font.pixelSize: 14
                         font.weight: Font.Medium
@@ -312,7 +312,7 @@ Item {
 
                     Text {
                         text: Quickshell.env("HOSTNAME")
-                        color: Colors.onSurfaceVariant
+                        color: Colors.adapter.onSurfaceVariant
                         font.family: Styling.defaultFont
                         font.pixelSize: 12
                     }
@@ -324,8 +324,8 @@ Item {
                 width: parent.width
                 height: 60
                 radius: 8
-                color: Colors.surface
-                border.color: Colors.outline
+                color: Colors.adapter.surface
+                border.color: Colors.adapter.outline
                 border.width: 1
 
                 MouseArea {
@@ -333,14 +333,14 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
 
-                    onEntered: parent.color = Colors.surfaceContainerHigh
-                    onExited: parent.color = Colors.surface
+                    onEntered: parent.color = Colors.adapter.surfaceContainerHigh
+                    onExited: parent.color = Colors.adapter.surface
                 }
 
                 Text {
                     anchors.centerIn: parent
                     text: "Workspaces"
-                    color: Colors.onSurfaceVariant
+                    color: Colors.adapter.onSurfaceVariant
                     font.family: Styling.defaultFont
                     font.pixelSize: 12
                 }
@@ -360,7 +360,7 @@ Item {
 
             Text {
                 text: "System Resources"
-                color: Colors.onSurface
+                color: Colors.adapter.onSurface
                 font.family: Styling.defaultFont
                 font.pixelSize: 16
                 font.weight: Font.Bold
@@ -398,7 +398,7 @@ Item {
 
             Text {
                 text: "Quick Settings"
-                color: Colors.onSurface
+                color: Colors.adapter.onSurface
                 font.family: Styling.defaultFont
                 font.pixelSize: 16
                 font.weight: Font.Bold
@@ -427,8 +427,8 @@ Item {
         width: parent.width
         height: 60
         radius: 8
-        color: Colors.surface
-        border.color: Colors.outline
+        color: Colors.adapter.surface
+        border.color: Colors.adapter.outline
         border.width: 1
 
         MouseArea {
@@ -436,8 +436,8 @@ Item {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
 
-            onEntered: parent.color = Colors.surfaceContainerHigh
-            onExited: parent.color = Colors.surface
+            onEntered: parent.color = Colors.adapter.surfaceContainerHigh
+            onExited: parent.color = Colors.adapter.surface
         }
 
         Column {
@@ -446,7 +446,7 @@ Item {
 
             Text {
                 text: parent.title
-                color: Colors.onSurface
+                color: Colors.adapter.onSurface
                 font.family: Styling.defaultFont
                 font.pixelSize: 12
                 font.weight: Font.Medium
@@ -455,7 +455,7 @@ Item {
 
             Text {
                 text: parent.subtitle
-                color: Colors.onSurfaceVariant
+                color: Colors.adapter.onSurfaceVariant
                 font.family: Styling.defaultFont
                 font.pixelSize: 10
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -476,8 +476,8 @@ Item {
         width: (parent.width - parent.spacing) / 2
         height: 60
         radius: 8
-        color: Colors.surface
-        border.color: Colors.outline
+        color: Colors.adapter.surface
+        border.color: Colors.adapter.outline
         border.width: 1
 
         MouseArea {
@@ -485,8 +485,8 @@ Item {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
 
-            onEntered: parent.color = Colors.surfaceContainerHigh
-            onExited: parent.color = Colors.surface
+            onEntered: parent.color = Colors.adapter.surfaceContainerHigh
+            onExited: parent.color = Colors.adapter.surface
             onPressed: parent.scale = 0.95
             onReleased: parent.scale = 1.0
         }
@@ -494,7 +494,7 @@ Item {
         Text {
             anchors.centerIn: parent
             text: parent.title
-            color: Colors.onSurfaceVariant
+            color: Colors.adapter.onSurfaceVariant
             font.family: Styling.defaultFont
             font.pixelSize: 12
             font.weight: Font.Medium

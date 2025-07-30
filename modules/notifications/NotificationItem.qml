@@ -121,7 +121,7 @@ Item {
             }
         }
 
-        color: (expanded && !onlyNotification) ? (notificationObject.urgency == NotificationUrgency.Critical) ? Colors.error : Colors.surfaceContainerLow : Colors.background
+        color: (expanded && !onlyNotification) ? (notificationObject.urgency == NotificationUrgency.Critical) ? Colors.adapter.error : Colors.adapter.surfaceContainerLow : Colors.adapter.background
 
         implicitHeight: expanded ? (contentColumn.implicitHeight + padding * 2) : summaryRow.implicitHeight
 
@@ -155,7 +155,7 @@ Item {
                     visible: !root.onlyNotification
                     font.family: Styling.defaultFont
                     font.pixelSize: root.fontSize
-                    color: Colors.primary
+                    color: Colors.adapter.primary
                     elide: Text.ElideRight
                     text: root.notificationObject.summary || ""
                 }
@@ -170,7 +170,7 @@ Item {
                     Layout.fillWidth: true
                     font.family: Styling.defaultFont
                     font.pixelSize: root.fontSize
-                    color: Colors.overBackground
+                    color: Colors.adapter.overBackground
                     elide: Text.ElideRight
                     maximumLineCount: 1
                     textFormat: Text.StyledText
@@ -194,7 +194,7 @@ Item {
                     }
                     Layout.fillWidth: true
                     font.pixelSize: 14
-                    color: Colors.overBackground
+                    color: Colors.adapter.overBackground
                     wrapMode: Text.Wrap
                     elide: Text.ElideRight
                     textFormat: Text.RichText
