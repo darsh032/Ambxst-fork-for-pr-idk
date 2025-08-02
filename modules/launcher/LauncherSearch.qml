@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import qs.modules.theme
 import qs.modules.globals
 import qs.modules.services
+import qs.config
 
 Rectangle {
     id: root
@@ -47,7 +48,7 @@ Rectangle {
             Layout.fillWidth: true
             implicitHeight: 48
             color: Colors.adapter.surfaceContainerHigh
-            radius: GlobalStates.roundness
+            radius: Configuration.roundness
             border.color: searchInput.activeFocus ? Colors.adapter.primary : Colors.adapter.outline
             border.width: 0
 
@@ -244,7 +245,7 @@ Rectangle {
 
             highlight: Rectangle {
                 color: Colors.adapter.surfaceBright
-                radius: GlobalStates.roundness
+                radius: Configuration.roundness
                 visible: root.selectedIndex >= 0
             }
 

@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell.Io
-import qs.modules.globals
+import qs.config
 
 FileView {
     id: colors
@@ -104,5 +104,5 @@ FileView {
         property string yellowValue: ""
         property string sourceColor: ""
     }
-    property string background: GlobalStates.oledMode ? "#000000" : adapter.background
+    property string background: Configuration.oledMode ? "#000000" : adapter.background
 }

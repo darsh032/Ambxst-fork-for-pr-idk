@@ -1,8 +1,9 @@
 pragma Singleton
 import QtQuick
+import qs.config
 
 QtObject {
-    property color background: GlobalStates.oledMode ? "#000000" : "{{colors.background.default.hex}}"
+    property color background: Configuration.oledMode ? "#000000" : "{{colors.background.default.hex}}"
     property color cursor: "{{colors.on_background.default.hex}}"
     property color error: "{{colors.error.default.hex}}"
     property color errorContainer: "{{colors.error_container.default.hex}}"

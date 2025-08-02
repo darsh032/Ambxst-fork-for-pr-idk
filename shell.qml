@@ -8,6 +8,7 @@ import "./modules/wallpaper/"
 import "./modules/notch/"
 import "./modules/services/"
 import "./modules/corners/"
+import qs.config
 
 ShellRoot {
     id: root
@@ -44,7 +45,7 @@ ShellRoot {
     Variants {
         model: {
             const screens = Quickshell.screens;
-            const list = ConfigOptions.bar.screenList;
+            const list = Configuration.bar.screenList;
             if (!list || list.length === 0)
                 return screens;
             return screens.filter(screen => list.includes(screen.name));
@@ -64,7 +65,7 @@ ShellRoot {
     Variants {
         model: {
             const screens = Quickshell.screens;
-            const list = ConfigOptions.bar.screenList;
+            const list = Configuration.bar.screenList;
             if (!list || list.length === 0)
                 return screens;
             return screens.filter(screen => list.includes(screen.name));

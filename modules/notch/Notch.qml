@@ -3,6 +3,7 @@ import QtQuick.Controls
 import "../globals"
 import "../theme"
 import qs.modules.corners
+import qs.config
 
 Item {
     id: notchContainer
@@ -13,7 +14,6 @@ Item {
     property var stackView: stackViewInternal
     property bool isExpanded: stackViewInternal.currentItem !== stackViewInternal.initialItem
 
-    // implicitWidth: Math.max(stackContainer.width, 250)
     implicitWidth: (GlobalStates.launcherOpen || GlobalStates.dashboardOpen) ? Math.max(stackContainer.width + 40, 290) : 290
     // implicitHeight: Math.max(stackContainer.height, 40)
     implicitHeight: (GlobalStates.launcherOpen || GlobalStates.dashboardOpen) ? Math.max(stackContainer.height, 40) : 40
@@ -39,7 +39,7 @@ Item {
         anchors.top: parent.top
         anchors.right: notchRect.left
         corner: RoundCorner.CornerEnum.TopRight
-        size: GlobalStates.roundness > 0 ? GlobalStates.roundness + 4 : 0
+        size: Configuration.roundness > 0 ? Configuration.roundness + 4 : 0
         color: Colors.background
     }
 
@@ -52,8 +52,8 @@ Item {
         color: Colors.background
         topLeftRadius: 0
         topRightRadius: 0
-        bottomLeftRadius: GlobalStates.roundness > 0 ? (GlobalStates.notchOpen ? GlobalStates.roundness + 16 : GlobalStates.roundness + 4) : 0
-        bottomRightRadius: GlobalStates.roundness > 0 ? (GlobalStates.notchOpen ? GlobalStates.roundness + 16 : GlobalStates.roundness + 4) : 0
+        bottomLeftRadius: Configuration.roundness > 0 ? (GlobalStates.notchOpen ? Configuration.roundness + 16 : Configuration.roundness + 4) : 0
+        bottomRightRadius: Configuration.roundness > 0 ? (GlobalStates.notchOpen ? Configuration.roundness + 16 : Configuration.roundness + 4) : 0
 
         Item {
             id: stackContainer
@@ -143,7 +143,7 @@ Item {
         anchors.top: parent.top
         anchors.left: notchRect.right
         corner: RoundCorner.CornerEnum.TopLeft
-        size: GlobalStates.roundness > 0 ? GlobalStates.roundness + 4 : 0
+        size: Configuration.roundness > 0 ? Configuration.roundness + 4 : 0
         color: Colors.background
     }
 }

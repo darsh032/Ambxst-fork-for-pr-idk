@@ -10,15 +10,16 @@ import Qt5Compat.GraphicalEffects
 import qs.modules.theme
 import "../services"
 import qs.modules.globals
+import qs.config
 import "../utils/color_utils.js" as ColorUtils
 
 Item {
     required property var bar
-    property bool borderless: ConfigOptions.bar.borderless
+    property bool borderless: Configuration.bar.borderless
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(bar.screen)
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
 
-    readonly property int workspaceGroup: Math.floor((monitor?.activeWorkspace?.id - 1 || 0) / ConfigOptions.bar.workspaces.shown)
+    readonly property int workspaceGroup: Math.floor((monitor?.activeWorkspace?.id - 1 || 0) / Configuration.workspaces.shown)
     property list<bool> workspaceOccupied: []
     property int widgetPadding: 5
     property int workspaceButtonWidth: 26
@@ -26,13 +27,13 @@ Item {
     property real workspaceIconSizeShrinked: workspaceButtonWidth * 0.55
     property real workspaceIconOpacityShrinked: 1
     property real workspaceIconMarginShrinked: -4
-    property int workspaceIndexInGroup: (monitor?.activeWorkspace?.id - 1 || 0) % ConfigOptions.bar.workspaces.shown
+    property int workspaceIndexInGroup: (monitor?.activeWorkspace?.id - 1 || 0) % Configuration.workspaces.shown
 
     function updateWorkspaceOccupied() {
         workspaceOccupied = Array.from({
-            length: ConfigOptions.bar.workspaces.shown
+            length: Configuration.workspaces.shown
         }, (_, i) => {
-            return Hyprland.workspaces.values.some(ws => ws.id === workspaceGroup * ConfigOptions.bar.workspaces.shown + i + 1);
+            return Hyprland.workspaces.values.some(ws => ws.id === workspaceGroup * Configuration.workspaces.shown + i + 1);
         });
     }
 
@@ -94,7 +95,7 @@ Item {
         implicitHeight: workspaceButtonWidth
 
         Repeater {
-            model: ConfigOptions.bar.workspaces.shown
+            model: Configuration.workspaces.shown
 
             Rectangle {
                 z: 1
@@ -180,11 +181,11 @@ Item {
         implicitHeight: workspaceButtonWidth
 
         Repeater {
-            model: ConfigOptions.bar.workspaces.shown
+            model: Configuration.workspaces.shown
 
             Button {
                 id: button
-                property int workspaceValue: workspaceGroup * ConfigOptions.bar.workspaces.shown + index + 1
+                property int workspaceValue: workspaceGroup * Configuration.workspaces.shown + index + 1
                 Layout.fillHeight: true
                 onPressed: Hyprland.dispatch(`workspace ${workspaceValue}`)
                 width: workspaceButtonWidth
@@ -204,7 +205,7 @@ Item {
                     property var mainAppIconSource: Quickshell.iconPath(AppSearch.guessIcon(biggestWindow?.class), "image-missing")
 
                     Text {
-                        opacity: GlobalStates.workspaceShowNumbers || ((ConfigOptions?.bar.workspaces.alwaysShowNumbers && (!ConfigOptions?.bar.workspaces.showAppIcons || !workspaceButtonBackground.biggestWindow || GlobalStates.workspaceShowNumbers)) || (GlobalStates.workspaceShowNumbers && !ConfigOptions?.bar.workspaces.showAppIcons)) ? 1 : 0
+                        opacity: Configuration.workspaces.showNumbers || ((Configuration.workspaces.alwaysShowNumbers && (!Configuration.workspaces.showAppIcons || !workspaceButtonBackground.biggestWindow || Configuration.workspaces.showNumbers)) || (Configuration.workspaces.showNumbers && !Configuration.workspaces.showAppIcons)) ? 1 : 0
                         z: 3
 
                         anchors.centerIn: parent
@@ -224,7 +225,7 @@ Item {
                         }
                     }
                     StyledContainer {
-                        opacity: (ConfigOptions?.bar.workspaces.alwaysShowNumbers || GlobalStates.workspaceShowNumbers || (ConfigOptions?.bar.workspaces.showAppIcons && workspaceButtonBackground.biggestWindow)) ? 0 : 1
+                        opacity: (Configuration.workspaces.alwaysShowNumbers || Configuration.workspaces.showNumbers || (Configuration.workspaces.showAppIcons && workspaceButtonBackground.biggestWindow)) ? 0 : 1
                         visible: opacity > 0
                         anchors.centerIn: parent
                         width: workspaceButtonWidth * 0.18
@@ -243,17 +244,17 @@ Item {
                         anchors.centerIn: parent
                         width: workspaceButtonWidth
                         height: workspaceButtonWidth
-                        opacity: !ConfigOptions?.bar.workspaces.showAppIcons ? 0 : (workspaceButtonBackground.biggestWindow && !GlobalStates.workspaceShowNumbers && ConfigOptions?.bar.workspaces.showAppIcons) ? 1 : workspaceButtonBackground.biggestWindow ? workspaceIconOpacityShrinked : 0
+                        opacity: !Configuration.workspaces.showAppIcons ? 0 : (workspaceButtonBackground.biggestWindow && !Configuration.workspaces.showNumbers && Configuration.workspaces.showAppIcons) ? 1 : workspaceButtonBackground.biggestWindow ? workspaceIconOpacityShrinked : 0
                         visible: opacity > 0
                         IconImage {
                             id: mainAppIcon
                             anchors.bottom: parent.bottom
                             anchors.right: parent.right
-                            anchors.bottomMargin: (!GlobalStates.workspaceShowNumbers && ConfigOptions?.bar.workspaces.showAppIcons) ? (workspaceButtonWidth - workspaceIconSize) / 2 : workspaceIconMarginShrinked
-                            anchors.rightMargin: (!GlobalStates.workspaceShowNumbers && ConfigOptions?.bar.workspaces.showAppIcons) ? (workspaceButtonWidth - workspaceIconSize) / 2 : workspaceIconMarginShrinked
+                            anchors.bottomMargin: (!Configuration.workspaces.showNumbers && Configuration.workspaces.showAppIcons) ? (workspaceButtonWidth - workspaceIconSize) / 2 : workspaceIconMarginShrinked
+                            anchors.rightMargin: (!Configuration.workspaces.showNumbers && Configuration.workspaces.showAppIcons) ? (workspaceButtonWidth - workspaceIconSize) / 2 : workspaceIconMarginShrinked
 
                             source: workspaceButtonBackground.mainAppIconSource
-                            implicitSize: (!GlobalStates.workspaceShowNumbers && ConfigOptions?.bar.workspaces.showAppIcons) ? workspaceIconSize : workspaceIconSizeShrinked
+                            implicitSize: (!Configuration.workspaces.showNumbers && Configuration.workspaces.showAppIcons) ? workspaceIconSize : workspaceIconSizeShrinked
 
                             Behavior on opacity {
                                 NumberAnimation {
