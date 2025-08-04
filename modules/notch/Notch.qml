@@ -54,6 +54,7 @@ Item {
         topRightRadius: 0
         bottomLeftRadius: Configuration.roundness > 0 ? (GlobalStates.notchOpen ? Configuration.roundness + 20 : Configuration.roundness + 4) : 0
         bottomRightRadius: Configuration.roundness > 0 ? (GlobalStates.notchOpen ? Configuration.roundness + 20 : Configuration.roundness + 4) : 0
+        clip: true
 
         Behavior on bottomLeftRadius {
             NumberAnimation {
@@ -76,6 +77,7 @@ Item {
             anchors.centerIn: parent
             width: stackViewInternal.currentItem ? stackViewInternal.currentItem.width + 32 : 32
             height: stackViewInternal.currentItem ? stackViewInternal.currentItem.height + 32 : 32
+            clip: true
 
             StackView {
                 id: stackViewInternal
