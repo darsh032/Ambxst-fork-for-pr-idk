@@ -7,45 +7,47 @@ import Quickshell.Hyprland
 import "../../globals"
 import "../../theme"
 import "../../services"
+import qs.config
 
 Item {
     id: root
-    
+
     property var windowData
     property real scale
     property real availableWorkspaceWidth
     property real availableWorkspaceHeight
     property real xOffset: 0
     property real yOffset: 0
-    
+
     property bool hovered: false
     property bool pressed: false
     property bool atInitPosition: (initX == x && initY == y)
-    
+
     property real initX: Math.max((windowData?.at[0] || 0) * scale, 0) + xOffset
     property real initY: Math.max((windowData?.at[1] || 0) * scale, 0) + yOffset
     property real targetWindowWidth: (windowData?.size[0] || 100) * scale
     property real targetWindowHeight: (windowData?.size[1] || 100) * scale
-    
+
     property real iconToWindowRatio: 0.4
     property real iconToWindowRatioCompact: 0.7
     property string iconPath: AppSearch.guessIcon(windowData?.class || "")
     property bool compactMode: targetWindowHeight < 60 || targetWindowWidth < 60
-    
-    signal dragStarted()
+
+    signal dragStarted
     signal dragFinished(int targetWorkspace)
-    signal windowClicked()
-    signal windowClosed()
-    
+    signal windowClicked
+    signal windowClosed
+
     x: initX
     y: initY
     width: targetWindowWidth
     height: targetWindowHeight
     z: atInitPosition ? 1 : 99999
-    
+
+    Drag.active: false
     Drag.hotSpot.x: width / 2
     Drag.hotSpot.y: height / 2
-    
+
     Behavior on x {
         NumberAnimation {
             duration: Configuration.animDuration
@@ -70,38 +72,35 @@ Item {
             easing.type: Easing.OutQuart
         }
     }
-    
+
     Rectangle {
         id: windowPreview
         anchors.fill: parent
         radius: Configuration.roundness * root.scale
-        color: pressed ? Colors.adapter.primaryContainer : 
-               hovered ? Colors.adapter.surfaceContainer : 
-               Colors.adapter.surface
+        color: pressed ? Colors.adapter.primaryContainer : hovered ? Colors.adapter.surfaceContainer : Colors.adapter.surface
         border.color: Colors.adapter.outline
         border.width: 1
-        
+
         Behavior on color {
             ColorAnimation {
                 duration: Configuration.animDuration / 2
             }
         }
-        
+
         Column {
             anchors.centerIn: parent
             spacing: 4
-            
+
             Image {
                 id: windowIcon
-                property real iconSize: Math.min(root.targetWindowWidth, root.targetWindowHeight) * 
-                                       (root.compactMode ? root.iconToWindowRatioCompact : root.iconToWindowRatio)
-                
+                property real iconSize: Math.min(root.targetWindowWidth, root.targetWindowHeight) * (root.compactMode ? root.iconToWindowRatioCompact : root.iconToWindowRatio)
+
                 anchors.horizontalCenter: parent.horizontalCenter
                 source: Quickshell.iconPath(root.iconPath, "image-missing")
                 width: iconSize
                 height: iconSize
                 sourceSize: Qt.size(iconSize, iconSize)
-                
+
                 Behavior on width {
                     NumberAnimation {
                         duration: Configuration.animDuration
@@ -115,7 +114,7 @@ Item {
                     }
                 }
             }
-            
+
             Text {
                 id: windowTitle
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -128,7 +127,7 @@ Item {
                 width: Math.min(implicitWidth, root.targetWindowWidth - 8)
                 elide: Text.ElideRight
                 horizontalAlignment: Text.AlignHCenter
-                
+
                 Behavior on opacity {
                     NumberAnimation {
                         duration: Configuration.animDuration / 2
@@ -136,7 +135,7 @@ Item {
                 }
             }
         }
-        
+
         // XWayland indicator
         Rectangle {
             visible: root.windowData?.xwayland || false
@@ -149,50 +148,54 @@ Item {
             color: Colors.adapter.error
         }
     }
-    
+
     MouseArea {
         id: dragArea
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         drag.target: parent
-        
+
         onEntered: root.hovered = true
         onExited: root.hovered = false
-        
+
         onPressed: mouse => {
-            root.pressed = true
-            root.Drag.active = true
-            root.Drag.source = root
-            root.dragStarted()
+            root.pressed = true;
+            root.Drag.active = true;
+            root.Drag.source = root;
+            root.dragStarted();
         }
-        
+
         onReleased: mouse => {
-            root.pressed = false
-            root.Drag.active = false
+            const overviewRoot = parent.parent.parent.parent;
+            const targetWorkspace = overviewRoot.draggingTargetWorkspace;
             
+            root.pressed = false;
+            root.Drag.active = false;
+
             if (mouse.button === Qt.LeftButton) {
-                const targetWorkspace = parent.parent.parent.parent.draggingTargetWorkspace
-                root.dragFinished(targetWorkspace)
-                
+                root.dragFinished(targetWorkspace);
+                overviewRoot.draggingTargetWorkspace = -1;
+
                 if (targetWorkspace === -1) {
-                    root.x = root.initX
-                    root.y = root.initY
+                    root.x = root.initX;
+                    root.y = root.initY;
                 }
             }
         }
-        
+
         onClicked: mouse => {
-            if (!root.windowData) return;
-            
+            if (!root.windowData)
+                return;
+
             if (mouse.button === Qt.LeftButton) {
-                root.windowClicked()
+                root.windowClicked();
             } else if (mouse.button === Qt.MiddleButton) {
-                root.windowClosed()
+                root.windowClosed();
             }
         }
     }
-    
+
     // Tooltip
     Rectangle {
         visible: dragArea.containsMouse && !root.Drag.active && root.windowData
@@ -205,7 +208,7 @@ Item {
         radius: Configuration.roundness / 2
         opacity: 0.9
         z: 1000
-        
+
         Text {
             id: tooltipText
             anchors.centerIn: parent
