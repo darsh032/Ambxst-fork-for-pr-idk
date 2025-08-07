@@ -273,27 +273,88 @@ NotchAnimationBehavior {
         implicitWidth: 400
         implicitHeight: 300
 
+        property string searchText: ""
+        property var filteredWallpapers: {
+            if (!GlobalStates.wallpaperManager) return []
+            if (searchText.length === 0) return GlobalStates.wallpaperManager.wallpaperPaths
+            
+            return GlobalStates.wallpaperManager.wallpaperPaths.filter(function(path) {
+                const fileName = path.split('/').pop().toLowerCase()
+                return fileName.includes(searchText.toLowerCase())
+            })
+        }
+
         Row {
             anchors.fill: parent
             anchors.margins: 16
             spacing: 16
 
-            // Placeholder rectangle a la izquierda
-            Rectangle {
+            // Sidebar izquierdo con search y opciones
+            Column {
                 width: 150
                 height: parent.height
-                color: Colors.surfaceContainer
-                radius: Config.roundness > 0 ? Config.roundness : 0
-                border.color: Colors.adapter.outline
-                border.width: 1
+                spacing: 12
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "Preview\nPlaceholder"
-                    color: Colors.adapter.overSurfaceVariant
-                    font.family: Styling.defaultFont
-                    font.pixelSize: 14
-                    horizontalAlignment: Text.AlignHCenter
+                // Barra de búsqueda
+                Rectangle {
+                    width: parent.width
+                    height: 36
+                    color: Colors.surfaceContainer
+                    radius: Config.roundness > 0 ? Config.roundness : 0
+                    border.color: searchInput.activeFocus ? Colors.adapter.primary : Colors.adapter.outline
+                    border.width: 1
+
+                    Behavior on border.color {
+                        ColorAnimation {
+                            duration: Config.animDuration / 2
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    TextInput {
+                        id: searchInput
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        verticalAlignment: TextInput.AlignVCenter
+                        text: searchText
+                        color: Colors.adapter.overSurfaceVariant
+                        font.family: Styling.defaultFont
+                        font.pixelSize: 12
+                        selectByMouse: true
+
+                        onTextChanged: searchText = text
+
+                        Text {
+                            anchors.fill: parent
+                            verticalAlignment: Text.AlignVCenter
+                            text: "Search wallpapers..."
+                            color: Colors.adapter.outline
+                            font.family: Styling.defaultFont
+                            font.pixelSize: 12
+                            visible: !parent.activeFocus && parent.text.length === 0
+                        }
+                    }
+                }
+
+                // Área placeholder para opciones futuras
+                Rectangle {
+                    width: parent.width
+                    height: parent.height - 36 - 12
+                    color: Colors.surfaceContainer
+                    radius: Config.roundness > 0 ? Config.roundness : 0
+                    border.color: Colors.adapter.outline
+                    border.width: 1
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Placeholder\nfor future\noptions"
+                        color: Colors.adapter.overSurfaceVariant
+                        font.family: Styling.defaultFont
+                        font.pixelSize: 12
+                        horizontalAlignment: Text.AlignHCenter
+                        lineHeight: 1.2
+                    }
                 }
             }
 
@@ -301,35 +362,30 @@ NotchAnimationBehavior {
             Column {
                 width: parent.width - 150 - 16
                 height: parent.height
-                spacing: 12
-
-                Text {
-                    text: "Wallpapers"
-                    color: Colors.adapter.overSurface
-                    font.family: Styling.defaultFont
-                    font.pixelSize: 16
-                    font.weight: Font.Bold
-                }
+                spacing: 8
 
                 ScrollView {
                     width: parent.width
-                    height: parent.height - parent.children[0].height - parent.spacing
+                    height: parent.height
 
                     GridView {
                         id: wallpaperGrid
-                        cellWidth: 104
-                        cellHeight: 104
-                        model: GlobalStates.wallpaperManager ? GlobalStates.wallpaperManager.wallpaperPaths : []
+                        cellWidth: width / 3
+                        cellHeight: cellWidth * 0.6
+                        model: filteredWallpapers
 
                         delegate: Rectangle {
-                            width: 96
-                            height: 96
-                            radius: 8
+                            width: wallpaperGrid.cellWidth - 8
+                            height: wallpaperGrid.cellHeight - 8
+                            radius: Config.roundness > 0 ? Config.roundness : 0
                             color: Colors.surface
                             border.color: isCurrentWallpaper ? Colors.adapter.primary : Colors.adapter.outline
                             border.width: isCurrentWallpaper ? 2 : 1
 
-                            property bool isCurrentWallpaper: GlobalStates.wallpaperManager && GlobalStates.wallpaperManager.currentIndex === index
+                            property bool isCurrentWallpaper: {
+                                if (!GlobalStates.wallpaperManager) return false
+                                return GlobalStates.wallpaperManager.currentWallpaper === modelData
+                            }
 
                             Behavior on border.color {
                                 ColorAnimation {
@@ -346,14 +402,6 @@ NotchAnimationBehavior {
                                 asynchronous: true
                                 smooth: true
                                 clip: true
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    color: "transparent"
-                                    radius: 4
-                                    border.color: parent.parent.isCurrentWallpaper ? Colors.adapter.primary : "transparent"
-                                    border.width: 1
-                                }
                             }
 
                             MouseArea {
@@ -363,12 +411,12 @@ NotchAnimationBehavior {
 
                                 onEntered: {
                                     if (!parent.isCurrentWallpaper) {
-                                        parent.color = Colors.surfaceContainerHigh;
+                                        parent.color = Colors.surfaceContainerHigh
                                     }
                                 }
                                 onExited: {
                                     if (!parent.isCurrentWallpaper) {
-                                        parent.color = Colors.surface;
+                                        parent.color = Colors.surface
                                     }
                                 }
                                 onPressed: parent.scale = 0.95
@@ -376,7 +424,7 @@ NotchAnimationBehavior {
 
                                 onClicked: {
                                     if (GlobalStates.wallpaperManager) {
-                                        GlobalStates.wallpaperManager.setWallpaperByIndex(index);
+                                        GlobalStates.wallpaperManager.setWallpaper(modelData)
                                     }
                                 }
                             }
