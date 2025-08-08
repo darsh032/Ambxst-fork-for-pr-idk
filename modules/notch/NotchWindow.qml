@@ -192,7 +192,7 @@ PanelWindow {
         id: dashboardViewComponent
         Item {
             implicitWidth: 940
-            implicitHeight: 440
+            implicitHeight: 430
 
             Dashboard {
                 id: dashboardItem
@@ -222,7 +222,7 @@ PanelWindow {
 
         layer.enabled: true
         layer.effect: MultiEffect {
-            shadowEnabled: true
+            shadowEnabled: Config.theme.shadowOpacity > 0
             shadowHorizontalOffset: 0
             shadowVerticalOffset: 0
             shadowBlur: screenVisibilities && (screenVisibilities.launcher || screenVisibilities.dashboard || screenVisibilities.overview) ? 2.0 : 1.0

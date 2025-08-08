@@ -47,12 +47,7 @@ PanelWindow {
         Rectangle {
             id: barBg
             anchors.fill: parent
-            property color bgColor: Qt.rgba(
-              Colors.adapter.surfaceContainerLowest.r,
-              Colors.adapter.surfaceContainerLowest.g,
-              Colors.adapter.surfaceContainerLowest.b,
-              Config.bar.bgOpacity
-            )
+            property color bgColor: Qt.rgba(Colors.adapter.surfaceContainerLowest.r, Colors.adapter.surfaceContainerLowest.g, Colors.adapter.surfaceContainerLowest.b, Config.bar.bgOpacity)
             color: Config.bar.showBackground ? bgColor : "transparent"
 
             RoundCorner {
@@ -80,11 +75,13 @@ PanelWindow {
             color: Config.bar.showBackground ? "black" : "transparent"
 
             layer.enabled: true
+            layer.smooth: true
             layer.effect: MultiEffect {
                 maskEnabled: true
                 maskSource: barBgShadow
                 maskInverted: true
-                maskThresholdMin: 0.75
+                maskThresholdMin: 0.5
+                maskSpreadAtMin: 1.0
                 shadowEnabled: true
                 shadowHorizontalOffset: 0
                 shadowVerticalOffset: 0

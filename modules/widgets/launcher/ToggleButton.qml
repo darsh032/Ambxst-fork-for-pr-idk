@@ -17,17 +17,7 @@ Button {
     implicitHeight: 36
 
     background: BgRect {
-        Behavior on color {
-            ColorAnimation {
-                duration: Config.animDuration / 2
-            }
-        }
-
-        Behavior on border.color {
-            ColorAnimation {
-                duration: Config.animDuration / 2
-            }
-        }
+        color: root.pressed ? Colors.adapter.primary : (root.hovered ? Colors.adapter.surfaceContainerHighest : Colors.background)
     }
 
     contentItem: Text {
@@ -38,12 +28,6 @@ Button {
         color: root.pressed ? Colors.background : Colors.adapter.primary
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-
-        Behavior on color {
-            ColorAnimation {
-                duration: Config.animDuration / 2
-            }
-        }
     }
 
     onClicked: root.onToggle()
