@@ -25,9 +25,29 @@ Rectangle {
         wallpaperSearchInput.focusInput();
     }
 
+    // Función para encontrar el índice del wallpaper actual en la lista filtrada
+    function findCurrentWallpaperIndex() {
+        if (!GlobalStates.wallpaperManager || !GlobalStates.wallpaperManager.currentWallpaper) {
+            return -1;
+        }
+
+        const currentWallpaper = GlobalStates.wallpaperManager.currentWallpaper;
+        return filteredWallpapers.indexOf(currentWallpaper);
+    }
+
     // Llama a focusSearch una vez que el componente se ha completado.
     Component.onCompleted: {
         Qt.callLater(() => {
+            // Primero intentar encontrar el wallpaper actual
+            const currentIndex = findCurrentWallpaperIndex();
+            if (currentIndex !== -1) {
+                GlobalStates.wallpaperSelectedIndex = currentIndex;
+                selectedIndex = currentIndex;
+                wallpaperGrid.currentIndex = currentIndex;
+                // Posicionar la vista en el wallpaper actual
+                wallpaperGrid.positionViewAtIndex(currentIndex, GridView.Center);
+            }
+
             focusSearch();
         });
     }
@@ -222,7 +242,7 @@ Rectangle {
                             anchors.fill: parent
                             anchors.margins: 2  // Para crear espacio para el borde exterior
                             color: "transparent"
-                            border.color: Colors.adapter.surfaceContainerLowest
+                            border.color: Colors.background
                             border.width: 8
                             z: 5
 
@@ -232,7 +252,7 @@ Rectangle {
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 height: 24
-                                color: Colors.adapter.surfaceContainerLowest
+                                color: Colors.background
                                 z: 10
                                 clip: true
 
@@ -266,14 +286,14 @@ Rectangle {
                                     horizontalAlignment: Text.AlignHCenter
 
                                     readonly property bool needsScroll: width > parent.width - 8
-                                    
+
                                     // Resetear posición cuando cambia el texto o cuando deja de necesitar scroll
                                     onTextChanged: {
                                         if (needsScroll) {
                                             x = 4;
                                         }
                                     }
-                                    
+
                                     onNeedsScrollChanged: {
                                         if (needsScroll) {
                                             x = 4;
