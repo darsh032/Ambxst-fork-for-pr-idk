@@ -66,9 +66,11 @@ Rectangle {
                     if (text.length > 0 && filteredWallpapers.length > 0) {
                         GlobalStates.wallpaperSelectedIndex = 0;
                         selectedIndex = 0;
+                        wallpaperGrid.currentIndex = 0;
                     } else {
                         GlobalStates.wallpaperSelectedIndex = -1;
                         selectedIndex = -1;
+                        wallpaperGrid.currentIndex = -1;
                     }
                 }
 
@@ -85,9 +87,11 @@ Rectangle {
                             }
                             GlobalStates.wallpaperSelectedIndex = newIndex;
                             selectedIndex = newIndex;
+                            wallpaperGrid.currentIndex = newIndex;
                         } else if (selectedIndex === -1) {
                             GlobalStates.wallpaperSelectedIndex = 0;
                             selectedIndex = 0;
+                            wallpaperGrid.currentIndex = 0;
                         }
                     }
                 }
@@ -100,9 +104,11 @@ Rectangle {
                         }
                         GlobalStates.wallpaperSelectedIndex = newIndex;
                         selectedIndex = newIndex;
+                        wallpaperGrid.currentIndex = newIndex;
                     } else if (selectedIndex === 0 && searchText.length === 0) {
                         GlobalStates.wallpaperSelectedIndex = -1;
                         selectedIndex = -1;
+                        wallpaperGrid.currentIndex = -1;
                     }
                 }
 
@@ -120,27 +126,33 @@ Rectangle {
                         if (selectedIndex > 0) {
                             GlobalStates.wallpaperSelectedIndex = selectedIndex - 1;
                             selectedIndex = selectedIndex - 1;
+                            wallpaperGrid.currentIndex = selectedIndex;
                         } else if (selectedIndex === -1) {
                             GlobalStates.wallpaperSelectedIndex = 0;
                             selectedIndex = 0;
+                            wallpaperGrid.currentIndex = 0;
                         }
                         event.accepted = true;
                     } else if (event.key === Qt.Key_Right && filteredWallpapers.length > 0) {
                         if (selectedIndex < filteredWallpapers.length - 1) {
                             GlobalStates.wallpaperSelectedIndex = selectedIndex + 1;
                             selectedIndex = selectedIndex + 1;
+                            wallpaperGrid.currentIndex = selectedIndex;
                         } else if (selectedIndex === -1) {
                             GlobalStates.wallpaperSelectedIndex = 0;
                             selectedIndex = 0;
+                            wallpaperGrid.currentIndex = 0;
                         }
                         event.accepted = true;
                     } else if (event.key === Qt.Key_Home && filteredWallpapers.length > 0) {
                         GlobalStates.wallpaperSelectedIndex = 0;
                         selectedIndex = 0;
+                        wallpaperGrid.currentIndex = 0;
                         event.accepted = true;
                     } else if (event.key === Qt.Key_End && filteredWallpapers.length > 0) {
                         GlobalStates.wallpaperSelectedIndex = filteredWallpapers.length - 1;
                         selectedIndex = filteredWallpapers.length - 1;
+                        wallpaperGrid.currentIndex = selectedIndex;
                         event.accepted = true;
                     }
                 }
@@ -191,6 +203,63 @@ Rectangle {
                     cellWidth: wallpaperGridContainer.wallpaperWidth
                     cellHeight: wallpaperGridContainer.wallpaperHeight
                     model: filteredWallpapers
+                    currentIndex: selectedIndex
+
+                    // Función para centrar el elemento seleccionado en el scroll
+                    function centerCurrentItem() {
+                        if (currentIndex >= 0 && currentIndex < count) {
+                            // Calcular fila y posición Y del elemento actual
+                            let currentRow = Math.floor(currentIndex / gridColumns);
+                            let itemY = currentRow * cellHeight;
+                            let itemCenterY = itemY + cellHeight / 2;
+
+                            // Calcular posición ideal del scroll para centrar el elemento
+                            let scrollViewHeight = scrollView.height;
+                            let contentHeight = Math.ceil(count / gridColumns) * cellHeight;
+                            let targetScrollY = itemCenterY - scrollViewHeight / 2;
+
+                            // Asegurar que está dentro de los límites
+                            targetScrollY = Math.max(0, Math.min(targetScrollY, contentHeight - scrollViewHeight));
+
+                            // Aplicar el scroll
+                            if (contentHeight > scrollViewHeight) {
+                                let normalizedPosition = targetScrollY / (contentHeight - scrollViewHeight);
+                                scrollView.ScrollBar.vertical.position = Math.max(0, Math.min(1, normalizedPosition));
+                            }
+                        }
+                    }
+
+                    // Sincronizar currentIndex con selectedIndex
+                    onCurrentIndexChanged: {
+                        if (currentIndex !== selectedIndex) {
+                            GlobalStates.wallpaperSelectedIndex = currentIndex;
+                            selectedIndex = currentIndex;
+                        }
+                        // Centrar el elemento cuando cambie la selección
+                        Qt.callLater(centerCurrentItem);
+                    }
+
+                    highlight: Rectangle {
+                        color: "transparent"
+                        border.color: Colors.adapter.primary
+                        border.width: 2
+                        visible: selectedIndex >= 0
+                        z: 5
+
+                        Behavior on x {
+                            NumberAnimation {
+                                duration: Config.animDuration / 2
+                                easing.type: Easing.OutQuart
+                            }
+                        }
+
+                        Behavior on y {
+                            NumberAnimation {
+                                duration: Config.animDuration / 2
+                                easing.type: Easing.OutQuart
+                            }
+                        }
+                    }
 
                     delegate: Rectangle {
                         width: wallpaperGridContainer.wallpaperWidth
@@ -229,7 +298,7 @@ Rectangle {
                             anchors.fill: parent
                             color: "transparent"
                             border.color: Colors.adapter.primary
-                            border.width: 2
+                            // border.width: 2
                             radius: 4
                             visible: parent.isSelected
                             z: 15
@@ -282,9 +351,9 @@ Rectangle {
                             }
                         }
 
-                        // Etiqueta con nombre del archivo al hacer hover
+                        // Etiqueta con nombre del archivo al hacer hover o seleccionar
                         Rectangle {
-                            visible: parent.isHovered && !parent.isCurrentWallpaper
+                            visible: (parent.isHovered || parent.isSelected) && !parent.isCurrentWallpaper
                             anchors.bottom: parent.bottom
                             anchors.left: parent.left
                             anchors.right: parent.right
@@ -354,7 +423,8 @@ Rectangle {
                                 // Sincronizar selección con hover
                                 GlobalStates.wallpaperSelectedIndex = index;
                                 selectedIndex = index;
-                                
+                                wallpaperGrid.currentIndex = index;
+
                                 if (!parent.isCurrentWallpaper) {
                                     parent.color = Colors.surfaceContainerHigh;
                                 }
