@@ -212,11 +212,28 @@ Singleton {
         root.discardAll();
     }
 
+    signal timeoutWithAnimation(id: var);
+    
     function timeoutNotification(id) {
-        const index = root.list.findIndex((notif) => notif.id === id);
-        if (root.list[index] != null)
-            root.list[index].popup = false;
-        root.timeout(id);
+        // Primero emitir la señal para que la UI haga animación
+        root.timeoutWithAnimation(id);
+        
+        // Luego, después de un delay para la animación, quitar del popup
+        const timeoutTimer = Qt.createQmlObject(`
+            import QtQuick
+            Timer {
+                interval: 350
+                running: true
+                repeat: false
+                onTriggered: {
+                    const index = root.list.findIndex((notif) => notif.id === ${id});
+                    if (root.list[index] != null)
+                        root.list[index].popup = false;
+                    root.timeout(${id});
+                    destroy();
+                }
+            }
+        `, root);
     }
 
     function timeoutAll() {

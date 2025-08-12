@@ -31,18 +31,12 @@ Item {
         if (root.qmlParent && root.qmlParent.resetDrag)
             root.qmlParent.resetDrag();
         background.anchors.leftMargin = background.anchors.leftMargin;
-        
-        // Para notificación única: usar deslizado, para múltiples: usar fade
-        if (!root.multipleNotifications) {
-            slideDestroyAnimation.running = true;
-        } else {
-            fadeDestroyAnimation.running = true;
-        }
+        destroyAnimation.running = true;
     }
 
-    // Animación de deslizado para notificación única
+    // Animación de deslizado para todos los grupos
     SequentialAnimation {
-        id: slideDestroyAnimation
+        id: destroyAnimation
         running: false
 
         NumberAnimation {
@@ -61,29 +55,20 @@ Item {
         }
     }
 
-    // Animación de fade para múltiples notificaciones
-    SequentialAnimation {
-        id: fadeDestroyAnimation
-        running: false
-
-        NumberAnimation {
-            target: background
-            property: "opacity"
-            to: 0
-            duration: 300
-            easing.type: Easing.OutCubic
-        }
-        onFinished: () => {
-            root.notifications.forEach(notif => {
-                Qt.callLater(() => {
-                    Notifications.discardNotification(notif.id);
-                });
-            });
-        }
-    }
-
     function toggleExpanded() {
         root.expanded = !root.expanded;
+    }
+
+    // Escuchar cuando las notificaciones van a hacer timeout
+    Connections {
+        target: Notifications
+        function onTimeoutWithAnimation(id) {
+            // Verificar si la notificación que va a hacer timeout pertenece a este grupo
+            const notifExists = root.notifications.some(notif => notif.id === id);
+            if (notifExists && root.popup) {
+                root.destroyWithAnimation();
+            }
+        }
     }
 
     // HoverHandler dedicado para pausar/reanudar timers
