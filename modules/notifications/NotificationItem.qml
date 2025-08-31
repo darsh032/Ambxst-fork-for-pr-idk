@@ -113,7 +113,7 @@ Item {
         image: notificationObject.image
         anchors.right: background.left
         anchors.top: background.top
-        anchors.rightMargin: 10
+        anchors.rightMargin: root.padding / 2
     }
 
     Rectangle {

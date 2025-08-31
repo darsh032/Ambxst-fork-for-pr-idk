@@ -149,7 +149,7 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.margins: root.padding
-            spacing: 4
+            spacing: root.padding / 2
 
             NotificationAppIcon {
                 Layout.alignment: Qt.AlignTop
