@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
+import qs.modules.bar.workspaces
 
 Singleton {
     id: root
@@ -54,6 +55,9 @@ Singleton {
         
         let focusedScreenName = Hyprland.focusedMonitor.name;
         
+        // Store if we're closing a module for focus restoration
+        let wasOpen = currentActiveModule !== "";
+        
         // Clear all modules on all screens first
         clearAll();
         
@@ -72,6 +76,26 @@ Singleton {
             currentActiveModule = moduleName;
         } else {
             currentActiveModule = "";
+            
+            // Restore focus to windows when closing modules (unless explicitly skipped)
+            if (wasOpen && !skipFocusRestore) {
+                Qt.callLater(() => {
+                    if (Hyprland.focusedMonitor) {
+                        // Find a window in the current workspace to focus
+                        let currentWorkspace = Hyprland.focusedMonitor.activeWorkspace?.id;
+                        if (currentWorkspace) {
+                            let windowInWorkspace = HyprlandData.windowList.find(win => 
+                                win?.workspace?.id === currentWorkspace && 
+                                Hyprland.focusedMonitor?.id === win.monitor
+                            );
+                            
+                            if (windowInWorkspace) {
+                                Hyprland.dispatch(`focuswindow address:${windowInWorkspace.address}`);
+                            }
+                        }
+                    }
+                });
+            }
         }
         
         lastFocusedScreen = focusedScreenName;
