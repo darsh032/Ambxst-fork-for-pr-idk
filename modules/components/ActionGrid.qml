@@ -76,48 +76,65 @@ FocusScope {
         anchors.fill: parent
         color: "transparent"
 
-        // Highlight que se desplaza entre botones
+        // Highlight que se desplaza entre botones con efecto elástico
         Rectangle {
             id: highlight
-            width: root.buttonSize
-            height: root.buttonSize
-            color: Colors.adapter.surfaceContainerHighest
+            color: Colors.adapter.primary
             radius: Config.roundness > 0 ? Config.roundness + 4 : 0
             border.width: 0
             border.color: Colors.adapter.primary
             z: 0 // Por debajo de los botones
             visible: repeater.count > 0
 
-            // Posición calculada basada en currentIndex
+            property real activeButtonMargin: 2
+            property real idx1X: root.currentIndex % (root.layout === "row" ? root.actions.length : root.columns)
+            property real idx2X: root.currentIndex % (root.layout === "row" ? root.actions.length : root.columns)
+            property real idx1Y: root.layout === "row" ? 0 : Math.floor(root.currentIndex / root.columns)
+            property real idx2Y: root.layout === "row" ? 0 : Math.floor(root.currentIndex / root.columns)
+
+            // Posición y tamaño con efecto elástico
             x: {
-                if (root.layout === "row") {
-                    return container.x + root.currentIndex * (root.buttonSize + root.spacing);
-                } else {
-                    let col = root.currentIndex % root.columns;
-                    return container.x + col * (root.buttonSize + root.spacing);
-                }
+                let minX = Math.min(idx1X, idx2X) * (root.buttonSize + root.spacing) + container.x + activeButtonMargin;
+                return minX;
             }
 
             y: {
-                if (root.layout === "row") {
-                    return container.y;
-                } else {
-                    let row = Math.floor(root.currentIndex / root.columns);
-                    return container.y + row * (root.buttonSize + root.spacing);
-                }
+                let minY = Math.min(idx1Y, idx2Y) * (root.buttonSize + root.spacing) + container.y + activeButtonMargin;
+                return minY;
             }
 
-            Behavior on x {
-                NumberAnimation {
-                    duration: Config.animDuration / 2
-                    easing.type: Easing.OutQuart
-                }
+            width: {
+                let stretchX = Math.abs(idx1X - idx2X) * (root.buttonSize + root.spacing) + root.buttonSize - activeButtonMargin * 2;
+                return stretchX;
             }
 
-            Behavior on y {
+            height: {
+                let stretchY = Math.abs(idx1Y - idx2Y) * (root.buttonSize + root.spacing) + root.buttonSize - activeButtonMargin * 2;
+                return stretchY;
+            }
+
+            Behavior on idx1X {
                 NumberAnimation {
-                    duration: Config.animDuration / 2
-                    easing.type: Easing.OutQuart
+                    duration: Config.animDuration / 3
+                    easing.type: Easing.OutSine
+                }
+            }
+            Behavior on idx2X {
+                NumberAnimation {
+                    duration: Config.animDuration
+                    easing.type: Easing.OutSine
+                }
+            }
+            Behavior on idx1Y {
+                NumberAnimation {
+                    duration: Config.animDuration / 3
+                    easing.type: Easing.OutSine
+                }
+            }
+            Behavior on idx2Y {
+                NumberAnimation {
+                    duration: Config.animDuration
+                    easing.type: Easing.OutSine
                 }
             }
         }
@@ -162,7 +179,7 @@ FocusScope {
                         text: modelData.icon || ""
                         font.family: Icons.font
                         font.pixelSize: root.iconSize
-                        color: actionButton.pressed ? Colors.background : (index === root.currentIndex ? Colors.adapter.primary : Colors.adapter.overBackground)
+                        color: actionButton.pressed ? Colors.background : (index === root.currentIndex ? Colors.background : Colors.adapter.overBackground)
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
 

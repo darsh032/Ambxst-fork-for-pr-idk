@@ -42,22 +42,31 @@ NotchAnimationBehavior {
             width: root.tabWidth
             height: parent.height
 
-            // Background highlight que se desplaza verticalmente
+            // Background highlight que se desplaza verticalmente con efecto elástico
             Rectangle {
                 id: tabHighlight
                 width: parent.width
-                height: width
-                // height: (parent.height - root.tabSpacing * (root.tabCount - 1)) / root.tabCount
-                x: 0
-                y: root.state.currentTab * (height + root.tabSpacing)
-                color: Qt.rgba(Colors.surfaceContainer.r, Colors.surfaceContainer.g, Colors.surfaceContainer.b, Config.opacity)
                 radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                color: Colors.adapter.primary
                 z: 0
 
-                Behavior on y {
+                property real idx1: root.state.currentTab
+                property real idx2: root.state.currentTab
+                
+                x: 0
+                y: Math.min(idx1, idx2) * (width + root.tabSpacing)
+                height: Math.abs(idx1 - idx2) * (width + root.tabSpacing) + width
+
+                Behavior on idx1 {
+                    NumberAnimation {
+                        duration: Config.animDuration / 3
+                        easing.type: Easing.OutSine
+                    }
+                }
+                Behavior on idx2 {
                     NumberAnimation {
                         duration: Config.animDuration
-                        easing.type: Easing.OutQuart
+                        easing.type: Easing.OutSine
                     }
                 }
             }
@@ -87,7 +96,7 @@ NotchAnimationBehavior {
 
                         contentItem: Text {
                             text: parent.text
-                            color: root.state.currentTab === index ? Colors.adapter.primary : Colors.adapter.overBackground
+                            color: root.state.currentTab === index ? Colors.background : Colors.adapter.overBackground
                             // font.family: Config.theme.font
                             font.family: Icons.font
                             // font.pixelSize: Config.theme.fontSize
