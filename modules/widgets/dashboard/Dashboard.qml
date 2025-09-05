@@ -52,7 +52,7 @@ NotchAnimationBehavior {
 
                 property real idx1: root.state.currentTab
                 property real idx2: root.state.currentTab
-                
+
                 x: 0
                 y: Math.min(idx1, idx2) * (width + root.tabSpacing)
                 height: Math.abs(idx1 - idx2) * (width + root.tabSpacing) + width
@@ -113,21 +113,12 @@ NotchAnimationBehavior {
                             }
                         }
 
-                        onClicked: root.state.currentTab = index
+                        onClicked: stack.navigateToTab(index)
 
                         Behavior on scale {
                             NumberAnimation {
                                 duration: Config.animDuration / 2
                                 easing.type: Easing.OutCubic
-                            }
-                        }
-
-                        states: State {
-                            name: "pressed"
-                            when: parent.pressed
-                            PropertyChanges {
-                                target: parent
-                                scale: 0.95
                             }
                         }
                     }
@@ -145,51 +136,154 @@ NotchAnimationBehavior {
             radius: Config.roundness > 0 ? Config.roundness + 4 : 0
             clip: true
 
-            SwipeView {
-                id: view
-
+            StackView {
+                id: stack
                 anchors.fill: parent
-                orientation: Qt.Vertical
 
-                currentIndex: root.state.currentTab
+                // Array de componentes para cargar dinámicamente
+                property var components: [overviewComponent, systemComponent, quickSettingsComponent, wallpapersComponent, assistantComponent]
 
-                onCurrentIndexChanged: {
-                    root.state.currentTab = currentIndex;
-                    // Auto-focus search input when switching to wallpapers tab
-                    if (currentIndex === 3) {
-                        Qt.callLater(() => {
-                            if (wallpapersPane.item && wallpapersPane.item.focusSearch) {
-                                wallpapersPane.item.focusSearch();
-                            }
-                        });
+                initialItem: overviewComponent
+
+                // Función para navegar a un tab específico
+                function navigateToTab(index) {
+                    if (index >= 0 && index < components.length && index !== root.state.currentTab) {
+                        let targetComponent = components[index];
+
+                        // Determinar dirección de la transición
+                        let direction = index > root.state.currentTab ? StackView.PushTransition : StackView.PopTransition;
+
+                        // Usar replace para evitar acumulación en el stack
+                        stack.replace(targetComponent, {}, direction);
+
+                        root.state.currentTab = index;
+
+                        // Auto-focus search input when switching to wallpapers tab
+                        if (index === 3) {
+                            Qt.callLater(() => {
+                                if (stack.currentItem && stack.currentItem.focusSearch) {
+                                    stack.currentItem.focusSearch();
+                                }
+                            });
+                        }
                     }
                 }
 
-                // Overview Tab
-                DashboardPane {
-                    sourceComponent: overviewComponent
+                // Transiciones personalizadas para swipe vertical
+                pushEnter: Transition {
+                    PropertyAnimation {
+                        property: "y"
+                        from: stack.height
+                        to: 0
+                        duration: Config.animDuration
+                        easing.type: Easing.OutCubic
+                    }
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 0.7
+                        to: 1
+                        duration: Config.animDuration
+                        easing.type: Easing.OutCubic
+                    }
                 }
 
-                // System Tab
-                DashboardPane {
-                    sourceComponent: systemComponent
+                pushExit: Transition {
+                    PropertyAnimation {
+                        property: "y"
+                        from: 0
+                        to: -stack.height
+                        duration: Config.animDuration
+                        easing.type: Easing.OutCubic
+                    }
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 1
+                        to: 0.7
+                        duration: Config.animDuration
+                        easing.type: Easing.OutCubic
+                    }
                 }
 
-                // Quick Settings Tab
-                DashboardPane {
-                    sourceComponent: quickSettingsComponent
+                popEnter: Transition {
+                    PropertyAnimation {
+                        property: "y"
+                        from: -stack.height
+                        to: 0
+                        duration: Config.animDuration
+                        easing.type: Easing.OutCubic
+                    }
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 0.7
+                        to: 1
+                        duration: Config.animDuration
+                        easing.type: Easing.OutCubic
+                    }
                 }
 
-                // Wallpapers Tab
-                DashboardPane {
-                    id: wallpapersPane
-                    sourceComponent: wallpapersComponent
+                popExit: Transition {
+                    PropertyAnimation {
+                        property: "y"
+                        from: 0
+                        to: stack.height
+                        duration: Config.animDuration
+                        easing.type: Easing.OutCubic
+                    }
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 1
+                        to: 0.7
+                        duration: Config.animDuration
+                        easing.type: Easing.OutCubic
+                    }
                 }
 
-                // Assistant Tab
-                DashboardPane {
-                    id: assistantPane
-                    sourceComponent: assistantComponent
+                // Gesture handling para swipe vertical
+                MouseArea {
+                    anchors.fill: parent
+                    property real startY: 0
+                    property real startX: 0
+                    property bool swiping: false
+                    property real swipeThreshold: 50
+                    property real swipeProgress: 0
+
+                    onPressed: mouse => {
+                        startY = mouse.y;
+                        startX = mouse.x;
+                        swiping = false;
+                        swipeProgress = 0;
+                    }
+
+                    onPositionChanged: mouse => {
+                        let deltaY = mouse.y - startY;
+                        let deltaX = Math.abs(mouse.x - startX);
+
+                        // Solo considerar swipe vertical si el movimiento horizontal es mínimo
+                        if (Math.abs(deltaY) > 20 && deltaX < 30) {
+                            swiping = true;
+                            swipeProgress = Math.max(-1, Math.min(1, deltaY / (parent.height * 0.3)));
+                        }
+                    }
+
+                    onReleased: mouse => {
+                        if (swiping) {
+                            let deltaY = mouse.y - startY;
+
+                            if (deltaY < -swipeThreshold && root.state.currentTab < root.tabCount - 1) {
+                                // Swipe hacia arriba - siguiente tab
+                                stack.navigateToTab(root.state.currentTab + 1);
+                            } else if (deltaY > swipeThreshold && root.state.currentTab > 0) {
+                                // Swipe hacia abajo - tab anterior
+                                stack.navigateToTab(root.state.currentTab - 1);
+                            }
+                        }
+
+                        swiping = false;
+                        swipeProgress = 0;
+                    }
+
+                    // Pasar eventos de click a los elementos internos
+                    propagateComposedEvents: true
                 }
             }
         }
