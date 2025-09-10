@@ -181,14 +181,12 @@ Item {
                         root.state.currentTab = index;
                         GlobalStates.launcherCurrentTab = index;
 
-                        // Auto-focus search input when switching to apps tab
-                        if (index === 0) {
-                            Qt.callLater(() => {
-                                if (stack.currentItem && stack.currentItem.focusSearchInput) {
-                                    stack.currentItem.focusSearchInput();
-                                }
-                            });
-                        }
+                        // Auto-focus search input when switching tabs
+                        Qt.callLater(() => {
+                            if (stack.currentItem && stack.currentItem.focusSearchInput) {
+                                stack.currentItem.focusSearchInput();
+                            }
+                        });
                     }
                 }
 
@@ -320,12 +318,38 @@ Item {
         }
     }
 
+    // Instancia permanente del clipboard tab
+    LauncherClipboardTab {
+        id: clipboardInstance
+        visible: false
+        onItemSelected: {
+            GlobalStates.clearLauncherState();
+            Visibilities.setActiveModule("");
+        }
+    }
+
     Component {
         id: clipboardComponent
-        LauncherClipboardTab {
-            onItemSelected: {
-                GlobalStates.clearLauncherState();
-                Visibilities.setActiveModule("");
+        Item {
+            implicitWidth: clipboardInstance.implicitWidth
+            implicitHeight: clipboardInstance.implicitHeight
+            
+            // Exponer el método focusSearchInput
+            function focusSearchInput() {
+                if (clipboardInstance && clipboardInstance.focusSearchInput) {
+                    clipboardInstance.focusSearchInput();
+                }
+            }
+            
+            Component.onCompleted: {
+                clipboardInstance.parent = this;
+                clipboardInstance.anchors.fill = this;
+                clipboardInstance.visible = true;
+            }
+            
+            Component.onDestruction: {
+                clipboardInstance.parent = root;
+                clipboardInstance.visible = false;
             }
         }
     }

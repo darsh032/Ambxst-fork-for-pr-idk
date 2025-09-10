@@ -128,7 +128,7 @@ Rectangle {
     ColumnLayout {
         id: mainLayout
         anchors.fill: parent
-        spacing: 12
+        spacing: 8
 
         // Barra de búsqueda
         SearchInput {
