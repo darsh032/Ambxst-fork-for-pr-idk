@@ -558,14 +558,43 @@ Rectangle {
 
                     onClicked: mouse => {
                         if (mouse.button === Qt.LeftButton) {
-                            if (modelData.isCreateSpecificButton) {
-                                root.createTmuxSession(modelData.sessionNameToCreate);
-                            } else if (modelData.isCreateButton) {
-                                root.createTmuxSession();
-                            } else {
-                                root.attachToSession(modelData.name);
+                            // Verificar si hay algún modo activo y este no es el item en modo activo
+                            if (root.deleteMode && modelData.name !== root.sessionToDelete) {
+                                // Cancelar modo delete y no ejecutar acción
+                                console.log("DEBUG: Clicking outside delete mode - canceling");
+                                root.cancelDeleteMode();
+                                return;
+                            } else if (root.renameMode && modelData.name !== root.sessionToRename) {
+                                // Cancelar modo rename y no ejecutar acción
+                                console.log("DEBUG: Clicking outside rename mode - canceling");
+                                root.cancelRenameMode();
+                                return;
+                            }
+
+                            // Si no hay modos activos o este es el item activo, ejecutar acción normal
+                            if (!root.deleteMode && !root.renameMode) {
+                                if (modelData.isCreateSpecificButton) {
+                                    root.createTmuxSession(modelData.sessionNameToCreate);
+                                } else if (modelData.isCreateButton) {
+                                    root.createTmuxSession();
+                                } else {
+                                    root.attachToSession(modelData.name);
+                                }
                             }
                         } else if (mouse.button === Qt.RightButton) {
+                            // Click derecho - primero verificar si hay modos activos
+                            if (root.deleteMode || root.renameMode) {
+                                // Si hay un modo activo, cancelarlo y no mostrar menú
+                                if (root.deleteMode) {
+                                    console.log("DEBUG: Right click while in delete mode - canceling");
+                                    root.cancelDeleteMode();
+                                } else if (root.renameMode) {
+                                    console.log("DEBUG: Right click while in rename mode - canceling");
+                                    root.cancelRenameMode();
+                                }
+                                return;
+                            }
+
                             // Click derecho - mostrar menú contextual (solo para sesiones reales)
                             if (!modelData.isCreateButton && !modelData.isCreateSpecificButton) {
                                 console.log("DEBUG: Right click detected, showing context menu");

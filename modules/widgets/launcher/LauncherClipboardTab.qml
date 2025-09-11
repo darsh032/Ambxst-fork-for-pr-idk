@@ -283,14 +283,14 @@ Rectangle {
     }
 
     function onLeftPressed() {
-        if (root.isImageSectionFocused && root.selectedImageIndex > 0) {
+        if (root.isImageSectionFocused && root.selectedImageIndex > 0 && !root.deleteMode && !root.imageDeleteMode) {
             root.selectedImageIndex--;
             imageResultsList.currentIndex = root.selectedImageIndex;
         }
     }
 
     function onRightPressed() {
-        if (root.isImageSectionFocused && root.selectedImageIndex < root.imageItems.length - 1) {
+        if (root.isImageSectionFocused && root.selectedImageIndex < root.imageItems.length - 1 && !root.deleteMode && !root.imageDeleteMode) {
             root.selectedImageIndex++;
             imageResultsList.currentIndex = root.selectedImageIndex;
         }
@@ -630,8 +630,8 @@ Rectangle {
                                 property bool isInImageDeleteMode: root.imageDeleteMode && modelData.id === root.imageToDelete
 
                                 onEntered: {
-                                    // Solo cambiar la selección si no estamos en modo delete
-                                    if (!root.imageDeleteMode) {
+                                    // Solo cambiar la selección si no estamos en ningún modo activo
+                                    if (!root.imageDeleteMode && !root.deleteMode) {
                                         if (!root.isImageSectionFocused) {
                                             root.isImageSectionFocused = true;
                                             root.selectedIndex = -1;
@@ -644,9 +644,37 @@ Rectangle {
 
                                 onClicked: mouse => {
                                     if (mouse.button === Qt.LeftButton && !imageMouseArea.isInImageDeleteMode) {
-                                        // Solo copiar si NO estamos en modo delete
-                                        root.copyToClipboard(modelData.id);
+                                        // Verificar si hay algún modo activo y este no es el item en modo activo
+                                        if (root.deleteMode && modelData.id !== root.itemToDelete) {
+                                            // Cancelar modo delete de texto y no ejecutar acción
+                                            console.log("DEBUG: Clicking image outside text delete mode - canceling");
+                                            root.cancelDeleteMode();
+                                            return;
+                                        } else if (root.imageDeleteMode && modelData.id !== root.imageToDelete) {
+                                            // Cancelar modo delete de imagen y no ejecutar acción
+                                            console.log("DEBUG: Clicking outside image delete mode - canceling");
+                                            root.cancelImageDeleteMode();
+                                            return;
+                                        }
+
+                                        // Si no hay modos activos o este es el item activo, ejecutar acción normal
+                                        if (!root.deleteMode && !root.imageDeleteMode) {
+                                            root.copyToClipboard(modelData.id);
+                                        }
                                     } else if (mouse.button === Qt.RightButton) {
+                                        // Click derecho - primero verificar si hay modos activos
+                                        if (root.deleteMode || root.imageDeleteMode) {
+                                            // Si hay un modo activo, cancelarlo y no mostrar menú
+                                            if (root.deleteMode) {
+                                                console.log("DEBUG: Right click image while in delete mode - canceling");
+                                                root.cancelDeleteMode();
+                                            } else if (root.imageDeleteMode) {
+                                                console.log("DEBUG: Right click while in image delete mode - canceling");
+                                                root.cancelImageDeleteMode();
+                                            }
+                                            return;
+                                        }
+
                                         // Click derecho - mostrar menú contextual
                                         console.log("DEBUG: Right click detected on image, showing context menu");
                                         imageContextMenu.popup(mouse.x, mouse.y);
@@ -1073,8 +1101,8 @@ Rectangle {
                             property bool isInDeleteMode: root.deleteMode && modelData.id === root.itemToDelete
 
                             onEntered: {
-                                // Solo cambiar la selección si no estamos en modo delete
-                                if (!root.deleteMode) {
+                                // Solo cambiar la selección si no estamos en ningún modo activo
+                                if (!root.deleteMode && !root.imageDeleteMode) {
                                     if (root.isImageSectionFocused) {
                                         root.isImageSectionFocused = false;
                                         root.selectedImageIndex = -1;
@@ -1086,9 +1114,37 @@ Rectangle {
 
                             onClicked: mouse => {
                                 if (mouse.button === Qt.LeftButton && !mouseArea.isInDeleteMode) {
-                                    // Solo copiar si NO estamos en modo delete
-                                    root.copyToClipboard(modelData.id);
+                                    // Verificar si hay algún modo activo y este no es el item en modo activo
+                                    if (root.deleteMode && modelData.id !== root.itemToDelete) {
+                                        // Cancelar modo delete de texto y no ejecutar acción
+                                        console.log("DEBUG: Clicking text outside text delete mode - canceling");
+                                        root.cancelDeleteMode();
+                                        return;
+                                    } else if (root.imageDeleteMode && modelData.id !== root.imageToDelete) {
+                                        // Cancelar modo delete de imagen y no ejecutar acción
+                                        console.log("DEBUG: Clicking text outside image delete mode - canceling");
+                                        root.cancelImageDeleteMode();
+                                        return;
+                                    }
+
+                                    // Si no hay modos activos o este es el item activo, ejecutar acción normal
+                                    if (!root.deleteMode && !root.imageDeleteMode) {
+                                        root.copyToClipboard(modelData.id);
+                                    }
                                 } else if (mouse.button === Qt.RightButton) {
+                                    // Click derecho - primero verificar si hay modos activos
+                                    if (root.deleteMode || root.imageDeleteMode) {
+                                        // Si hay un modo activo, cancelarlo y no mostrar menú
+                                        if (root.deleteMode) {
+                                            console.log("DEBUG: Right click text while in delete mode - canceling");
+                                            root.cancelDeleteMode();
+                                        } else if (root.imageDeleteMode) {
+                                            console.log("DEBUG: Right click text while in image delete mode - canceling");
+                                            root.cancelImageDeleteMode();
+                                        }
+                                        return;
+                                    }
+
                                     // Click derecho - mostrar menú contextual
                                     console.log("DEBUG: Right click detected, showing context menu");
                                     contextMenu.popup(mouse.x, mouse.y);
