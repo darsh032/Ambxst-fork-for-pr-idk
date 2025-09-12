@@ -138,7 +138,7 @@ Item {
                             text: parent.text
                             color: root.state.currentTab === index ? Colors.adapter.overPrimary : Colors.adapter.overBackground
                             font.family: Icons.font
-                            font.pixelSize: 20
+                            font.pixelSize: 24
                             font.weight: Font.Medium
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -167,7 +167,7 @@ Item {
             radius: Config.roundness > 0 ? Config.roundness + 4 : 0
             clip: true
 
-                StackView {
+            StackView {
                 id: stack
                 anchors.fill: parent
 
@@ -188,7 +188,7 @@ Item {
                         if (root.state.currentTab === 1 && stack.currentItem && stack.currentItem.cancelDeleteModeFromExternal) {
                             stack.currentItem.cancelDeleteModeFromExternal();
                         }
-                        
+
                         let targetComponent = components[index];
 
                         // Determinar dirección de la transición

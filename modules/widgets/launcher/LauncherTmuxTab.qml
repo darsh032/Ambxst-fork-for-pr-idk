@@ -617,13 +617,13 @@ Rectangle {
                                 return;
                             }
 
-                             // Click derecho - mostrar menú contextual (solo para sesiones reales)
-                             if (!modelData.isCreateButton && !modelData.isCreateSpecificButton) {
-                                 console.log("DEBUG: Right click detected, showing context menu");
-                                 root.menuItemIndex = index;
-                                 root.optionsMenuOpen = true;
-                                 contextMenu.popup(mouse.x, mouse.y);
-                             }
+                            // Click derecho - mostrar menú contextual (solo para sesiones reales)
+                            if (!modelData.isCreateButton && !modelData.isCreateSpecificButton) {
+                                console.log("DEBUG: Right click detected, showing context menu");
+                                root.menuItemIndex = index;
+                                root.optionsMenuOpen = true;
+                                contextMenu.popup(mouse.x, mouse.y);
+                            }
                         }
                     }
 
@@ -875,7 +875,7 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: 8
                     anchors.rightMargin: isInRenameMode ? 84 : 8 // 68 (ancho botones) + 16 (padding extra)
-                    spacing: 12
+                    spacing: 8
 
                     Behavior on anchors.rightMargin {
                         NumberAnimation {
@@ -1238,7 +1238,6 @@ Rectangle {
             }
         }
     }
-
 
     Component.onCompleted: {
         // Cargar sesiones de tmux al inicializar

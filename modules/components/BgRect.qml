@@ -8,15 +8,15 @@ ClippingRectangle {
     color: Colors.background
     radius: Config.roundness
     border.color: Colors.adapter.overBackground
-    border.width: Config.theme.currentTheme === "sticker" ? 4 : 0
+    border.width: Config.theme.currentTheme === "sticker" ? 2 : 0
 
     layer.enabled: true
     layer.effect: MultiEffect {
         shadowEnabled: true
-        shadowHorizontalOffset: 0
-        shadowVerticalOffset: 0
-        shadowBlur: 1
+        shadowHorizontalOffset: Config.theme.currentTheme === "sticker" ? 2 : 0
+        shadowVerticalOffset: Config.theme.currentTheme === "sticker" ? 2 : 0
+        shadowBlur: Config.theme.currentTheme === "sticker" ? 0 : 1
         shadowColor: Colors.adapter.shadow
-        shadowOpacity: Config.theme.shadowOpacity
+        shadowOpacity: Config.theme.currentTheme === "sticker" ? 1 : Config.theme.shadowOpacity
     }
 }

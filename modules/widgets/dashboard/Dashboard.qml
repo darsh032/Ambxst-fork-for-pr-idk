@@ -154,7 +154,7 @@ NotchAnimationBehavior {
                             // font.family: Config.theme.font
                             font.family: Icons.font
                             // font.pixelSize: Config.theme.fontSize
-                            font.pixelSize: 20
+                            font.pixelSize: 24
                             font.weight: Font.Medium
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -192,7 +192,7 @@ NotchAnimationBehavior {
             radius: Config.roundness > 0 ? Config.roundness + 4 : 0
             clip: true
 
-                StackView {
+            StackView {
                 id: stack
                 anchors.fill: parent
 

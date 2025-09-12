@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
@@ -150,6 +151,8 @@ Rectangle {
         copyProcess.command = ["bash", "-c", "echo -n '" + emoji.emoji.replace(/'/g, "'\\''") + "' | wl-copy"];
         copyProcess.running = true;
         addToRecent(emoji);
+        typeTimer.start();
+        pasteTimer.start();
         root.itemSelected();
     }
 
@@ -344,6 +347,36 @@ Rectangle {
         running: false
     }
 
+    // Type emoji
+    Process {
+        id: typeProcess
+        command: ["bash", "-c", "wl-paste | wtype"]
+        running: false
+    }
+
+    // Paste emoji
+    Process {
+        id: pasteProcess
+        command: ["wtype", "-M", "ctrl", "-k", "v"]
+        running: false
+    }
+
+    Timer {
+        id: typeTimer
+        interval: 100
+        onTriggered: {
+            typeProcess.running = true;
+        }
+    }
+
+    Timer {
+        id: pasteTimer
+        interval: 150
+        onTriggered: {
+            pasteProcess.running = true;
+        }
+    }
+
     ColumnLayout {
         id: mainLayout
         anchors.fill: parent
@@ -468,7 +501,7 @@ Rectangle {
                         Layout.preferredWidth: 32
                         text: root.clearButtonConfirmState ? Icons.xeyes : Icons.broom
                         font.family: Icons.font
-                        font.pixelSize: 20
+                        font.pixelSize: 24
                         color: root.clearButtonConfirmState ? Colors.adapter.overError : Colors.adapter.primary
                         horizontalAlignment: Text.AlignHCenter
 
@@ -590,6 +623,7 @@ Rectangle {
                             id: emojiText
                             anchors.centerIn: parent
                             text: modelData.emoji
+                            color: Colors.adapter.overBackground
                             font.pixelSize: 24
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -654,16 +688,32 @@ Rectangle {
                     RowLayout {
                         anchors.fill: parent
                         anchors.margins: 8
-                        spacing: 12
+                        spacing: 8
 
-                        Text {
-                            id: emojiIcon
-                            Layout.preferredWidth: implicitWidth + 8 // Ancho variable basado en el emoji
+                        Rectangle {
+                            Layout.preferredWidth: emojiIcon.implicitWidth + 6 // Ancho variable basado en el emoji
                             Layout.preferredHeight: 32
-                            text: modelData.emoji
-                            font.pixelSize: 24
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                            radius: Config.roundness > 0 ? Config.roundness - 4 : 0
+                            color: root.selectedIndex === index && !root.isRecentFocused ? Colors.adapter.overPrimary : Colors.surface
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Config.animDuration / 2
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+
+                            Text {
+                                id: emojiIcon
+                                anchors.centerIn: parent
+                                color: root.selectedIndex === index && !root.isRecentFocused ? Colors.adapter.overPrimary : Colors.adapter.overBackground
+                                // Layout.preferredWidth: implicitWidth + 8 // Ancho variable basado en el emoji
+                                // Layout.preferredHeight: 32
+                                text: modelData.emoji
+                                font.pixelSize: 24
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
                         }
 
                         Text {
@@ -671,6 +721,7 @@ Rectangle {
                             text: modelData.search
                             color: root.selectedIndex === index && !root.isRecentFocused ? Colors.adapter.overPrimary : Colors.adapter.overBackground
                             font.family: Config.theme.font
+                            font.weight: Font.Bold
                             font.pixelSize: Config.theme.fontSize
                             elide: Text.ElideRight
 

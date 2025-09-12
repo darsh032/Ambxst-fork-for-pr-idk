@@ -320,7 +320,7 @@ Rectangle {
         anchors.fill: parent
         enabled: root.deleteMode || root.imageDeleteMode
         z: -10 // Muy por debajo para que no interfiera con otros componentes
-        
+
         onClicked: {
             if (root.deleteMode) {
                 console.log("DEBUG: Clicked on empty space globally - canceling delete mode");
@@ -522,7 +522,7 @@ Rectangle {
                         Layout.preferredWidth: 32
                         text: root.clearButtonConfirmState ? Icons.alert : Icons.trash
                         font.family: Icons.font
-                        font.pixelSize: 20
+                        font.pixelSize: 24
                         color: root.clearButtonConfirmState ? Colors.adapter.overError : Colors.adapter.primary
                         horizontalAlignment: Text.AlignHCenter
 
@@ -1078,7 +1078,6 @@ Rectangle {
                             }
                         }
                     }
-
                 }
             }
 
@@ -1141,12 +1140,12 @@ Rectangle {
                         color: "transparent"
                         radius: 16
 
-                            MouseArea {
-                                id: mouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                enabled: !root.deleteMode && !root.imageDeleteMode && !root.textOptionsMenuOpen && !root.imageOptionsMenuOpen
-                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        MouseArea {
+                            id: mouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            enabled: !root.deleteMode && !root.imageDeleteMode && !root.textOptionsMenuOpen && !root.imageOptionsMenuOpen
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
 
                             // Variables para gestos táctiles
                             property real startX: 0
@@ -1455,7 +1454,7 @@ Rectangle {
                             anchors.fill: parent
                             anchors.margins: 8
                             anchors.rightMargin: mouseArea.isInDeleteMode ? 84 : 8 // 68 (ancho botones) + 16 (padding extra)
-                            spacing: 12
+                            spacing: 8
 
                             Behavior on anchors.rightMargin {
                                 NumberAnimation {
@@ -1569,7 +1568,6 @@ Rectangle {
                         }
                     }
                 }
-
 
                 // Mensaje cuando no hay elementos
                 Column {

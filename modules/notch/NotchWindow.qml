@@ -110,11 +110,11 @@ PanelWindow {
         layer.enabled: true
         layer.effect: MultiEffect {
             shadowEnabled: Config.theme.shadowOpacity > 0
-            shadowHorizontalOffset: 0
-            shadowVerticalOffset: 0
-            shadowBlur: screenVisibilities && (screenVisibilities.launcher || screenVisibilities.dashboard || screenVisibilities.overview || screenVisibilities.powermenu) ? 2.0 : 1.0
+            shadowHorizontalOffset: Config.theme.currentTheme === "sticker" ? 2 : 0
+            shadowVerticalOffset: Config.theme.currentTheme === "sticker" ? 2 : 0
+            shadowBlur: Config.theme.currentTheme === "sticker" ? 0 : (screenVisibilities && (screenVisibilities.launcher || screenVisibilities.dashboard || screenVisibilities.overview || screenVisibilities.powermenu) ? 2.0 : 1.0)
             shadowColor: Colors.adapter.shadow
-            shadowOpacity: screenVisibilities && (screenVisibilities.launcher || screenVisibilities.dashboard || screenVisibilities.overview || screenVisibilities.powermenu) ? Math.min(Config.theme.shadowOpacity + 0.25, 1.0) : Config.theme.shadowOpacity
+            shadowOpacity: Config.theme.currentTheme === "sticker" ? 1 : (screenVisibilities && (screenVisibilities.launcher || screenVisibilities.dashboard || screenVisibilities.overview || screenVisibilities.powermenu) ? Math.min(Config.theme.shadowOpacity + 0.25, 1.0) : Config.theme.shadowOpacity)
 
             Behavior on shadowBlur {
                 NumberAnimation {
