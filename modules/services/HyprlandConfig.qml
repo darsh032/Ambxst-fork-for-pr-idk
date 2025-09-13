@@ -143,9 +143,14 @@ QtObject {
     property Connections configConnections: Connections {
         target: Config.loader
         function onFileChanged() { applyHyprlandConfig() }
+        function onLoaded() { applyHyprlandConfig() }
     }
 
     Component.onCompleted: {
-        applyHyprlandConfig()
+        // Si el loader ya está cargado, aplicar inmediatamente
+        if (Config.loader.loaded) {
+            applyHyprlandConfig()
+        }
+        // Si no, la conexión onLoaded se encargará
     }
 }
