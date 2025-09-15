@@ -215,6 +215,12 @@ QtObject {
     }
 
     function applyHyprlandConfig() {
+        // Verificar que los adapters estén cargados antes de aplicar configuración
+        if (!Config.loader.loaded || !Colors.loaded) {
+            console.log("HyprlandConfig: Esperando que se carguen los adapters...");
+            return;
+        }
+
         const activeColor = getColorValue(Config.theme.currentTheme === "sticker" ? "overBackground" : Config.hyprland.activeBorderColor);
         const inactiveColor = getColorValue(Config.hyprland.inactiveBorderColor);
 
@@ -227,6 +233,7 @@ QtObject {
         // Usar batch para aplicar todos los comandos de una vez
         const batchCommand = `keyword general:col.active_border ${activeColorFormatted} ; keyword general:col.inactive_border ${inactiveColorFormatted} ; keyword general:border_size ${Config.hyprland.borderSize} ; keyword decoration:rounding ${Config.hyprlandRounding}`;
 
+        console.log("HyprlandConfig: Aplicando configuración:", batchCommand);
         hyprctlProcess.command = ["hyprctl", "--batch", batchCommand];
         hyprctlProcess.running = true;
     }
@@ -241,11 +248,21 @@ QtObject {
         }
     }
 
-    Component.onCompleted: {
-        // Si el loader ya está cargado, aplicar inmediatamente
-        if (Config.loader.loaded) {
+    property Connections colorsConnections: Connections {
+        target: Colors
+        function onFileChanged() {
             applyHyprlandConfig();
         }
-        // Si no, la conexión onLoaded se encargará
+        function onLoaded() {
+            applyHyprlandConfig();
+        }
+    }
+
+    Component.onCompleted: {
+        // Si ambos loaders ya están cargados, aplicar inmediatamente
+        if (Config.loader.loaded && Colors.loaded) {
+            applyHyprlandConfig();
+        }
+        // Si no, las conexiones onLoaded se encargarán
     }
 }
