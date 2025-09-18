@@ -100,12 +100,13 @@ Item {
     ClippingRectangle {
         anchors.fill: parent
         radius: Math.max(0, Config.roundness - workspaceSpacing - 2)
-        
+
         ScreencopyView {
             id: windowPreview
             anchors.fill: parent
-            captureSource: GlobalStates.overviewOpen ? root.toplevel : null
+            captureSource: Config.performance.windowPreview && GlobalStates.overviewOpen ? root.toplevel : null
             live: true
+            visible: Config.performance.windowPreview
         }
     }
 
@@ -114,10 +115,10 @@ Item {
         id: previewBackground
         anchors.fill: parent
         radius: Math.max(0, Config.roundness - workspaceSpacing - 2)
-        color: pressed ? Colors.surfaceContainerHighest : hovered ? Colors.surfaceContainer : Colors.surface
+        color: pressed ? Colors.surfaceBright : hovered ? Colors.surface : Colors.background
         border.color: hovered ? Colors.adapter.primary : Colors.surfaceContainerHighest
         border.width: 2
-        visible: !windowPreview.hasContent
+        visible: !windowPreview.hasContent || !Config.performance.windowPreview || !Config.performance.windowPreview
         clip: true
 
         Behavior on color {
@@ -137,7 +138,7 @@ Item {
     Column {
         anchors.centerIn: parent
         spacing: 4
-        visible: !windowPreview.hasContent
+        visible: !windowPreview.hasContent || !Config.performance.windowPreview
         z: 10
 
         Image {
@@ -193,7 +194,7 @@ Item {
         color: pressed ? Qt.rgba(Colors.surfaceContainerHighest.r, Colors.surfaceContainerHighest.g, Colors.surfaceContainerHighest.b, 0.5) : hovered ? Qt.rgba(Colors.surfaceContainer.r, Colors.surfaceContainer.g, Colors.surfaceContainer.b, 0.2) : "transparent"
         border.color: hovered ? Colors.adapter.primary : Colors.surfaceContainerHighest
         border.width: 2
-        visible: windowPreview.hasContent
+        visible: windowPreview.hasContent && Config.performance.windowPreview
         z: 5
 
         Behavior on color {
@@ -212,7 +213,7 @@ Item {
     // Overlay icon when preview is available (smaller, in corner)
     Image {
         id: overlayIcon
-        visible: windowPreview.hasContent && !root.compactMode
+        visible: windowPreview.hasContent && !root.compactMode && Config.performance.windowPreview
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.margins: 4

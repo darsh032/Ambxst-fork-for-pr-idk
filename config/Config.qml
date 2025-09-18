@@ -74,6 +74,7 @@ Singleton {
 
             property JsonObject performance: JsonObject {
                 property bool blurTransition: true
+                property bool windowPreview: true
             }
         }
     }
