@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.modules.globals
 
 Singleton {
     id: root
@@ -86,9 +87,22 @@ Singleton {
     property bool lightMode: theme.lightMode
     property real opacity: Math.min(Math.max(theme.opacity, 0.1), 1.0)
     property int roundness: theme.roundness
-    property string defaultFont: theme.defaultFont
+    property string defaultFont: theme.font
     property string currentTheme: theme.currentTheme
     property int animDuration: theme.animDuration
+
+    // Detectar cambios en lightMode y ejecutar Matugen
+    onLightModeChanged: {
+        console.log("lightMode changed to:", lightMode);
+        // Ejecutar Matugen con el wallpaper actual si existe un wallpaper manager
+        if (GlobalStates.wallpaperManager) {
+            var wallpaperManager = GlobalStates.wallpaperManager;
+            if (wallpaperManager.currentWallpaper) {
+                console.log("Re-running Matugen due to lightMode change");
+                wallpaperManager.runMatugenForCurrentWallpaper();
+            }
+        }
+    }
 
     // Bar configuration
     property QtObject bar: loader.adapter.bar

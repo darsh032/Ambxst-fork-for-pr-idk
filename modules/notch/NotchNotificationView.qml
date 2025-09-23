@@ -202,7 +202,7 @@ Item {
                         font.family: Config.theme.font
                         font.pixelSize: Config.theme.fontSize
                         font.weight: Font.Bold
-                        color: Colors.adapter.secondary
+                        color: Colors.adapter.outline
                         verticalAlignment: Text.AlignVCenter
                         visible: text !== ""
                         anchors.verticalCenter: parent.verticalCenter
