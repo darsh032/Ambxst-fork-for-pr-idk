@@ -2,6 +2,7 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Qt.labs.platform 1.0
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
@@ -108,8 +109,50 @@ Singleton {
         NotifTimer {}
     }
 
+    FileView {
+        id: notifFileView
+        path: StandardPaths.writableLocation(StandardPaths.ConfigLocation) + "/ambyst/notifications.json"
+        onLoaded: loadNotifications()
+    }
+
     function stringifyList(list) {
         return JSON.stringify(list.map(notif => notifToJSON(notif)), null, 2);
+    }
+
+    function jsonToNotif(json) {
+        return notifComponent.createObject(root, {
+            "id": json.id,
+            "actions": json.actions,
+            "appIcon": json.appIcon,
+            "appName": json.appName,
+            "body": json.body,
+            "image": json.image,
+            "summary": json.summary,
+            "time": json.time,
+            "urgency": json.urgency,
+            "popup": false  // No popup para notificaciones cargadas
+        });
+    }
+
+    function saveNotifications() {
+        notifFileView.setText(stringifyList(root.list));
+    }
+
+    function loadNotifications() {
+        try {
+            const data = JSON.parse(notifFileView.text());
+            root.list = data.map(jsonToNotif);
+            // Set idOffset to max id + 1
+            let maxId = 0;
+            root.list.forEach(notif => {
+                if (notif.id > maxId) maxId = notif.id;
+            });
+            root.idOffset = maxId + 1;
+        } catch (e) {
+            console.log("No saved notifications or error loading:", e);
+            root.list = [];
+            root.idOffset = 0;
+        }
     }
 
     onListChanged: {
@@ -199,6 +242,7 @@ Singleton {
             // Usar Qt.callLater para evitar race conditions al actualizar la lista
             Qt.callLater(() => {
                 root.list = [...root.list, newNotifObject];
+                saveNotifications();
             });
 
             // Popup - ahora se muestra en el notch en lugar de popup window
@@ -220,6 +264,7 @@ Singleton {
         if (index !== -1) {
             root.list.splice(index, 1);
             triggerListChange();
+            saveNotifications();
         }
         if (notifServerIndex !== -1) {
             notifServer.trackedNotifications.values[notifServerIndex].dismiss();
@@ -230,6 +275,7 @@ Singleton {
     function discardAllNotifications() {
         root.list = [];
         triggerListChange();
+        saveNotifications();
         notifServer.trackedNotifications.values.forEach(notif => {
             notif.dismiss();
         });
@@ -317,7 +363,7 @@ Singleton {
     }
 
     Component.onCompleted: {
-        root.idOffset = 0;
+        notifFileView.reload();
         root.initDone();
     }
 }
