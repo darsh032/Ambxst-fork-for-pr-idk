@@ -293,19 +293,35 @@ Item {
                             spacing: 8
                             visible: expanded
 
-                            Column {
-                                Layout.fillWidth: true
-                                spacing: 4
+                             Column {
+                                 Layout.fillWidth: true
+                                 spacing: 4
 
-                                Text {
-                                    width: parent.width
-                                    text: latestNotification ? latestNotification.summary : ""
-                                    font.family: Config.theme.font
-                                    font.pixelSize: Config.theme.fontSize
-                                    font.weight: Font.Bold
-                                    color: Colors.adapter.primary
-                                    elide: Text.ElideRight
-                                }
+                                 // Fila del summary y timestamp
+                                 RowLayout {
+                                     width: parent.width
+                                     spacing: 4
+
+                                     Text {
+                                         Layout.maximumWidth: parent.width * 0.7
+                                         text: latestNotification ? latestNotification.summary : ""
+                                         font.family: Config.theme.font
+                                         font.pixelSize: Config.theme.fontSize
+                                         font.weight: Font.Bold
+                                         color: Colors.adapter.primary
+                                         elide: Text.ElideRight
+                                     }
+
+                                     Text {
+                                         text: latestNotification ? NotificationUtils.getFriendlyNotifTimeString(latestNotification.time) : ""
+                                         font.family: Config.theme.font
+                                         font.pixelSize: Config.theme.fontSize
+                                         font.weight: Font.Bold
+                                         color: Colors.adapter.outline
+                                         visible: text !== ""
+                                         Layout.alignment: Qt.AlignVCenter
+                                     }
+                                 }
 
                                 // Mostrar todos los body ordenados antiguo a reciente con spacing 4
                                 Column {
@@ -337,16 +353,15 @@ Item {
                             spacing: 4
                             visible: !expanded
 
-                             Text {
-                                 text: (!expanded && notifications.length > 1) ?
-                                       qsTr("%1 • %2").arg(notifications.length).arg(latestNotification ? latestNotification.summary : "") :
-                                       (root.summary || (latestNotification ? latestNotification.summary : ""))
-                                 font.family: Config.theme.font
-                                 font.pixelSize: Config.theme.fontSize
-                                 font.weight: Font.Bold
-                                 color: Colors.adapter.primary
-                                 elide: Text.ElideRight
-                             }
+                              Text {
+                                  Layout.maximumWidth: parent.width * 0.4
+                                  text: root.summary || (latestNotification ? latestNotification.summary : "")
+                                  font.family: Config.theme.font
+                                  font.pixelSize: Config.theme.fontSize
+                                  font.weight: Font.Bold
+                                  color: Colors.adapter.primary
+                                  elide: Text.ElideRight
+                              }
 
                             Text {
                                 text: "•"

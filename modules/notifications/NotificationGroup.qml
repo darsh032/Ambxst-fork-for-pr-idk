@@ -41,6 +41,10 @@ Item {
 
     onValidNotificationsChanged: {}
     property bool expanded: false
+
+    onNotificationCountChanged: {
+        root.expanded = notificationCount === 1;
+    }
     property bool popup: false
     property real padding: 8
     implicitHeight: background.implicitHeight
@@ -76,7 +80,9 @@ Item {
     }
 
     function toggleExpanded() {
-        root.expanded = !root.expanded;
+        if (root.multipleNotifications) {
+            root.expanded = !root.expanded;
+        }
     }
 
     // Escuchar cuando las notificaciones van a hacer timeout
