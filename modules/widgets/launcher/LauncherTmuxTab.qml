@@ -1125,19 +1125,18 @@ Rectangle {
             highlightMoveDuration: Config.animDuration / 2
             highlightMoveVelocity: -1
         }
+    }
 
-        MouseArea {
-            Layout.fillWidth: true
-            Layout.preferredHeight: resultsList.height
-            enabled: root.deleteMode || root.renameMode
-            z: 1000
+    MouseArea {
+        anchors.fill: resultsList
+        enabled: root.deleteMode || root.renameMode
+        z: 1000
 
-            onClicked: {
-                if (root.deleteMode) {
-                    root.cancelDeleteMode();
-                } else if (root.renameMode) {
-                    root.cancelRenameMode();
-                }
+        onClicked: {
+            if (root.deleteMode) {
+                root.cancelDeleteMode();
+            } else if (root.renameMode) {
+                root.cancelRenameMode();
             }
         }
     }
