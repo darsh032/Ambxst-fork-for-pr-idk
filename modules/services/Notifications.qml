@@ -55,6 +55,14 @@ Singleton {
                         cachedImage = cachedData;
                     });
                 }
+
+                // Escuchar cuando la notificación es cerrada por la aplicación
+                notification.closed.connect(function(reason) {
+                    // CloseRequested = 3: la aplicación solicitó cerrar la notificación
+                    if (reason === 3) {
+                        root.discardNotification(id);
+                    }
+                });
             }
         }
     }
