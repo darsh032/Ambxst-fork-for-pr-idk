@@ -1,11 +1,12 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 import Quickshell
+import Quickshell.Widgets
 import Quickshell.Services.Notifications
 import qs.modules.theme
 import qs.modules.services
+import qs.modules.components
 import qs.config
 import "./NotificationAnimation.qml"
 import "./NotificationAppIcon.qml"
@@ -83,42 +84,12 @@ Item {
             }
         }
 
-        Item {
+        DiagonalStripePattern {
+            id: stripeContainer
             anchors.fill: parent
             visible: latestNotification && latestNotification.urgency == NotificationUrgency.Critical
-            clip: true
-            layer.enabled: true
-            layer.effect: OpacityMask {
-                maskSource: Rectangle {
-                    width: background.width
-                    height: background.height
-                    radius: Config.roundness > 4 ? Config.roundness + 4 : 0
-                }
-            }
-
-            Repeater {
-                model: Math.ceil((parent.width + parent.height) / 8)
-
-                Rectangle {
-                    width: 8
-                    height: parent.height * 3
-                    rotation: -45
-                    color: Colors.overError
-                    opacity: 1
-                    x: ((index * 20) - (animationOffset % 20)) - 20
-                    y: -parent.height
-
-                    property real animationOffset: 0
-
-                    NumberAnimation on animationOffset {
-                        from: 0
-                        to: 20
-                        duration: 1000
-                        loops: Animation.Infinite
-                        running: parent.parent.visible
-                    }
-                }
-            }
+            radius: Config.roundness > 4 ? Config.roundness + 4 : 0
+            animationRunning: visible
         }
 
         ColumnLayout {
@@ -182,7 +153,7 @@ Item {
                                     font.family: Config.theme.font
                                     font.pixelSize: Config.theme.fontSize
                                     font.weight: Font.Bold
-                                    color: Colors.primary
+                                    color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.error : Colors.primary
                                     elide: Text.ElideRight
                                     maximumLineCount: 1
                                     wrapMode: Text.NoWrap
@@ -224,6 +195,7 @@ Item {
                             text: latestNotification ? NotificationUtils.processNotificationBody(latestNotification.body, latestNotification.appName) : ""
                             font.family: Config.theme.font
                             font.pixelSize: Config.theme.fontSize
+                            font.weight: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Font.Bold : Font.Normal
                             color: Colors.overBackground
                             wrapMode: onlyNotification ? Text.Wrap : Text.NoWrap
                             maximumLineCount: onlyNotification ? 3 : 1
@@ -296,7 +268,7 @@ Item {
                                         font.family: Config.theme.font
                                         font.pixelSize: Config.theme.fontSize
                                         font.weight: Font.Bold
-                                        color: Colors.primary
+                                        color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.error : Colors.primary
                                         elide: Text.ElideRight
                                     }
 
@@ -324,6 +296,7 @@ Item {
                                             text: NotificationUtils.processNotificationBody(modelData.body || "", modelData.appName)
                                             font.family: Config.theme.font
                                             font.pixelSize: root.fontSize
+                                            font.weight: modelData.urgency == NotificationUrgency.Critical ? Font.Bold : Font.Normal
                                             color: Colors.overBackground
                                             wrapMode: Text.Wrap
                                             maximumLineCount: 3
@@ -347,7 +320,7 @@ Item {
                                 font.family: Config.theme.font
                                 font.pixelSize: Config.theme.fontSize
                                 font.weight: Font.Bold
-                                color: Colors.primary
+                                color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.error : Colors.primary
                                 elide: Text.ElideRight
                             }
 
@@ -364,6 +337,7 @@ Item {
                                 text: latestNotification ? NotificationUtils.processNotificationBody(latestNotification.body || "").replace(/\n/g, ' ') : ""
                                 font.family: Config.theme.font
                                 font.pixelSize: root.fontSize
+                                font.weight: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Font.Bold : Font.Normal
                                 color: Colors.overBackground
                                 wrapMode: Text.NoWrap
                                 elide: Text.ElideRight

@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 import Quickshell
+import Quickshell.Widgets
 import Quickshell.Services.Notifications
 import qs.modules.theme
 import qs.modules.services
@@ -378,42 +378,12 @@ Item {
                                 width: parent.width
                                 implicitHeight: mainContentRow.implicitHeight
 
-                                Item {
+                                DiagonalStripePattern {
+                                    id: notchStripeContainer
                                     anchors.fill: parent
                                     visible: notification && notification.urgency == NotificationUrgency.Critical
-                                    clip: true
-                                    layer.enabled: true
-                                    layer.effect: OpacityMask {
-                                        maskSource: Rectangle {
-                                            width: mainContentRow.width
-                                            height: mainContentRow.height
-                                            radius: Config.roundness > 4 ? Config.roundness + 4 : 0
-                                        }
-                                    }
-
-                                    Repeater {
-                                        model: Math.ceil((parent.width + parent.height) / 8)
-
-                                        Rectangle {
-                                            width: 8
-                                            height: parent.height * 3
-                                            rotation: -45
-                                            color: Colors.overError
-                                            opacity: 1
-                                            x: ((index * 20) - (animationOffset % 20)) - 20
-                                            y: -parent.height
-
-                                            property real animationOffset: 0
-
-                                            NumberAnimation on animationOffset {
-                                                from: 0
-                                                to: 20
-                                                duration: 1000
-                                                loops: Animation.Infinite
-                                                running: parent.parent.visible
-                                            }
-                                        }
-                                    }
+                                    radius: Config.roundness > 4 ? Config.roundness + 4 : 0
+                                    animationRunning: visible
                                 }
 
                                 RowLayout {
@@ -471,7 +441,7 @@ Item {
                                                         font.family: Config.theme.font
                                                         font.pixelSize: Config.theme.fontSize
                                                         font.weight: Font.Bold
-                                                        color: Colors.primary
+                                                        color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.error : Colors.primary
                                                         elide: Text.ElideRight
                                                         maximumLineCount: 1
                                                         wrapMode: Text.NoWrap
@@ -513,7 +483,7 @@ Item {
                                                 text: notification ? processNotificationBody(notification.body, notification.appName) : ""
                                                 font.family: Config.theme.font
                                                 font.pixelSize: Config.theme.fontSize
-                                                font.weight: Font.Normal
+                                                font.weight: notification && notification.urgency == NotificationUrgency.Critical ? Font.Bold : Font.Normal
                                                 color: Colors.overBackground
                                                 wrapMode: Text.Wrap
                                                 maximumLineCount: 3
@@ -534,7 +504,7 @@ Item {
                                                 font.family: Config.theme.font
                                                 font.pixelSize: Config.theme.fontSize
                                                 font.weight: Font.Bold
-                                                color: Colors.primary
+                                                color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.error : Colors.primary
                                                 elide: Text.ElideRight
                                             }
 
@@ -551,6 +521,7 @@ Item {
                                                 text: notification ? processNotificationBody(notification.body || "").replace(/\n/g, ' ') : ""
                                                 font.family: Config.theme.font
                                                 font.pixelSize: Config.theme.fontSize
+                                                font.weight: notification && notification.urgency == NotificationUrgency.Critical ? Font.Bold : Font.Normal
                                                 color: Colors.overBackground
                                                 wrapMode: Text.NoWrap
                                                 elide: Text.ElideRight
