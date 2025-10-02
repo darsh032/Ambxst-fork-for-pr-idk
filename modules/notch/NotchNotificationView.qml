@@ -688,7 +688,8 @@ Item {
                             width: 8
                             height: 8
                             radius: 4
-                            color: index === root.currentIndex ? Colors.primary : Colors.surfaceBright
+                            property bool isCritical: Notifications.popupList[index] && Notifications.popupList[index].urgency == NotificationUrgency.Critical
+                            color: isCritical ? Colors.criticalRed : (index === root.currentIndex ? Colors.primary : Colors.surfaceBright)
 
                             Behavior on color {
                                 ColorAnimation {
