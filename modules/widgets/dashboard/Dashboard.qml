@@ -41,12 +41,17 @@ NotchAnimationBehavior {
 
     // Focus search input when dashboard opens to wallpapers tab
     onIsVisibleChanged: {
-        if (isVisible && GlobalStates.dashboardCurrentTab === 3) {
-            Qt.callLater(() => {
-                if (stack.currentItem && stack.currentItem.focusSearch) {
-                    stack.currentItem.focusSearch();
-                }
-            });
+        if (isVisible) {
+            if (GlobalStates.dashboardCurrentTab === 0) {
+                Notifications.hideAllPopups();
+            }
+            if (GlobalStates.dashboardCurrentTab === 3) {
+                Qt.callLater(() => {
+                    if (stack.currentItem && stack.currentItem.focusSearch) {
+                        stack.currentItem.focusSearch();
+                    }
+                });
+            }
         }
     }
 
@@ -200,16 +205,17 @@ NotchAnimationBehavior {
                     if (index >= 0 && index < components.length && index !== root.state.currentTab) {
                         let targetComponent = components[index];
 
-                        // Determinar dirección de la transición
                         let direction = index > root.state.currentTab ? StackView.PushTransition : StackView.PopTransition;
 
-                        // Usar replace para evitar acumulación en el stack
                         stack.replace(targetComponent, {}, direction);
 
                         root.state.currentTab = index;
                         GlobalStates.dashboardCurrentTab = index;
 
-                        // Auto-focus search input when switching to wallpapers tab
+                        if (index === 0) {
+                            Notifications.hideAllPopups();
+                        }
+
                         if (index === 3) {
                             Qt.callLater(() => {
                                 if (stack.currentItem && stack.currentItem.focusSearch) {

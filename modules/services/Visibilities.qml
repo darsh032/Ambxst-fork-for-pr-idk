@@ -71,7 +71,6 @@ Singleton {
                 focusedScreen.launcher = true;
             } else if (moduleName === "dashboard") {
                 focusedScreen.dashboard = true;
-                Notifications.hideAllPopups();
             } else if (moduleName === "overview") {
                 focusedScreen.overview = true;
             } else if (moduleName === "powermenu") {
