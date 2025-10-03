@@ -9,20 +9,31 @@ Singleton {
     id: root
 
     property alias loader: loader
+    property bool initialLoadComplete: false
+
+    Process {
+        id: checkFile
+        running: true
+        command: ["test", "-f", Qt.resolvedUrl("../config.json").toString().replace("file://", "")]
+
+        onExited: exitCode => {
+            if (exitCode !== 0) {
+                console.log("config.json not found, creating with default values...");
+                loader.writeAdapter();
+            }
+            root.initialLoadComplete = true;
+        }
+    }
 
     FileView {
         id: loader
         path: Qt.resolvedUrl("../config.json")
-        blockLoading: true
         atomicWrites: true
         watchChanges: true
         onFileChanged: reload()
-        onAdapterUpdated: writeAdapter()
-
-        Component.onCompleted: {
-            if (!loader.loaded || loader.error === FileViewError.FileNotFound) {
-                console.log("config.json not found, creating with default values...")
-                loader.writeAdapter()
+        onAdapterUpdated: {
+            if (root.initialLoadComplete) {
+                loader.writeAdapter();
             }
         }
 
@@ -51,7 +62,7 @@ Singleton {
                 property string position: "top"
                 property string launcherIcon: ""
                 property bool showBackground: false
-                property real bgOpacity: 0.75
+                property real bgOpacity: 0.5
                 property bool verbose: true
                 property list<string> screenList: []
                 property bool enableFirefoxPlayer: false
