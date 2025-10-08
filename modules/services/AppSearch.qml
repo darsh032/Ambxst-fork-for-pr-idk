@@ -108,6 +108,11 @@ Singleton {
             results.push({
                 name: app.name,
                 icon: app.icon || "application-x-executable",
+                id: app.id,
+                execString: app.execString,
+                comment: app.comment || "",
+                categories: app.categories || [],
+                runInTerminal: app.runInTerminal || false,
                 execute: () => {
                     app.execute();
                 }
@@ -191,6 +196,11 @@ Singleton {
                     name: app.name,
                     icon: app.icon || "application-x-executable",
                     score: score,
+                    id: app.id,
+                    execString: app.execString,
+                    comment: app.comment || "",
+                    categories: app.categories || [],
+                    runInTerminal: app.runInTerminal || false,
                     execute: () => {
                         app.execute();
                     }

@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell
+import Quickshell.Io
 import qs.modules.theme
 import qs.modules.components
 import qs.modules.globals
@@ -13,6 +15,9 @@ Rectangle {
     property string searchText: GlobalStates.launcherSearchText
     property bool showResults: searchText.length > 0
     property int selectedIndex: GlobalStates.launcherSelectedIndex
+    property bool optionsMenuOpen: false
+    property int menuItemIndex: -1
+    property bool menuJustClosed: false
     signal itemSelected
 
     onSelectedIndexChanged: {
@@ -161,6 +166,7 @@ Rectangle {
             Layout.preferredHeight: 5 * 48
             visible: true
             clip: true
+            interactive: !root.optionsMenuOpen
             cacheBuffer: 96
             reuseItems: true
 
@@ -188,15 +194,85 @@ Rectangle {
                     id: mouseArea
                     anchors.fill: parent
                     hoverEnabled: true
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
 
                     onEntered: {
-                        GlobalStates.launcherSelectedIndex = index;
-                        root.selectedIndex = index;
-                        resultsList.currentIndex = index;
+                        if (!root.optionsMenuOpen) {
+                            GlobalStates.launcherSelectedIndex = index;
+                            root.selectedIndex = index;
+                            resultsList.currentIndex = index;
+                        }
                     }
-                    onClicked: {
-                        modelData.execute();
-                        root.itemSelected();
+                    onClicked: mouse => {
+                        if (menuJustClosed) {
+                            return;
+                        }
+
+                        if (mouse.button === Qt.LeftButton) {
+                            modelData.execute();
+                            root.itemSelected();
+                        } else if (mouse.button === Qt.RightButton) {
+                            root.menuItemIndex = index;
+                            root.optionsMenuOpen = true;
+                            contextMenu.popup(mouse.x, mouse.y);
+                        }
+                    }
+
+                    OptionsMenu {
+                        id: contextMenu
+
+                        onClosed: {
+                            root.optionsMenuOpen = false;
+                            root.menuItemIndex = -1;
+                            root.menuJustClosed = true;
+                            menuClosedTimer.start();
+                        }
+
+                        Timer {
+                            id: menuClosedTimer
+                            interval: 100
+                            repeat: false
+                            onTriggered: {
+                                root.menuJustClosed = false;
+                            }
+                        }
+
+                        items: [
+                            {
+                                text: "Launch",
+                                icon: Icons.launch,
+                                highlightColor: Colors.primary,
+                                textColor: Colors.overPrimary,
+                                onTriggered: function () {
+                                    modelData.execute();
+                                    root.itemSelected();
+                                }
+                            },
+                            {
+                                text: "Create Shortcut",
+                                icon: Icons.shortcut,
+                                highlightColor: Colors.secondary,
+                                textColor: Colors.overSecondary,
+                                onTriggered: function () {
+                                    let desktopDir = Quickshell.env("XDG_DESKTOP_DIR") || Quickshell.env("HOME") + "/Desktop";
+                                    let fileName = modelData.id + ".desktop";
+                                    let filePath = desktopDir + "/" + fileName;
+                                    
+                                    let desktopContent = "[Desktop Entry]\n" +
+                                        "Type=Application\n" +
+                                        "Name=" + modelData.name + "\n" +
+                                        "Exec=" + modelData.execString + "\n" +
+                                        "Icon=" + modelData.icon + "\n" +
+                                        (modelData.comment ? "Comment=" + modelData.comment + "\n" : "") +
+                                        (modelData.categories.length > 0 ? "Categories=" + modelData.categories.join(";") + ";\n" : "") +
+                                        (modelData.runInTerminal ? "Terminal=true\n" : "");
+                                    
+                                    let writeCmd = "echo '" + desktopContent.replace(/'/g, "'\\''") + "' > \"" + filePath + "\" && chmod +x \"" + filePath + "\"";
+                                    copyProcess.command = ["sh", "-c", writeCmd];
+                                    copyProcess.running = true;
+                                }
+                            }
+                        ]
                     }
                 }
 
@@ -268,7 +344,7 @@ Rectangle {
             highlight: Rectangle {
                 color: Colors.primary
                 radius: Config.roundness > 0 ? Config.roundness + 4 : 0
-                visible: root.selectedIndex >= 0
+                visible: root.selectedIndex >= 0 && (root.optionsMenuOpen ? root.selectedIndex === root.menuItemIndex : true)
             }
 
             highlightMoveDuration: Config.animDuration / 2
@@ -279,5 +355,16 @@ Rectangle {
     Component.onCompleted: {
         // Focus the input when component is ready
         focusSearchInput();
+    }
+
+    Process {
+        id: copyProcess
+        running: false
+
+        onExited: function (code) {
+            if (code === 0) {
+                root.itemSelected();
+            }
+        }
     }
 }
