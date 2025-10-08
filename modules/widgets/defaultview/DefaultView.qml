@@ -52,6 +52,12 @@ Item {
             } else if (event.key === Qt.Key_Right && activePlayer.canSeek) {
                 activePlayer.position = Math.min(activePlayer.length, activePlayer.position + 10);
                 event.accepted = true;
+            } else if (event.key === Qt.Key_Up && activePlayer.canGoPrevious) {
+                activePlayer.previous();
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Down && activePlayer.canGoNext) {
+                activePlayer.next();
+                event.accepted = true;
             }
         }
     }

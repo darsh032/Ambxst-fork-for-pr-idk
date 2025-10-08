@@ -44,6 +44,12 @@ NotchAnimationBehavior {
             } else if (event.key === Qt.Key_Right && MprisController.activePlayer.canSeek) {
                 MprisController.activePlayer.position = Math.min(MprisController.activePlayer.length, MprisController.activePlayer.position + 10);
                 event.accepted = true;
+            } else if (event.key === Qt.Key_Up && MprisController.canGoPrevious) {
+                MprisController.previous();
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Down && MprisController.canGoNext) {
+                MprisController.next();
+                event.accepted = true;
             }
         }
     }
