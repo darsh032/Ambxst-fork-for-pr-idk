@@ -36,7 +36,13 @@ MouseArea {
 
     IconImage {
         id: trayIcon
-        source: root.item.icon
+        source: {
+            const iconPath = root.item.icon.toString();
+            if (iconPath.includes("spotify")) {
+                return Quickshell.iconPath("spotify-client");
+            }
+            return root.item.icon;
+        }
         anchors.centerIn: parent
         width: parent.width
         height: parent.height
