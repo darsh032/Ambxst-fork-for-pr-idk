@@ -9,6 +9,11 @@ import qs.config
 PanelWindow {
     id: desktop
 
+    property int barHeight: Config.bar.showBackground ? 44 : 40
+    property int barMargin: 32
+    property int bottomTextMargin: 48
+    property string barPosition: ["top", "bottom", "left", "right"].includes(Config.bar.position) ? Config.bar.position : "top"
+
     anchors {
         top: true
         left: true
@@ -29,30 +34,16 @@ PanelWindow {
         DesktopService.maxRowsHint = Qt.binding(() => iconContainer.maxRows);
     }
 
-    Item {
+    Flow {
         id: iconContainer
         anchors.fill: parent
-        anchors.leftMargin: Config.desktop.spacing
-        anchors.rightMargin: Config.desktop.spacing
+        anchors.topMargin: barPosition === "top" ? barHeight + barMargin : 0
+        anchors.bottomMargin: barPosition === "bottom" ? barHeight + barMargin : bottomTextMargin
+        anchors.leftMargin: barPosition === "left" ? barHeight + barMargin : Config.desktop.spacing
+        anchors.rightMargin: barPosition === "right" ? barHeight + barMargin : Config.desktop.spacing
 
-        property real cellWidth: Config.desktop.iconSize + Config.desktop.spacing
-        
-        property int maxRows: {
-            var minSpacing = 32;
-            var iconHeight = Config.desktop.iconSize + 40;
-            var availableHeight = parent.height;
-            
-            var rows = Math.floor(availableHeight / (iconHeight + minSpacing));
-            console.log("Desktop maxRows calculated:", rows, "availableHeight:", availableHeight);
-            return rows < 1 ? 1 : rows;
-        }
-        
-        property real cellHeight: parent.height / maxRows
-        property int maxColumns: Math.floor(width / cellWidth)
-
-        onMaxRowsChanged: {
-            console.log("Desktop grid: maxRows =", maxRows, "maxColumns =", maxColumns);
-        }
+        flow: Flow.TopToBottom
+        spacing: Config.desktop.spacing
 
         Repeater {
             model: DesktopService.items
@@ -63,42 +54,12 @@ PanelWindow {
                 required property string type
                 required property string icon
                 required property bool isDesktopFile
-                required property int gridX
-                required property int gridY
                 required property int index
 
                 itemName: name
                 itemPath: path
                 itemType: type
                 itemIcon: icon
-
-                x: gridX * iconContainer.cellWidth
-                y: gridY * iconContainer.cellHeight
-
-                Behavior on x {
-                    enabled: !dragging
-                    NumberAnimation {
-                        duration: Config.animDuration
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                Behavior on y {
-                    enabled: !dragging
-                    NumberAnimation {
-                        duration: Config.animDuration
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                onPositionChanged: (newGridX, newGridY) => {
-                    var clampedX = Math.max(0, Math.min(newGridX, iconContainer.maxColumns - 1));
-                    var clampedY = Math.max(0, Math.min(newGridY, iconContainer.maxRows - 1));
-                    
-                    DesktopService.updateIconPosition(itemPath, clampedX, clampedY);
-                    DesktopService.items.setProperty(index, "gridX", clampedX);
-                    DesktopService.items.setProperty(index, "gridY", clampedY);
-                }
 
                 onActivated: {
                     console.log("Activated:", itemName);
