@@ -9,25 +9,43 @@ Canvas {
     property color color: Colors.primaryFixed
     property real lineWidth: 4
     property real fullLength: width
-    
+    property real speed: 2.4 // unidades de fase por segundo
+
     renderStrategy: Canvas.Cooperative
     renderTarget: Canvas.FramebufferObject
     antialiasing: true
-    
+
     property real phase: 0
-    
+
     onWidthChanged: requestPaint()
     onHeightChanged: requestPaint()
     onColorChanged: requestPaint()
     onLineWidthChanged: requestPaint()
-    
-    Component.onCompleted: requestPaint()
+
+    Component.onCompleted: {
+        animationTimer.start();
+        requestPaint();
+    }
+
+    Timer {
+        id: animationTimer
+        interval: 42 // ~24 FPS
+        running: false
+        repeat: true
+        onTriggered: {
+            // Calcula el incremento de fase basado en la velocidad y el intervalo
+            var deltaTime = interval / 1000.0; // en segundos
+            root.phase += root.speed * deltaTime;
+            root.requestPaint();
+        }
+    }
 
     onPaint: {
-        if (width <= 0 || height <= 0) return;
-        
+        if (width <= 0 || height <= 0)
+            return;
+
         var ctx = getContext("2d");
-        
+
         ctx.save();
         ctx.clearRect(0, 0, width, height);
 
@@ -40,7 +58,7 @@ Canvas {
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
         ctx.beginPath();
-        
+
         for (var x = ctx.lineWidth / 2; x <= root.width - ctx.lineWidth / 2; x += 2) {
             var waveY = centerY + amplitude * Math.sin(frequency * 2 * Math.PI * x / root.fullLength + root.phase);
             if (x === ctx.lineWidth / 2)
@@ -50,7 +68,5 @@ Canvas {
         }
         ctx.stroke();
         ctx.restore();
-        
-        root.phase += 0.04;
     }
 }
