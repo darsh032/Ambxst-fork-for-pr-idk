@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import qs.modules.bar
 import qs.modules.services
 import qs.modules.components
 import qs.modules.theme
@@ -30,6 +29,9 @@ Item {
             anchors.fill: parent
             anchors.margins: 8
             value: 0
+            wavy: true
+            wavyAmplitude: 0.5
+            wavyFrequency: 1.0
             icon: {
                 if (Audio.sink?.audio?.muted)
                     return Icons.speakerSlash;

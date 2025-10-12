@@ -28,6 +28,8 @@ RowLayout {
     property color progressColor: Colors.primary
     property color backgroundColor: Colors.surfaceBright
     property bool wavy: false
+    property real wavyAmplitude: 0.8
+    property real wavyFrequency: 8
 
     Text {
         id: iconText
@@ -67,9 +69,9 @@ RowLayout {
             id: wavyFill
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            frequency: 8
+            frequency: root.wavyFrequency
             color: root.progressColor
-            amplitudeMultiplier: 0.8
+            amplitudeMultiplier: root.wavyAmplitude
             height: parent.height * 8
             width: Math.max(0, parent.width * root.progressRatio - root.dragSeparation)
             lineWidth: parent.height
