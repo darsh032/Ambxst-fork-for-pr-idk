@@ -32,17 +32,17 @@ PaneRect {
         }
     }
 
-     Timer {
-         running: player.isPlaying
-         interval: 1000
-         repeat: true
-         onTriggered: {
-             if (!positionSlider.isDragging) {
-                 positionSlider.value = player.length > 0 ? Math.min(1.0, player.position / player.length) : 0;
-             }
-             MprisController.activePlayer?.positionChanged();
-         }
-     }
+    Timer {
+        running: player.isPlaying
+        interval: 1000
+        repeat: true
+        onTriggered: {
+            if (!positionSlider.isDragging) {
+                positionSlider.value = player.length > 0 ? Math.min(1.0, player.position / player.length) : 0;
+            }
+            MprisController.activePlayer?.positionChanged();
+        }
+    }
 
     ClippingRectangle {
         anchors.fill: parent
@@ -55,32 +55,32 @@ PaneRect {
             anchors.margins: 4
             visible: !MprisController.activePlayer
 
-             WavyLine {
-                 id: noPlayerWavyLine
-                 anchors.left: parent.left
-                 anchors.right: parent.right
-                 anchors.verticalCenter: parent.verticalCenter
-                 frequency: 2
-                 color: Colors.outline
-                 amplitudeMultiplier: 1
-                 height: 16
-                 lineWidth: 4
-                 fullLength: width
-                 visible: true
-                 opacity: 1.0
+            WavyLine {
+                id: noPlayerWavyLine
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                frequency: 2
+                color: Colors.outline
+                amplitudeMultiplier: 1
+                height: 16
+                lineWidth: 4
+                fullLength: width
+                visible: true
+                opacity: 1.0
 
-                 Behavior on color {
-                     ColorAnimation {
-                         duration: Config.animDuration
-                         easing.type: Easing.OutQuart
-                     }
-                 }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Config.animDuration
+                        easing.type: Easing.OutQuart
+                    }
+                }
 
-                 FrameAnimation {
-                     running: noPlayerWavyLine.visible
-                     onTriggered: noPlayerWavyLine.requestPaint()
-                 }
-             }
+                FrameAnimation {
+                    running: noPlayerWavyLine.visible
+                    onTriggered: noPlayerWavyLine.requestPaint()
+                }
+            }
         }
 
         Image {
@@ -260,28 +260,28 @@ PaneRect {
                     }
                 }
 
-                 StyledSlider {
-                     id: positionSlider
-                     Layout.fillWidth: true
-                     Layout.preferredHeight: 4
+                StyledSlider {
+                    id: positionSlider
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 4
 
-                     value: player.length > 0 ? Math.min(1.0, player.position / player.length) : 0
-                     progressColor: player.hasArtwork && player.playerColors ? player.playerColors.primary : Colors.primaryFixed
-                     backgroundColor: player.hasArtwork && player.playerColors ? player.playerColors.shadow : Colors.shadow
-                     wavy: player.isPlaying
-                     wavyAmplitude: player.isPlaying ? 0.5 : 0.0
-                     wavyFrequency: player.isPlaying ? 4 : 0
-                     heightMultiplier: MprisController.activePlayer ? 8 : 4
-                     resizeAnim: false
-                     scroll: false
-                     tooltip: false
+                    value: player.length > 0 ? Math.min(1.0, player.position / player.length) : 0
+                    progressColor: player.hasArtwork && player.playerColors ? player.playerColors.primary : Colors.primaryFixed
+                    backgroundColor: player.hasArtwork && player.playerColors ? player.playerColors.shadow : Colors.shadow
+                    wavy: player.isPlaying
+                    wavyAmplitude: player.isPlaying ? 0.5 : 0.0
+                    wavyFrequency: player.isPlaying ? 8 : 0
+                    heightMultiplier: MprisController.activePlayer ? 8 : 4
+                    resizeAnim: false
+                    scroll: false
+                    tooltip: false
 
-                     onValueChanged: {
-                         if (isDragging && MprisController.activePlayer && MprisController.activePlayer.canSeek) {
-                             MprisController.activePlayer.position = value * player.length;
-                         }
-                     }
-                 }
+                    onValueChanged: {
+                        if (isDragging && MprisController.activePlayer && MprisController.activePlayer.canSeek) {
+                            MprisController.activePlayer.position = value * player.length;
+                        }
+                    }
+                }
 
                 Text {
                     id: nextBtn
