@@ -41,6 +41,7 @@ Item {
     property bool updateOnRelease: false
     property string iconPos: "start"
     property real size: 100
+    property real thickness: 4
 
     Behavior on wavyAmplitude {
         NumberAnimation {
@@ -80,9 +81,12 @@ Item {
 
             Rectangle {
                 anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
                 width: (1 - root.progressRatio) * parent.width - root.dragSeparation
-                height: parent.height
-                radius: height / 2
+                height: root.thickness
+                radius: Config.roundness / 4
+                topLeftRadius: Config.roundness / 8
+                bottomLeftRadius: Config.roundness / 8
                 color: root.backgroundColor
                 z: 0
 
@@ -104,7 +108,7 @@ Item {
                 amplitudeMultiplier: root.wavyAmplitude
                 height: parent.height * heightMultiplier
                 width: Math.max(0, parent.width * root.progressRatio - root.dragSeparation)
-                lineWidth: parent.height
+                lineWidth: root.thickness
                 fullLength: parent.width
                 visible: root.wavy
                 opacity: 1.0
@@ -128,8 +132,10 @@ Item {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 width: Math.max(0, parent.width * root.progressRatio - root.dragSeparation)
-                height: parent.height
-                radius: height / 2
+                height: root.thickness
+                radius: Config.roundness / 4
+                topRightRadius: Config.roundness / 8
+                bottomRightRadius: Config.roundness / 8
                 color: root.progressColor
                 visible: !root.wavy
                 z: 1
@@ -148,8 +154,8 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 x: parent.width * root.progressRatio - 2
                 width: root.isDragging ? 2 : 4
-                height: root.isDragging ? 20 : 16
-                radius: width / 2
+                height: root.isDragging ? Math.max(20, root.thickness + 12) : Math.max(16, root.thickness + 8)
+                radius: Config.roundness
                 color: Colors.overBackground
                 z: 2
 
