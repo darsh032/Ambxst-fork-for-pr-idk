@@ -311,6 +311,23 @@ Rectangle {
                                         }
                                     }
                                 }
+
+                                ScrollBar.vertical: ScrollBar {
+                                    parent: schemeFlickable
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 2
+                                    height: parent.height
+                                    width: 8
+                                    policy: ScrollBar.AlwaysOn
+                                    background: Rectangle {
+                                        color: Colors.surfaceVariant
+                                        radius: 4
+                                    }
+                                    contentItem: Rectangle {
+                                        color: Colors.primary
+                                        radius: 4
+                                    }
+                                }
                             }
 
                             Behavior on height {
