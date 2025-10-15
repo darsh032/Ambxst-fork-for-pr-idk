@@ -133,32 +133,7 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
 
-            property int verticalShift: isBarVertical && !notchPanel.screenNotchOpen && !notchPanel.hasActiveNotifications && !notchContainer.isHovered ? (Config.bar.showBackground ? 44 : 40) - 2 : 0
-
-            Behavior on verticalShift {
-                NumberAnimation {
-                    duration: Config.animDuration
-                    easing.type: Easing.OutQuart
-                }
-            }
-
-            function updateVerticalShift() {
-                verticalShift = isBarVertical && !notchPanel.screenNotchOpen && !notchPanel.hasActiveNotifications && !notchContainer.isHovered ? (Config.bar.showBackground ? 44 : 40) - 2 : 0
-            }
-
-            Connections {
-                target: notchPanel
-                function onIsBarVerticalChanged() { updateVerticalShift() }
-                function onScreenNotchOpenChanged() { updateVerticalShift() }
-                function onHasActiveNotificationsChanged() { updateVerticalShift() }
-            }
-
-            Connections {
-                target: notchContainer
-                function onIsHoveredChanged() { updateVerticalShift() }
-            }
-
-            anchors.topMargin: (Config.notchTheme === "default" ? 0 : (Config.notchTheme === "island" ? 4 : 0)) - verticalShift
+             anchors.topMargin: (Config.notchTheme === "default" ? 0 : (Config.notchTheme === "island" ? 4 : 0))
 
             layer.enabled: true
             layer.effect: Shadow {}
