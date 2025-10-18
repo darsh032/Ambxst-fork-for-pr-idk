@@ -263,44 +263,4 @@ Item {
             }
         }
     }
-
-    // Volume control shortcuts
-    GlobalShortcut {
-        id: volumeUpShortcut
-        appid: "ambxst"
-        name: "vol-up"
-        description: "Increase volume by 5%"
-
-        onPressed: {
-            if (Audio.sink?.audio) {
-                Audio.sink.audio.volume = Math.min(1, Audio.sink.audio.volume + 0.05);
-            }
-        }
-    }
-
-    GlobalShortcut {
-        id: volumeDownShortcut
-        appid: "ambxst"
-        name: "vol-down"
-        description: "Decrease volume by 5%"
-
-        onPressed: {
-            if (Audio.sink?.audio) {
-                Audio.sink.audio.volume = Math.max(0, Audio.sink.audio.volume - 0.05);
-            }
-        }
-    }
-
-    GlobalShortcut {
-        id: volumeMuteShortcut
-        appid: "ambxst"
-        name: "vol-mute"
-        description: "Toggle mute"
-
-        onPressed: {
-            if (Audio.sink?.audio) {
-                Audio.sink.audio.muted = !Audio.sink.audio.muted;
-            }
-        }
-    }
 }
