@@ -245,19 +245,8 @@ PanelWindow {
                                     layerEnabled: Config.bar.showBackground
                                 }
 
-                                SysTray {
-                                    bar: panel
-                                    layer.enabled: false
-                                }
-
                                 Weather {
                                     id: weatherComponent
-                                    bar: panel
-                                    layer.enabled: false
-                                }
-
-                                Clock {
-                                    id: clockComponent
                                     bar: panel
                                     layer.enabled: false
                                 }
@@ -265,6 +254,17 @@ PanelWindow {
                         }
                     }
                 }
+            }
+
+            SysTray {
+                bar: panel
+                layer.enabled: false
+            }
+
+            Clock {
+                id: clockComponent
+                bar: panel
+                layer.enabled: false
             }
 
             PowerButton {
@@ -382,19 +382,8 @@ PanelWindow {
                                     layerEnabled: Config.bar.showBackground
                                 }
 
-                                SysTray {
-                                    bar: panel
-                                    layer.enabled: false
-                                }
-
                                 Weather {
                                     id: weatherComponentVert
-                                    bar: panel
-                                    layer.enabled: false
-                                }
-
-                                Clock {
-                                    id: clockComponentVert
                                     bar: panel
                                     layer.enabled: false
                                 }
@@ -402,6 +391,17 @@ PanelWindow {
                         }
                     }
                 }
+            }
+
+            SysTray {
+                bar: panel
+                layer.enabled: false
+            }
+
+            Clock {
+                id: clockComponentVert
+                bar: panel
+                layer.enabled: false
             }
 
             PowerButton {
