@@ -129,4 +129,5 @@ QtObject {
     readonly property string sun: ""
     readonly property string sunDim: ""
     readonly property string moon: ""
+    readonly property string user: ""
 }

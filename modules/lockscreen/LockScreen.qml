@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
@@ -82,182 +84,192 @@ PanelWindow {
         }
     }
 
-    // Left sidebar
-    Rectangle {
-        id: sidebar
+    // Password input container (slides from bottom)
+    Item {
+        id: passwordContainer
         anchors {
-            top: parent.top
+            horizontalCenter: parent.horizontalCenter
             bottom: parent.bottom
+            bottomMargin: 32
         }
-        x: (GlobalStates.lockscreenVisible && !unlocking) ? 0 : -width
-        width: 350
-        color: Colors.background
+        width: 400
+        height: 80
 
-        Behavior on x {
-            NumberAnimation {
-                duration: Config.animDuration
-                easing.type: Easing.OutCubic
+        transform: Translate {
+            y: (GlobalStates.lockscreenVisible && !unlocking) ? 0 : passwordContainer.height + 32
+
+            Behavior on y {
+                NumberAnimation {
+                    duration: Config.animDuration
+                    easing.type: Easing.OutCubic
+                }
             }
         }
 
-        Column {
+        // Password input with avatar
+        BgRect {
+            id: passwordInputBox
             anchors.centerIn: parent
-            spacing: 24
+            width: parent.width
+            height: 80
+            radius: Config.roundness > 0 ? (height / 2) * (Config.roundness / 16) : 0
 
-            // Avatar
-            Rectangle {
-                id: avatarContainer
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: 200
-                height: 200
-                radius: Config.roundness > 0 ? (width / 2) * (Config.roundness / 16) : 0
-                color: "transparent"
-                border.width: 4
-                border.color: Colors.primary
+            property real shakeOffset: 0
 
-                Image {
-                    id: userAvatar
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    source: `file://${Quickshell.env("HOME")}/.face.icon`
-                    fillMode: Image.PreserveAspectCrop
-                    smooth: true
-                    asynchronous: true
-                    visible: status === Image.Ready
+            transform: Translate {
+                x: passwordInputBox.shakeOffset
+            }
 
-                    layer.enabled: true
-                    layer.effect: MultiEffect {
-                        maskEnabled: true
-                        maskThresholdMin: 0.5
-                        maskSpreadAtMin: 1.0
-                        maskSource: ShaderEffectSource {
-                            sourceItem: Rectangle {
-                                width: userAvatar.width
-                                height: userAvatar.height
-                                radius: Config.roundness > 0 ? (width / 2) * (Config.roundness / 16) : 0
+            Row {
+                anchors.fill: parent
+                anchors.margins: 16
+                spacing: 12
+
+                // Avatar (48x48)
+                Rectangle {
+                    id: avatarContainer
+                    width: 48
+                    height: 48
+                    radius: Config.roundness > 0 ? (height / 2) * (Config.roundness / 16) : 0
+                    color: "transparent"
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Image {
+                        id: userAvatar
+                        anchors.fill: parent
+                        source: `file://${Quickshell.env("HOME")}/.face.icon`
+                        fillMode: Image.PreserveAspectCrop
+                        smooth: true
+                        asynchronous: true
+                        visible: status === Image.Ready
+
+                        layer.enabled: true
+                        layer.effect: MultiEffect {
+                            maskEnabled: true
+                            maskThresholdMin: 0.5
+                            maskSpreadAtMin: 1.0
+                            maskSource: ShaderEffectSource {
+                                sourceItem: Rectangle {
+                                    width: userAvatar.width
+                                    height: userAvatar.height
+                                    radius: Config.roundness > 0 ? (height / 2) * (Config.roundness / 16) : 0
+                                }
+                            }
+                        }
+                    }
+
+                    // Fallback icon if image not found
+                    Text {
+                        anchors.centerIn: parent
+                        text: "👤"
+                        font.pixelSize: 24
+                        visible: userAvatar.status !== Image.Ready
+                    }
+                }
+
+                // Password field
+                Rectangle {
+                    width: parent.width - avatarContainer.width - parent.spacing
+                    height: parent.height
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: Colors.surface
+                    radius: Config.roundness > 0 ? (height / 2) * (Config.roundness / 16) : 0
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 16
+                        anchors.rightMargin: 16
+                        spacing: 8
+
+                        // User icon
+                        Text {
+                            text: Icons.user
+                            font.family: Icons.font
+                            font.pixelSize: 24
+                            color: Colors.overBackground
+                            Layout.preferredWidth: 24
+                            Layout.preferredHeight: 24
+                            Layout.alignment: Qt.AlignVCenter
+                            z: 10
+                        }
+
+                        // Text field
+                        TextField {
+                            id: passwordInput
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
+                            placeholderText: usernameCollector.text.trim()
+                            placeholderTextColor: Colors.outline
+                            font.family: Config.theme.font
+                            font.pixelSize: Config.theme.fontSize
+                            color: Colors.overBackground
+                            background: null
+                            echoMode: TextInput.Password
+                            verticalAlignment: TextInput.AlignVCenter
+
+                            onAccepted: {
+                                if (passwordInput.text === "123") {
+                                    unlocking = true;
+                                    unlockResetTimer.start();
+                                    GlobalStates.lockscreenVisible = false;
+                                    passwordInput.text = "";
+                                } else {
+                                    wrongPasswordAnim.start();
+                                }
+                            }
+
+                            Keys.onPressed: event => {
+                                if (event.key === Qt.Key_Escape) {
+                                    unlocking = true;
+                                    unlockResetTimer.start();
+                                    GlobalStates.lockscreenVisible = false;
+                                    passwordInput.text = "";
+                                    event.accepted = true;
+                                }
+                            }
+
+                            Component.onCompleted: {
+                                if (GlobalStates.lockscreenVisible) {
+                                    passwordInput.forceActiveFocus();
+                                }
                             }
                         }
                     }
                 }
-
-                // Fallback icon if image not found
-                Text {
-                    anchors.centerIn: parent
-                    text: "👤"
-                    font.pixelSize: 64
-                    visible: userAvatar.status !== Image.Ready
-                }
             }
 
-            // User and hostname
-            Column {
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 4
-
-                Text {
-                    id: usernameText
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: {
-                        const username = usernameCollector.text.trim();
-                        return username.charAt(0).toUpperCase() + username.slice(1);
-                    }
-                    font.family: Config.theme.font
-                    font.pixelSize: Config.theme.fontSize + 2
-                    font.weight: Font.Bold
-                    color: Colors.overBackground
+            SequentialAnimation {
+                id: wrongPasswordAnim
+                NumberAnimation {
+                    target: passwordInputBox
+                    property: "shakeOffset"
+                    to: 10
+                    duration: 50
+                    easing.type: Easing.InOutQuad
                 }
-
-                Text {
-                    id: hostnameText
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: {
-                        const hostname = hostnameCollector.text.trim();
-                        return hostname.charAt(0).toUpperCase() + hostname.slice(1);
-                    }
-                    font.family: Config.theme.font
-                    font.pixelSize: Config.theme.fontSize + 2
-                    font.weight: Font.Bold
-                    color: Colors.outline
+                NumberAnimation {
+                    target: passwordInputBox
+                    property: "shakeOffset"
+                    to: -10
+                    duration: 100
+                    easing.type: Easing.InOutQuad
                 }
-            }
-
-            // Password input
-            Item {
-                width: 300
-                height: passwordInput.height
-                anchors.horizontalCenter: parent.horizontalCenter
-
-                SearchInput {
-                    id: passwordInput
-                    width: parent.width
-                    iconText: ""
-                    placeholderText: "Enter password..."
-                    clearOnEscape: false
-                    passwordMode: true
-                    centerText: true
-
-                    onAccepted: {
-                        if (passwordInput.text === "123") {
-                            unlocking = true;
-                            unlockResetTimer.start();
-                            GlobalStates.lockscreenVisible = false;
-                            passwordInput.clear();
-                        } else {
-                            wrongPasswordAnim.start();
-                        }
-                    }
-
-                    onEscapePressed: {
-                        unlocking = true;
-                        unlockResetTimer.start();
-                        GlobalStates.lockscreenVisible = false;
-                        passwordInput.clear();
-                    }
-
-                    SequentialAnimation {
-                        id: wrongPasswordAnim
-                        NumberAnimation {
-                            target: passwordInput
-                            property: "x"
-                            from: 0
-                            to: 10
-                            duration: 50
-                            easing.type: Easing.InOutQuad
-                        }
-                        NumberAnimation {
-                            target: passwordInput
-                            property: "x"
-                            from: 10
-                            to: -10
-                            duration: 100
-                            easing.type: Easing.InOutQuad
-                        }
-                        NumberAnimation {
-                            target: passwordInput
-                            property: "x"
-                            from: -10
-                            to: 10
-                            duration: 100
-                            easing.type: Easing.InOutQuad
-                        }
-                        NumberAnimation {
-                            target: passwordInput
-                            property: "x"
-                            from: 10
-                            to: 0
-                            duration: 50
-                            easing.type: Easing.InOutQuad
-                        }
-                        ScriptAction {
-                            script: passwordInput.clear()
-                        }
-                    }
-
-                    Component.onCompleted: {
-                        if (GlobalStates.lockscreenVisible) {
-                            passwordInput.focusInput();
-                        }
-                    }
+                NumberAnimation {
+                    target: passwordInputBox
+                    property: "shakeOffset"
+                    to: 10
+                    duration: 100
+                    easing.type: Easing.InOutQuad
+                }
+                NumberAnimation {
+                    target: passwordInputBox
+                    property: "shakeOffset"
+                    to: 0
+                    duration: 50
+                    easing.type: Easing.InOutQuad
+                }
+                ScriptAction {
+                    script: passwordInput.text = ""
                 }
             }
         }
@@ -288,7 +300,7 @@ PanelWindow {
             screencopyBackground.captureFrame();
             blurEffect.visible = true;
             blurAnimTimer.start();
-            passwordInput.focusInput();
+            passwordInput.forceActiveFocus();
         } else if (!visible) {
             blurAnimTimer.stop();
             unlockResetTimer.stop();
@@ -359,7 +371,7 @@ PanelWindow {
             unlocking = true;
             unlockResetTimer.start();
             GlobalStates.lockscreenVisible = false;
-            passwordInput.clear();
+            passwordInput.text = "";
             event.accepted = true;
         }
     }
