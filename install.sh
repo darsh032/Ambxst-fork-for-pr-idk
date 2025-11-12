@@ -83,8 +83,93 @@ if [ ! -f /etc/NIXOS ]; then
   else
     echo "✅ power-profiles-daemon already installed"
   fi
+
+  # Check for iwd and disable it if present
+  if command -v iwd >/dev/null 2>&1 || command -v iwctl >/dev/null 2>&1; then
+    echo "⚠️  iwd detected! Disabling iwd to prevent conflicts with NetworkManager..."
+    
+    if command -v systemctl >/dev/null 2>&1; then
+      if systemctl is-active --quiet iwd 2>/dev/null; then
+        sudo systemctl stop iwd
+        sudo systemctl disable iwd
+        echo "✅ iwd service stopped and disabled (systemd)"
+      fi
+    elif command -v rc-update >/dev/null 2>&1; then
+      if rc-service iwd status >/dev/null 2>&1; then
+        sudo rc-service iwd stop
+        sudo rc-update del iwd default
+        echo "✅ iwd service stopped and disabled (OpenRC)"
+      fi
+    elif command -v sv >/dev/null 2>&1; then
+      if [ -L /var/service/iwd ]; then
+        sudo rm /var/service/iwd
+        echo "✅ iwd service disabled (runit)"
+      fi
+    elif command -v s6-rc >/dev/null 2>&1; then
+      if s6-rc -a list | grep -q iwd; then
+        sudo s6-rc-bundle-update del default iwd
+        sudo s6-svscanctl -an /run/service
+        echo "✅ iwd service disabled (s6)"
+      fi
+    fi
+  fi
+
+  if ! command -v nmcli >/dev/null 2>&1; then
+    echo "📦 Installing NetworkManager..."
+    if command -v pacman >/dev/null 2>&1; then
+      sudo pacman -S --noconfirm networkmanager
+    elif command -v apt >/dev/null 2>&1; then
+      sudo apt update && sudo apt install -y network-manager
+    elif command -v dnf >/dev/null 2>&1; then
+      sudo dnf install -y NetworkManager
+    elif command -v zypper >/dev/null 2>&1; then
+      sudo zypper install -y NetworkManager
+    elif command -v xbps-install >/dev/null 2>&1; then
+      sudo xbps-install -y NetworkManager
+    elif command -v apk >/dev/null 2>&1; then
+      sudo apk add networkmanager
+      sudo rc-update add networkmanager default
+    else
+      echo "❌ Your package manager is not supported. Please install NetworkManager manually."
+      exit 1
+    fi
+    echo "✅ NetworkManager installed"
+    
+    # Enable and start the daemon based on init system
+    if command -v systemctl >/dev/null 2>&1; then
+      echo "🔌 Enabling and starting NetworkManager service (systemd)..."
+      sudo systemctl enable --now NetworkManager
+      echo "✅ NetworkManager service enabled and started"
+    elif command -v rc-update >/dev/null 2>&1; then
+      echo "🔌 Enabling and starting NetworkManager service (OpenRC)..."
+      sudo rc-update add networkmanager default
+      sudo rc-service networkmanager start
+      echo "✅ NetworkManager service enabled and started"
+    elif command -v sv >/dev/null 2>&1; then
+      echo "🔌 Enabling NetworkManager service (runit)..."
+      if [ -d /etc/runit/sv/NetworkManager ]; then
+        sudo ln -sf /etc/runit/sv/NetworkManager /var/service/
+        echo "✅ NetworkManager service enabled"
+      else
+        echo "⚠️ runit service directory not found. Please enable manually."
+      fi
+    elif command -v s6-rc >/dev/null 2>&1; then
+      echo "🔌 Enabling NetworkManager service (s6)..."
+      if [ -d /etc/s6/sv/NetworkManager ]; then
+        sudo s6-rc-bundle-update add default NetworkManager
+        sudo s6-svscanctl -an /run/service
+        echo "✅ NetworkManager service enabled"
+      else
+        echo "⚠️ s6 service directory not found. Please enable manually."
+      fi
+    else
+      echo "⚠️ No supported init system detected. Please start NetworkManager manually."
+    fi
+  else
+    echo "✅ NetworkManager already installed"
+  fi
 else
-  echo "🟦 NixOS detected: Skipping ddcutil and power-profiles-daemon installation"
+  echo "🟦 NixOS detected: Skipping ddcutil, power-profiles-daemon and NetworkManager installation"
 fi
 
 # Install Nix
