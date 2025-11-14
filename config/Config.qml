@@ -13,7 +13,7 @@ Singleton {
     property bool initialLoadComplete: false
     property bool keybindsInitialLoadComplete: false
     property string configPath: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/Ambxst/config.json"
-    property string keybindsPath: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/Ambxst/keybinds.json"
+    property string keybindsPath: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/Ambxst/binds.json"
 
     Process {
         id: checkFile
@@ -36,7 +36,7 @@ Singleton {
 
         onExited: exitCode => {
             if (exitCode !== 0) {
-                console.log("keybinds.json not found, creating with default values...");
+                console.log("binds.json not found, creating with default values...");
                 keybindsLoader.writeAdapter();
             }
             root.keybindsInitialLoadComplete = true;

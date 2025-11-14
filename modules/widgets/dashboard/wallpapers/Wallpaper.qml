@@ -124,7 +124,7 @@ PanelWindow {
         
         console.log("Generating lockscreen frame for:", filePath);
         
-        var scriptPath = Qt.resolvedUrl("../../../../scripts/lockscreen_wallpaper.py").toString().replace("file://", "");
+        var scriptPath = Qt.resolvedUrl("../../../../scripts/lockwall.py").toString().replace("file://", "");
         var dataPath = Quickshell.dataDir;
         
         lockscreenWallpaperScript.command = [

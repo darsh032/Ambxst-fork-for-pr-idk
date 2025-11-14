@@ -1,5 +1,5 @@
 AGENTS.md
 .qmlls.ini
+.ruff_cache/
 scripts/__pycache__
 modules/lockscreen/ambxst-auth
-config/keybinds.json
