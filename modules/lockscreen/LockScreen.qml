@@ -32,22 +32,54 @@ WlSessionLockSurface {
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         smooth: true
-        
+        opacity: 0  // Controlado solo por animaciones
+
         property string lockscreenFramePath: {
             if (!GlobalStates.wallpaperManager)
                 return "";
-            return GlobalStates.wallpaperManager.getLockscreenFramePath(
-                GlobalStates.wallpaperManager.currentWallpaper
-            );
+            return GlobalStates.wallpaperManager.getLockscreenFramePath(GlobalStates.wallpaperManager.currentWallpaper);
         }
-        
+
         source: lockscreenFramePath ? "file://" + lockscreenFramePath : ""
-        
+
         onStatusChanged: {
             if (status === Image.Ready) {
                 console.log("Lockscreen using wallpaper:", lockscreenFramePath);
             } else if (status === Image.Error) {
                 console.warn("Failed to load lockscreen wallpaper:", lockscreenFramePath);
+            }
+        }
+        
+        SequentialAnimation on opacity {
+            id: wallpaperOpacityAnimation
+            running: false
+            
+            // Animación de entrada (fade in)
+            NumberAnimation {
+                from: 0
+                to: 1
+                duration: Config.animDuration * 2
+                easing.type: Easing.OutQuint
+            }
+        }
+        
+        SequentialAnimation {
+            id: wallpaperExitOpacityAnimation
+            running: false
+            
+            // Esperar a que termine el zoom out
+            PauseAnimation {
+                duration: Config.animDuration
+            }
+            
+            // Fade out después del zoom
+            NumberAnimation {
+                target: wallpaperBackground
+                property: "opacity"
+                from: 1
+                to: 0
+                duration: Config.animDuration
+                easing.type: Easing.OutQuint
             }
         }
     }
@@ -62,7 +94,7 @@ WlSessionLockSurface {
         blur: startAnim ? 1 : 0
         blurMax: 64
         visible: true
-        opacity: 1
+        opacity: 0  // Controlado solo por animaciones
 
         property real zoomScale: startAnim ? 1.25 : 1.0
 
@@ -75,13 +107,39 @@ WlSessionLockSurface {
 
         Behavior on blur {
             NumberAnimation {
-                duration: Config.animDuration * 1.2
+                duration: Config.animDuration * 2
                 easing.type: Easing.OutExpo
             }
         }
 
-        Behavior on opacity {
+        SequentialAnimation on opacity {
+            id: opacityAnimation
+            running: false
+
+            // Animación de entrada (fade in)
             NumberAnimation {
+                from: 0
+                to: 1
+                duration: Config.animDuration * 2
+                easing.type: Easing.OutQuint
+            }
+        }
+        
+        SequentialAnimation {
+            id: exitOpacityAnimation
+            running: false
+            
+            // Esperar a que termine el zoom out
+            PauseAnimation {
+                duration: Config.animDuration
+            }
+            
+            // Fade out después del zoom
+            NumberAnimation {
+                target: blurEffect
+                property: "opacity"
+                from: 1
+                to: 0
                 duration: Config.animDuration
                 easing.type: Easing.OutQuint
             }
@@ -89,7 +147,7 @@ WlSessionLockSurface {
 
         Behavior on zoomScale {
             NumberAnimation {
-                duration: Config.animDuration * 1.8
+                duration: Config.animDuration * 2
                 easing.type: Easing.OutExpo
             }
         }
@@ -113,14 +171,14 @@ WlSessionLockSurface {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Config.animDuration
+                duration: Config.animDuration * 2
                 easing.type: Easing.OutQuint
             }
         }
 
         Behavior on zoomScale {
             NumberAnimation {
-                duration: Config.animDuration * 1.8
+                duration: Config.animDuration * 2
                 easing.type: Easing.OutExpo
             }
         }
@@ -224,9 +282,9 @@ WlSessionLockSurface {
     // Music player (slides from left)
     Item {
         id: playerContainer
-        
+
         property bool isTopPosition: Config.lockscreen.position === "top"
-        
+
         anchors {
             left: parent.left
             leftMargin: startAnim ? 32 : -(playerContainer.width + 64)
@@ -263,9 +321,9 @@ WlSessionLockSurface {
     // Password input container (slides from top or bottom)
     Item {
         id: passwordContainer
-        
+
         property bool isTopPosition: Config.lockscreen.position === "top"
-        
+
         anchors {
             horizontalCenter: parent.horizontalCenter
             top: isTopPosition ? parent.top : undefined
@@ -524,7 +582,7 @@ WlSessionLockSurface {
     // Timer to unlock after exit animation
     Timer {
         id: unlockTimer
-        interval: Config.animDuration
+        interval: Config.animDuration * 2  // Wait for zoom out (1x) + fade out (1x)
         onTriggered: {
             GlobalStates.lockscreenVisible = false;
         }
@@ -616,6 +674,8 @@ WlSessionLockSurface {
             if (exitCode === 0) {
                 // Autenticación exitosa - trigger exit animation
                 startAnim = false;
+                wallpaperExitOpacityAnimation.start();
+                exitOpacityAnimation.start();
 
                 // Wait for exit animation, then unlock
                 unlockTimer.start();
@@ -715,6 +775,8 @@ WlSessionLockSurface {
     Component.onCompleted: {
         // Start animations
         startAnim = true;
+        wallpaperOpacityAnimation.start();
+        opacityAnimation.start();
         passwordInput.forceActiveFocus();
     }
 }
