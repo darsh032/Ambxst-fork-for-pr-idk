@@ -286,6 +286,7 @@ Item {
                             console.log("DEBUG: Selected item:", selectedItem);
                             if (selectedItem && !root.deleteMode) {
                                 root.copyToClipboard(selectedItem.id);
+                                Visibilities.setActiveModule("");
                             }
                         } else {
                             console.log("DEBUG: No action taken - selectedIndex:", root.selectedIndex, "count:", root.allItems.length);
@@ -528,17 +529,18 @@ Item {
                                     return;
                                 }
 
-                                if (mouse.button === Qt.LeftButton && !isInDeleteMode) {
-                                    if (root.deleteMode && modelData.id !== root.itemToDelete) {
-                                        console.log("DEBUG: Clicking item outside delete mode - canceling");
-                                        root.cancelDeleteMode();
-                                        return;
-                                    }
+                        if (mouse.button === Qt.LeftButton && !isInDeleteMode) {
+                            if (root.deleteMode && modelData.id !== root.itemToDelete) {
+                                console.log("DEBUG: Clicking item outside delete mode - canceling");
+                                root.cancelDeleteMode();
+                                return;
+                            }
 
-                                    if (!root.deleteMode) {
-                                        root.copyToClipboard(modelData.id);
-                                    }
-                                } else if (mouse.button === Qt.RightButton) {
+                            if (!root.deleteMode) {
+                                root.copyToClipboard(modelData.id);
+                                Visibilities.setActiveModule("");
+                            }
+                        } else if (mouse.button === Qt.RightButton) {
                                     if (root.deleteMode) {
                                         console.log("DEBUG: Right click while in delete mode - canceling");
                                         root.cancelDeleteMode();
@@ -754,6 +756,7 @@ Item {
                                 onTriggered: {
                                     if (!mouseArea.isDragging) {
                                         root.copyToClipboard(modelData.id);
+                                        Visibilities.setActiveModule("");
                                         mouseArea.longPressTriggered = true;
                                     }
                                 }
@@ -795,6 +798,7 @@ Item {
                                     onTriggered: function () {
                                         console.log("DEBUG: Copy clicked from ContextMenu");
                                         root.copyToClipboard(modelData.id);
+                                        Visibilities.setActiveModule("");
                                     }
                                 },
                                 {

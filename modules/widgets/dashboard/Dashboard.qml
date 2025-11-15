@@ -80,6 +80,9 @@ NotchAnimationBehavior {
             } else if (GlobalStates.dashboardCurrentTab === 7) {
                 focusEmojiTimer.restart();
             }
+        } else {
+            // Reset launcher selected index when dashboard closes
+            GlobalStates.launcherSelectedIndex = -1;
         }
     }
 
@@ -316,6 +319,11 @@ NotchAnimationBehavior {
                         let direction = index > root.state.currentTab ? StackView.PushTransition : StackView.PopTransition;
 
                         stack.replace(targetComponent, {}, direction);
+
+                        // Reset launcher index when leaving widgets tab (tab 0)
+                        if (root.state.currentTab === 0 && index !== 0) {
+                            GlobalStates.launcherSelectedIndex = -1;
+                        }
 
                         root.state.currentTab = index;
                         GlobalStates.dashboardCurrentTab = index;

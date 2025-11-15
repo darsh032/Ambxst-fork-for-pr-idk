@@ -99,7 +99,7 @@ Rectangle {
                             let selectedApp = resultsList.model[appLauncherItem.selectedIndex];
                             if (selectedApp) {
                                 selectedApp.execute();
-                                // No cerrar el dashboard
+                                Visibilities.setActiveModule("");
                             }
                         }
                     }
@@ -228,7 +228,7 @@ Rectangle {
 
                                 if (mouse.button === Qt.LeftButton) {
                                     modelData.execute();
-                                    // No cerrar el dashboard
+                                    Visibilities.setActiveModule("");
                                 } else if (mouse.button === Qt.RightButton) {
                                     appLauncherItem.menuItemIndex = index;
                                     appLauncherItem.optionsMenuOpen = true;
@@ -263,7 +263,7 @@ Rectangle {
                                         textColor: Colors.overPrimary,
                                         onTriggered: function () {
                                             modelData.execute();
-                                            // No cerrar el dashboard
+                                            Visibilities.setActiveModule("");
                                         }
                                     },
                                     {
