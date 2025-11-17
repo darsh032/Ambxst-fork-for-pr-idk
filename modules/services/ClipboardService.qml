@@ -171,7 +171,9 @@ QtObject {
                             fullContent: item.preview,
                             mime: item.mime_type,
                             isImage: item.is_image === 1,
-                            binaryPath: item.binary_path || ""
+                            binaryPath: item.binary_path || "",
+                            hash: item.content_hash || "",
+                            createdAt: item.created_at || 0
                         });
                     }
                 } catch (e) {
@@ -407,7 +409,7 @@ QtObject {
         if (!_initialized) return;
         // Use JSON mode for reliable parsing
         listProcess.command = ["sh", "-c", 
-            "sqlite3 '" + dbPath + "' <<'EOSQL'\n.mode json\nSELECT id, mime_type, preview, is_image, binary_path FROM clipboard_items ORDER BY created_at DESC LIMIT 100;\nEOSQL"
+            "sqlite3 '" + dbPath + "' <<'EOSQL'\n.mode json\nSELECT id, mime_type, preview, is_image, binary_path, content_hash, created_at FROM clipboard_items ORDER BY created_at DESC LIMIT 100;\nEOSQL"
         ];
         listProcess.running = true;
     }

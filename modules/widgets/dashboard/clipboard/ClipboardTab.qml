@@ -1000,86 +1000,248 @@ Item {
 
             property var currentItem: root.selectedIndex >= 0 && root.selectedIndex < root.allItems.length ? root.allItems[root.selectedIndex] : null
 
-            Item {
+            // Content when item is selected
+            Column {
                 anchors.fill: parent
                 anchors.margins: 8
+                spacing: 8
+                visible: previewPanel.currentItem
 
-                // Preview para imagen
-                Image {
-                    id: previewImage
-                    anchors.fill: parent
-                    fillMode: Image.PreserveAspectFit
-                    visible: previewPanel.currentItem && previewPanel.currentItem.isImage
-                    source: {
-                        if (previewPanel.currentItem && previewPanel.currentItem.isImage) {
-                            ClipboardService.revision;
-                            return ClipboardService.getImageData(previewPanel.currentItem.id);
+                // Preview area
+                Item {
+                    width: parent.width
+                    height: parent.height - metadataSection.height - parent.spacing - separator.height
+
+                    // Preview para imagen
+                    Image {
+                        id: previewImage
+                        anchors.fill: parent
+                        fillMode: Image.PreserveAspectFit
+                        visible: previewPanel.currentItem && previewPanel.currentItem.isImage
+                        source: {
+                            if (previewPanel.currentItem && previewPanel.currentItem.isImage) {
+                                ClipboardService.revision;
+                                return ClipboardService.getImageData(previewPanel.currentItem.id);
+                            }
+                            return "";
                         }
-                        return "";
+                        clip: true
+                        cache: false
+                        asynchronous: true
                     }
-                    clip: true
-                    cache: false
-                    asynchronous: true
-                }
 
-                // Placeholder cuando la imagen no está lista
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: 120
-                    height: 120
-                    color: Colors.surfaceBright
-                    radius: Config.roundness > 0 ? Config.roundness + 4 : 0
-                    visible: previewPanel.currentItem && previewPanel.currentItem.isImage && previewImage.status !== Image.Ready
-
-                    Text {
+                    // Placeholder cuando la imagen no está lista
+                    Rectangle {
                         anchors.centerIn: parent
-                        text: Icons.image
-                        textFormat: Text.RichText
-                        font.family: Icons.font
-                        font.pixelSize: 48
-                        color: Colors.primary
-                    }
-                }
-
-                // Preview para texto con scroll
-                Flickable {
-                    anchors.fill: parent
-                    visible: previewPanel.currentItem && !previewPanel.currentItem.isImage
-                    clip: true
-                    contentWidth: width
-                    contentHeight: previewText.height
-                    boundsBehavior: Flickable.StopAtBounds
-
-                    Text {
-                        id: previewText
-                        text: root.currentFullContent || (previewPanel.currentItem ? previewPanel.currentItem.preview : "")
-                        font.family: Config.theme.font
-                        font.pixelSize: Config.theme.fontSize
-                        color: Colors.overBackground
-                        wrapMode: Text.Wrap
-                        width: parent.width
-                        textFormat: Text.PlainText
-                    }
-
-                    ScrollBar.vertical: ScrollBar {
-                        policy: ScrollBar.AsNeeded
-                    }
-                }
-
-                // Placeholder cuando no hay nada seleccionado
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 16
-                    visible: !previewPanel.currentItem
-
-                    Text {
-                        text: Icons.clipboard
-                        font.family: Icons.font
-                        font.pixelSize: 48
+                        width: 120
+                        height: 120
                         color: Colors.surfaceBright
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        textFormat: Text.RichText
+                        radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                        visible: previewPanel.currentItem && previewPanel.currentItem.isImage && previewImage.status !== Image.Ready
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: Icons.image
+                            textFormat: Text.RichText
+                            font.family: Icons.font
+                            font.pixelSize: 48
+                            color: Colors.primary
+                        }
                     }
+
+                    // Preview para texto con scroll
+                    Flickable {
+                        anchors.fill: parent
+                        visible: previewPanel.currentItem && !previewPanel.currentItem.isImage
+                        clip: true
+                        contentWidth: width
+                        contentHeight: previewText.height
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        Text {
+                            id: previewText
+                            text: root.currentFullContent || (previewPanel.currentItem ? previewPanel.currentItem.preview : "")
+                            font.family: Config.theme.font
+                            font.pixelSize: Config.theme.fontSize
+                            color: Colors.overBackground
+                            wrapMode: Text.Wrap
+                            width: parent.width
+                            textFormat: Text.PlainText
+                        }
+
+                        ScrollBar.vertical: ScrollBar {
+                            policy: ScrollBar.AsNeeded
+                        }
+                    }
+                }
+
+                // Separator
+                Separator {
+                    id: separator
+                    width: parent.width
+                    height: 2
+                    vert: false
+                    gradient: null
+                    color: Colors.surface
+                }
+
+                // Metadata section
+                Item {
+                    id: metadataSection
+                    width: parent.width
+                    height: 80
+
+                    Column {
+                        anchors.fill: parent
+                        spacing: 4
+
+                        // Row 1: MIME and Size
+                        Row {
+                            width: parent.width
+                            spacing: 16
+
+                            Column {
+                                width: (parent.width - parent.spacing) / 2
+                                spacing: 2
+
+                                Text {
+                                    text: "MIME Type"
+                                    font.family: Config.theme.font
+                                    font.pixelSize: Config.theme.fontSize - 2
+                                    font.weight: Font.Medium
+                                    color: Colors.surfaceBright
+                                }
+
+                                Text {
+                                    text: previewPanel.currentItem ? previewPanel.currentItem.mime : ""
+                                    font.family: Config.theme.font
+                                    font.pixelSize: Config.theme.fontSize
+                                    font.weight: Font.Bold
+                                    color: Colors.overBackground
+                                    elide: Text.ElideRight
+                                    width: parent.width
+                                }
+                            }
+
+                            Column {
+                                width: (parent.width - parent.spacing) / 2
+                                spacing: 2
+
+                                Text {
+                                    text: "Size"
+                                    font.family: Config.theme.font
+                                    font.pixelSize: Config.theme.fontSize - 2
+                                    font.weight: Font.Medium
+                                    color: Colors.surfaceBright
+                                }
+
+                                Text {
+                                    text: {
+                                        if (!previewPanel.currentItem) return "";
+                                        var content = root.currentFullContent || previewPanel.currentItem.preview;
+                                        var bytes = content.length;
+                                        if (bytes < 1024) return bytes + " B";
+                                        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+                                        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+                                    }
+                                    font.family: Config.theme.font
+                                    font.pixelSize: Config.theme.fontSize
+                                    font.weight: Font.Bold
+                                    color: Colors.overBackground
+                                }
+                            }
+                        }
+
+                        // Row 2: Date and Checksum
+                        Row {
+                            width: parent.width
+                            spacing: 16
+
+                            Column {
+                                width: (parent.width - parent.spacing) / 2
+                                spacing: 2
+
+                                Text {
+                                    text: "Date"
+                                    font.family: Config.theme.font
+                                    font.pixelSize: Config.theme.fontSize - 2
+                                    font.weight: Font.Medium
+                                    color: Colors.surfaceBright
+                                }
+
+                                Text {
+                                    text: {
+                                        if (!previewPanel.currentItem || !previewPanel.currentItem.createdAt) return "Unknown";
+                                        var date = new Date(previewPanel.currentItem.createdAt);
+                                        var now = new Date();
+                                        var diffMs = now - date;
+                                        var diffSecs = Math.floor(diffMs / 1000);
+                                        var diffMins = Math.floor(diffSecs / 60);
+                                        var diffHours = Math.floor(diffMins / 60);
+                                        var diffDays = Math.floor(diffHours / 24);
+                                        
+                                        if (diffSecs < 60) return "Just now";
+                                        if (diffMins < 60) return diffMins + " min ago";
+                                        if (diffHours < 24) return diffHours + " hour" + (diffHours > 1 ? "s" : "") + " ago";
+                                        if (diffDays < 7) return diffDays + " day" + (diffDays > 1 ? "s" : "") + " ago";
+                                        
+                                        return Qt.formatDateTime(date, "MMM dd, yyyy");
+                                    }
+                                    font.family: Config.theme.font
+                                    font.pixelSize: Config.theme.fontSize
+                                    font.weight: Font.Bold
+                                    color: Colors.overBackground
+                                }
+                            }
+
+                            Column {
+                                width: (parent.width - parent.spacing) / 2
+                                spacing: 2
+
+                                Text {
+                                    text: "Checksum"
+                                    font.family: Config.theme.font
+                                    font.pixelSize: Config.theme.fontSize - 2
+                                    font.weight: Font.Medium
+                                    color: Colors.surfaceBright
+                                }
+
+                                Text {
+                                    text: {
+                                        if (!previewPanel.currentItem || !previewPanel.currentItem.hash) return "N/A";
+                                        var hash = previewPanel.currentItem.hash;
+                                        // Show first 8 and last 8 characters
+                                        if (hash.length > 16) {
+                                            return hash.substring(0, 8) + "..." + hash.substring(hash.length - 8);
+                                        }
+                                        return hash;
+                                    }
+                                    font.family: Config.theme.font
+                                    font.pixelSize: Config.theme.fontSize
+                                    font.weight: Font.Bold
+                                    color: Colors.overBackground
+                                    elide: Text.ElideMiddle
+                                    width: parent.width
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Placeholder cuando no hay nada seleccionado
+            Column {
+                anchors.centerIn: parent
+                spacing: 16
+                visible: !previewPanel.currentItem
+
+                Text {
+                    text: Icons.clipboard
+                    font.family: Icons.font
+                    font.pixelSize: 48
+                    color: Colors.surfaceBright
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    textFormat: Text.RichText
                 }
             }
         }
