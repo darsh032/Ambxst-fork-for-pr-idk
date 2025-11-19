@@ -416,7 +416,7 @@ Item {
                 }
 
                 // Botón de limpiar historial
-                Rectangle {
+                ClippingRectangle {
                     id: clearButton
                     width: root.clearButtonConfirmState ? 120 : 48
                     height: 48
