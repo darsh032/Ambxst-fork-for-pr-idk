@@ -136,4 +136,5 @@ QtObject {
     readonly property string globe: ""
     readonly property string folder: ""
     readonly property string cactus: ""
+    readonly property string countdown: ""
 }
