@@ -155,7 +155,8 @@ QtObject {
                             size: item.size || 0,
                             createdAt: item.created_at || 0,
                             pinned: item.pinned === 1,
-                            alias: item.alias || ""
+                            alias: item.alias || "",
+                            displayIndex: item.display_index !== null ? item.display_index : -1
                         });
                     }
                 } catch (e) {
@@ -448,9 +449,9 @@ QtObject {
         if (!_initialized) return;
         _operationInProgress = true;
         // Use JSON mode for reliable parsing, with timeout to avoid locks
-        // ORDER BY pinned DESC to show pinned items first, then by updated_at
+        // ORDER BY pinned DESC, display_index ASC to show pinned items first (ordered by index), then unpinned items (ordered by index)
         listProcess.command = ["sh", "-c", 
-            "sqlite3 '" + dbPath + "' <<'EOSQL'\n.timeout 5000\n.mode json\nSELECT id, mime_type, preview, is_image, binary_path, content_hash, size, created_at, pinned, alias FROM clipboard_items ORDER BY pinned DESC, updated_at DESC LIMIT 100;\nEOSQL"
+            "sqlite3 '" + dbPath + "' <<'EOSQL'\n.timeout 5000\n.mode json\nSELECT id, mime_type, preview, is_image, binary_path, content_hash, size, created_at, pinned, alias, display_index FROM clipboard_items ORDER BY pinned DESC, display_index ASC, updated_at DESC LIMIT 100;\nEOSQL"
         ];
         listProcess.running = true;
     }
@@ -480,7 +481,33 @@ QtObject {
         if (!_initialized) return;
         _operationInProgress = true;
         togglePinProcess.itemId = id;
-        togglePinProcess.command = ["sh", "-c", "sqlite3 '" + dbPath + "' '.timeout 5000' 'UPDATE clipboard_items SET pinned = CASE WHEN pinned = 1 THEN 0 ELSE 1 END WHERE id = " + id + ";'"];
+        togglePinProcess.command = ["sh", "-c", 
+            "sqlite3 '" + dbPath + "' <<'EOSQL'\n" +
+            ".timeout 5000\n" +
+            "BEGIN TRANSACTION;\n" +
+            "-- Toggle pin status\n" +
+            "UPDATE clipboard_items SET pinned = CASE WHEN pinned = 1 THEN 0 ELSE 1 END WHERE id = " + id + ";\n" +
+            "-- Get new pinned status\n" +
+            "-- If item is now pinned (pinned=1), set its index to 0 and shift others\n" +
+            "-- If item is now unpinned (pinned=0), set its index to 0 and shift others\n" +
+            "UPDATE clipboard_items SET display_index = CASE \n" +
+            "  WHEN id = " + id + " THEN 0\n" +
+            "  ELSE display_index + 1\n" +
+            "END WHERE pinned = (SELECT pinned FROM clipboard_items WHERE id = " + id + ");\n" +
+            "-- Compact indices to remove gaps for both pinned and unpinned\n" +
+            "WITH reindexed_pinned AS (\n" +
+            "  SELECT id, ROW_NUMBER() OVER (ORDER BY display_index ASC, updated_at DESC) - 1 AS new_idx\n" +
+            "  FROM clipboard_items WHERE pinned = 1\n" +
+            ")\n" +
+            "UPDATE clipboard_items SET display_index = (SELECT new_idx FROM reindexed_pinned WHERE reindexed_pinned.id = clipboard_items.id) WHERE pinned = 1;\n" +
+            "WITH reindexed_unpinned AS (\n" +
+            "  SELECT id, ROW_NUMBER() OVER (ORDER BY display_index ASC, updated_at DESC) - 1 AS new_idx\n" +
+            "  FROM clipboard_items WHERE pinned = 0\n" +
+            ")\n" +
+            "UPDATE clipboard_items SET display_index = (SELECT new_idx FROM reindexed_unpinned WHERE reindexed_unpinned.id = clipboard_items.id) WHERE pinned = 0;\n" +
+            "COMMIT;\n" +
+            "EOSQL"
+        ];
         togglePinProcess.running = true;
     }
 
@@ -535,6 +562,159 @@ QtObject {
         linkPreviewProcess.requestUrl = url;
         linkPreviewProcess.command = ["python3", linkPreviewScriptPath, url, "5"];
         linkPreviewProcess.running = true;
+    }
+    
+    // Reorder item by moving it to a new index
+    function reorderItem(itemId, newIndex) {
+        if (!_initialized) return;
+        
+        // Get current item info
+        var item = null;
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].id === itemId) {
+                item = items[i];
+                break;
+            }
+        }
+        
+        if (!item) return;
+        
+        var isPinned = item.pinned ? 1 : 0;
+        
+        // Validate newIndex is non-negative
+        if (newIndex < 0) newIndex = 0;
+        
+        // Execute reordering with conflict resolution
+        reorderProcess.command = ["sh", "-c", 
+            "sqlite3 '" + dbPath + "' <<'EOSQL'\n" +
+            ".timeout 5000\n" +
+            "BEGIN TRANSACTION;\n" +
+            "-- Shift other items to make room\n" +
+            "UPDATE clipboard_items SET display_index = display_index + 1 WHERE pinned = " + isPinned + " AND display_index >= " + newIndex + " AND id != " + itemId + ";\n" +
+            "-- Set new index for target item\n" +
+            "UPDATE clipboard_items SET display_index = " + newIndex + " WHERE id = " + itemId + ";\n" +
+            "-- Compact indices to remove gaps\n" +
+            "WITH reindexed AS (\n" +
+            "  SELECT id, ROW_NUMBER() OVER (ORDER BY display_index ASC, updated_at DESC) - 1 AS new_idx\n" +
+            "  FROM clipboard_items WHERE pinned = " + isPinned + "\n" +
+            ")\n" +
+            "UPDATE clipboard_items SET display_index = (SELECT new_idx FROM reindexed WHERE reindexed.id = clipboard_items.id) WHERE pinned = " + isPinned + ";\n" +
+            "COMMIT;\n" +
+            "EOSQL"
+        ];
+        reorderProcess.running = true;
+    }
+    
+    // Move item up (decrease index)
+    function moveItemUp(itemId) {
+        var item = null;
+        var currentIdx = -1;
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].id === itemId) {
+                item = items[i];
+                currentIdx = i;
+                break;
+            }
+        }
+        
+        if (!item || currentIdx < 0) return;
+        
+        // Can't move up if first item
+        if (currentIdx === 0) return;
+        
+        // Check if previous item has same pinned status
+        var prevItem = items[currentIdx - 1];
+        if (prevItem.pinned !== item.pinned) return;
+        
+        // Swap indices with previous item
+        swapItems(itemId, prevItem.id);
+    }
+    
+    // Move item down (increase index)
+    function moveItemDown(itemId) {
+        var item = null;
+        var currentIdx = -1;
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].id === itemId) {
+                item = items[i];
+                currentIdx = i;
+                break;
+            }
+        }
+        
+        if (!item || currentIdx < 0) return;
+        
+        // Can't move down if last item
+        if (currentIdx >= items.length - 1) return;
+        
+        // Check if next item has same pinned status
+        var nextItem = items[currentIdx + 1];
+        if (nextItem.pinned !== item.pinned) return;
+        
+        // Swap indices with next item
+        swapItems(itemId, nextItem.id);
+    }
+    
+    // Swap display indices between two items
+    function swapItems(itemId1, itemId2) {
+        if (!_initialized) return;
+        
+        swapProcess.command = ["sh", "-c", 
+            "sqlite3 '" + dbPath + "' <<'EOSQL'\n" +
+            ".timeout 5000\n" +
+            "BEGIN TRANSACTION;\n" +
+            "-- Create temp variables for the swap\n" +
+            "CREATE TEMP TABLE IF NOT EXISTS swap_temp (idx1 INTEGER, idx2 INTEGER);\n" +
+            "DELETE FROM swap_temp;\n" +
+            "INSERT INTO swap_temp (idx1, idx2) \n" +
+            "  SELECT \n" +
+            "    (SELECT display_index FROM clipboard_items WHERE id = " + itemId1 + "),\n" +
+            "    (SELECT display_index FROM clipboard_items WHERE id = " + itemId2 + ");\n" +
+            "-- Perform the swap\n" +
+            "UPDATE clipboard_items SET display_index = (SELECT idx2 FROM swap_temp) WHERE id = " + itemId1 + ";\n" +
+            "UPDATE clipboard_items SET display_index = (SELECT idx1 FROM swap_temp) WHERE id = " + itemId2 + ";\n" +
+            "-- Clean up\n" +
+            "DELETE FROM swap_temp;\n" +
+            "COMMIT;\n" +
+            "EOSQL"
+        ];
+        swapProcess.running = true;
+    }
+    
+    property Process swapProcess: Process {
+        running: false
+        
+        stderr: StdioCollector {
+            onStreamFinished: {
+                if (text.length > 0) {
+                    console.warn("ClipboardService: swapProcess stderr:", text);
+                }
+            }
+        }
+        
+        onExited: function(code) {
+            if (code === 0) {
+                Qt.callLater(root.list);
+            }
+        }
+    }
+    
+    property Process reorderProcess: Process {
+        running: false
+        
+        stderr: StdioCollector {
+            onStreamFinished: {
+                if (text.length > 0) {
+                    console.warn("ClipboardService: reorderProcess stderr:", text);
+                }
+            }
+        }
+        
+        onExited: function(code) {
+            if (code === 0) {
+                Qt.callLater(root.list);
+            }
+        }
     }
 
     Component.onCompleted: {

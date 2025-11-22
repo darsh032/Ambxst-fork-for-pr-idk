@@ -38,9 +38,19 @@ ESCAPED_CONTENT="${CONTENT//\'/\'\'}"
 
 sqlite3 "$DB_PATH" <<EOSQL
 .timeout 5000
+BEGIN TRANSACTION;
+-- Insert or update item (unpinned items always get display_index 0)
 INSERT INTO clipboard_items 
-(content_hash, mime_type, preview, full_content, is_image, binary_path, size, created_at, updated_at) 
-VALUES ('$HASH', '$MIME_TYPE', '$ESCAPED_PREVIEW', '$ESCAPED_CONTENT', $IS_IMAGE, '$BINARY_PATH', $SIZE, $TIMESTAMP, $TIMESTAMP)
+(content_hash, mime_type, preview, full_content, is_image, binary_path, size, pinned, display_index, created_at, updated_at) 
+VALUES ('$HASH', '$MIME_TYPE', '$ESCAPED_PREVIEW', '$ESCAPED_CONTENT', $IS_IMAGE, '$BINARY_PATH', $SIZE, 0, 0, $TIMESTAMP, $TIMESTAMP)
 ON CONFLICT(content_hash) DO UPDATE SET
-updated_at = $TIMESTAMP;
+updated_at = $TIMESTAMP,
+display_index = 0;
+-- Reindex unpinned items (new item is at 0, others shift down)
+WITH reindexed AS (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY updated_at DESC) - 1 AS new_idx
+  FROM clipboard_items WHERE pinned = 0
+)
+UPDATE clipboard_items SET display_index = (SELECT new_idx FROM reindexed WHERE reindexed.id = clipboard_items.id) WHERE pinned = 0;
+COMMIT;
 EOSQL

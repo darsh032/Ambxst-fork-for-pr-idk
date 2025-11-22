@@ -35,6 +35,7 @@ Item {
     property bool hasNavigatedFromSearch: false
     property bool clearButtonFocused: false
     property bool clearButtonConfirmState: false
+    property bool anyItemDragging: false
 
     // Delete mode state
     property bool deleteMode: false
@@ -599,6 +600,26 @@ Item {
                 }
             }
 
+            onCtrlUpPressed: {
+                if (!root.deleteMode && !root.aliasMode && root.selectedIndex >= 0 && root.selectedIndex < root.allItems.length) {
+                    let selectedItem = root.allItems[root.selectedIndex];
+                    if (selectedItem) {
+                        root.pendingItemIdToSelect = selectedItem.id;
+                        ClipboardService.moveItemUp(selectedItem.id);
+                    }
+                }
+            }
+
+            onCtrlDownPressed: {
+                if (!root.deleteMode && !root.aliasMode && root.selectedIndex >= 0 && root.selectedIndex < root.allItems.length) {
+                    let selectedItem = root.allItems[root.selectedIndex];
+                    if (selectedItem) {
+                        root.pendingItemIdToSelect = selectedItem.id;
+                        ClipboardService.moveItemDown(selectedItem.id);
+                    }
+                }
+            }
+
             onEscapePressed: {
                         if (root.expandedItemIndex >= 0) {
                             root.expandedItemIndex = -1;
@@ -826,6 +847,7 @@ Item {
                         property bool isInAliasMode: root.aliasMode && modelData.id === root.itemToAlias
                         property bool isSelected: root.selectedIndex === index
                         property bool isExpanded: index === root.expandedItemIndex
+                        property bool isDraggingForReorder: false
                         property string displayText: {
                             if (isInDeleteMode) {
                                 let preview = modelData.alias || modelData.preview || "";
@@ -844,7 +866,7 @@ Item {
                         MouseArea {
                             id: mouseArea
                             anchors.fill: parent
-                            hoverEnabled: true
+                            hoverEnabled: !isDraggingForReorder
                             enabled: !root.deleteMode && !root.aliasMode
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
 
@@ -852,10 +874,11 @@ Item {
                             property real startY: 0
                             property bool isDragging: false
                             property bool longPressTriggered: false
+                            property bool isVerticalDrag: false
 
                             onEntered: {
-                                // Don't change selection if there's an expanded menu open
-                                if (!root.deleteMode && root.expandedItemIndex === -1) {
+                                // Don't change selection if there's an expanded menu open or dragging
+                                if (!root.deleteMode && root.expandedItemIndex === -1 && !isDraggingForReorder) {
                                     root.selectedIndex = index;
                                     resultsList.currentIndex = index;
                                 }
@@ -899,6 +922,7 @@ Item {
                                 startY = mouse.y;
                                 isDragging = false;
                                 longPressTriggered = false;
+                                isVerticalDrag = false;
 
                                 if (mouse.button !== Qt.RightButton) {
                                     longPressTimer.start();
@@ -915,11 +939,40 @@ Item {
                                         isDragging = true;
                                         longPressTimer.stop();
 
-                                        if (deltaX < -50 && Math.abs(deltaY) < 30) {
-                                            if (!longPressTriggered) {
-                                                root.enterDeleteMode(modelData.id);
-                                                longPressTriggered = true;
+                                        // Determine drag direction: horizontal (delete) or vertical (reorder)
+                                        if (!isVerticalDrag && Math.abs(deltaX) > Math.abs(deltaY)) {
+                                            // Horizontal drag for delete
+                                            if (deltaX < -50 && Math.abs(deltaY) < 30) {
+                                                if (!longPressTriggered) {
+                                                    root.enterDeleteMode(modelData.id);
+                                                    longPressTriggered = true;
+                                                }
                                             }
+                                        } else if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                                            // Vertical drag for reorder
+                                            isVerticalDrag = true;
+                                            isDraggingForReorder = true;
+                                            root.anyItemDragging = true;
+                                            
+                                            // Calculate target index based on drag position
+                                            let itemHeight = 48;
+                                            let targetIndex = index;
+                                            
+                                            if (deltaY > itemHeight / 2 && index < root.allItems.length - 1) {
+                                                // Check if next item has same pinned status
+                                                let nextItem = root.allItems[index + 1];
+                                                if (nextItem && nextItem.pinned === modelData.pinned) {
+                                                    targetIndex = index + 1;
+                                                }
+                                            } else if (deltaY < -itemHeight / 2 && index > 0) {
+                                                // Check if previous item has same pinned status
+                                                let prevItem = root.allItems[index - 1];
+                                                if (prevItem && prevItem.pinned === modelData.pinned) {
+                                                    targetIndex = index - 1;
+                                                }
+                                            }
+                                            
+                                            // Visual feedback could be added here
                                         }
                                     }
                                 }
@@ -1241,8 +1294,36 @@ Item {
 
                             onReleased: mouse => {
                                 longPressTimer.stop();
+                                
+                                // Handle reorder on release if vertical drag occurred
+                                if (isVerticalDrag && isDraggingForReorder) {
+                                    let deltaY = mouse.y - startY;
+                                    let itemHeight = 48;
+                                    
+                                    if (Math.abs(deltaY) > itemHeight / 2) {
+                                        if (deltaY > 0 && index < root.allItems.length - 1) {
+                                            // Dragged down
+                                            let nextItem = root.allItems[index + 1];
+                                            if (nextItem && nextItem.pinned === modelData.pinned) {
+                                                root.pendingItemIdToSelect = modelData.id;
+                                                ClipboardService.moveItemDown(modelData.id);
+                                            }
+                                        } else if (deltaY < 0 && index > 0) {
+                                            // Dragged up
+                                            let prevItem = root.allItems[index - 1];
+                                            if (prevItem && prevItem.pinned === modelData.pinned) {
+                                                root.pendingItemIdToSelect = modelData.id;
+                                                ClipboardService.moveItemUp(modelData.id);
+                                            }
+                                        }
+                                    }
+                                }
+                                
                                 isDragging = false;
                                 longPressTriggered = false;
+                                isVerticalDrag = false;
+                                isDraggingForReorder = false;
+                                root.anyItemDragging = false;
                             }
 
                             Timer {
@@ -1880,7 +1961,7 @@ Item {
                             }
                         }
                         radius: Config.roundness > 0 ? Config.roundness + 4 : 0
-                        visible: root.selectedIndex >= 0
+                        visible: root.selectedIndex >= 0 && !root.anyItemDragging
 
                         Behavior on color {
                             enabled: Config.animDuration > 0
