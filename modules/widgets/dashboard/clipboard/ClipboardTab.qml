@@ -19,6 +19,9 @@ Item {
         if (root.deleteMode) {
             console.log("DEBUG: Escape pressed in delete mode - canceling");
             root.cancelDeleteMode();
+        } else if (root.aliasMode) {
+            console.log("DEBUG: Escape pressed in alias mode - canceling");
+            root.cancelAliasMode();
         } else {
             // Cerrar el dashboard
             Visibilities.setActiveModule("");
@@ -39,10 +42,19 @@ Item {
     property int originalSelectedIndex: -1
     property int deleteButtonIndex: 0
 
+    // Alias mode state
+    property bool aliasMode: false
+    property string itemToAlias: ""
+    property string newAlias: ""
+    property int aliasSelectedIndex: -1
+    property int aliasButtonIndex: 0
+
     // Options menu state
     property bool optionsMenuOpen: false
     property int menuItemIndex: -1
     property bool menuJustClosed: false
+    property bool keyboardOptionsMenuOpen: false
+    property point keyboardMenuPosition: Qt.point(0, 0)
 
     property int previewImageSize: 200
     property string currentFullContent: ""
@@ -128,6 +140,10 @@ Item {
             console.log("DEBUG: Canceling delete mode from external source (tab change)");
             cancelDeleteMode();
         }
+        if (aliasMode) {
+            console.log("DEBUG: Canceling alias mode from external source (tab change)");
+            cancelAliasMode();
+        }
     }
 
     function enterDeleteMode(itemId) {
@@ -163,6 +179,66 @@ Item {
         hasNavigatedFromSearch = false;
 
         refreshClipboardHistory();
+        searchInput.focusInput();
+    }
+
+    function enterAliasMode(itemId) {
+        console.log("DEBUG: Entering alias mode for item:", itemId);
+        aliasSelectedIndex = selectedIndex;
+        aliasMode = true;
+        itemToAlias = itemId;
+        
+        // Find current alias
+        for (var i = 0; i < allItems.length; i++) {
+            if (allItems[i].id === itemId) {
+                newAlias = allItems[i].alias || allItems[i].preview;
+                break;
+            }
+        }
+        
+        aliasButtonIndex = 1;
+        root.forceActiveFocus();
+    }
+
+    function cancelAliasMode() {
+        console.log("DEBUG: Canceling alias mode");
+        aliasMode = false;
+        itemToAlias = "";
+        newAlias = "";
+        aliasButtonIndex = 0;
+        searchInput.focusInput();
+        updateFilteredItems();
+        selectedIndex = aliasSelectedIndex;
+        resultsList.currentIndex = aliasSelectedIndex;
+        aliasSelectedIndex = -1;
+    }
+
+    function confirmAliasItem() {
+        console.log("DEBUG: Confirming alias for item:", itemToAlias, "new alias:", newAlias);
+        
+        // Find the original preview to compare
+        var originalPreview = "";
+        for (var i = 0; i < allItems.length; i++) {
+            if (allItems[i].id === itemToAlias) {
+                originalPreview = allItems[i].preview;
+                break;
+            }
+        }
+        
+        // Only set alias if different from original preview
+        if (newAlias.trim() !== "" && newAlias.trim() !== originalPreview) {
+            ClipboardService.setAlias(itemToAlias, newAlias.trim());
+        } else if (newAlias.trim() === originalPreview || newAlias.trim() === "") {
+            // Clear alias if set back to original or empty
+            ClipboardService.setAlias(itemToAlias, "");
+        }
+
+        aliasMode = false;
+        itemToAlias = "";
+        newAlias = "";
+        aliasButtonIndex = 0;
+        selectedIndex = aliasSelectedIndex;
+        aliasSelectedIndex = -1;
         searchInput.focusInput();
     }
 
@@ -392,9 +468,18 @@ Item {
                         if (!root.deleteMode) {
                             if (root.selectedIndex >= 0 && root.selectedIndex < root.allItems.length) {
                                 let selectedItem = root.allItems[root.selectedIndex];
-                                console.log("DEBUG: Selected item for deletion:", selectedItem);
+                                console.log("DEBUG: Opening options menu for item:", selectedItem);
                                 if (selectedItem) {
-                                    root.enterDeleteMode(selectedItem.id);
+                                    root.menuItemIndex = root.selectedIndex;
+                                    root.optionsMenuOpen = true;
+                                    root.keyboardOptionsMenuOpen = true;
+                                    
+                                    // Calculate menu position next to selected item in the list
+                                    var itemY = resultsList.currentItem ? resultsList.currentItem.y : 0;
+                                    var globalY = resultsList.mapToItem(root, 0, itemY).y;
+                                    root.keyboardMenuPosition = Qt.point(resultsList.x + resultsList.width + 8, globalY);
+                                    
+                                    keyboardOptionsMenu.popup();
                                 }
                             }
                         }
@@ -577,17 +662,18 @@ Item {
                         radius: 16
 
                         property bool isInDeleteMode: root.deleteMode && modelData.id === root.itemToDelete
+                        property bool isInAliasMode: root.aliasMode && modelData.id === root.itemToAlias
                         property bool isSelected: root.selectedIndex === index
                         property string displayText: {
                             if (isInDeleteMode) {
-                                let preview = modelData.preview || "";
+                                let preview = modelData.alias || modelData.preview || "";
                                 // Replace newlines with spaces for single-line display
                                 preview = preview.replace(/\n/g, ' ').replace(/\r/g, '');
                                 return "Delete \"" + preview.substring(0, 20) + (preview.length > 20 ? '...' : '') + "\"?";
                             } else if (modelData.isImage) {
-                                return "Image";
+                                return modelData.alias || "Image";
                             } else {
-                                let preview = modelData.preview || "";
+                                let preview = modelData.alias || modelData.preview || "";
                                 // Replace newlines with spaces for single-line display
                                 return preview.replace(/\n/g, ' ').replace(/\r/g, '');
                             }
@@ -597,7 +683,7 @@ Item {
                             id: mouseArea
                             anchors.fill: parent
                             hoverEnabled: true
-                            enabled: !root.deleteMode && !root.optionsMenuOpen
+                            enabled: !root.deleteMode && !root.aliasMode && !root.optionsMenuOpen
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
 
                             property real startX: 0
@@ -831,6 +917,162 @@ Item {
                                 }
                             }
 
+                            // Alias mode action buttons
+                            Rectangle {
+                                width: 76
+                                height: 36
+                                anchors.right: parent.right
+                                anchors.rightMargin: 8
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: "transparent"
+                                radius: 6
+                                opacity: isInAliasMode ? 1.0 : 0.0
+                                visible: opacity > 0
+
+                                transform: Translate {
+                                    x: isInAliasMode ? 0 : 80
+
+                                    Behavior on x {
+                                        enabled: Config.animDuration > 0
+                                        NumberAnimation {
+                                            duration: Config.animDuration
+                                            easing.type: Easing.OutQuart
+                                        }
+                                    }
+                                }
+
+                                Behavior on opacity {
+                                    enabled: Config.animDuration > 0
+                                    NumberAnimation {
+                                        duration: Config.animDuration / 2
+                                        easing.type: Easing.OutQuart
+                                    }
+                                }
+
+                                Rectangle {
+                                    id: aliasHighlight
+                                    color: Colors.overSecondary
+                                    radius: Config.roundness > 0 ? Math.max(Config.roundness - 4, 0) : 0
+                                    visible: isInAliasMode
+                                    z: 0
+
+                                    property real activeButtonMargin: 2
+                                    property real idx1X: root.aliasButtonIndex
+                                    property real idx2X: root.aliasButtonIndex
+
+                                    x: {
+                                        let minX = Math.min(idx1X, idx2X) * 36 + activeButtonMargin;
+                                        return minX;
+                                    }
+
+                                    y: activeButtonMargin
+
+                                    width: {
+                                        let stretchX = Math.abs(idx1X - idx2X) * 36 + 32 - activeButtonMargin * 2;
+                                        return stretchX;
+                                    }
+
+                                    height: 32 - activeButtonMargin * 2
+
+                                    Behavior on idx1X {
+                                        enabled: Config.animDuration > 0
+                                        NumberAnimation {
+                                            duration: Config.animDuration / 3
+                                            easing.type: Easing.OutSine
+                                        }
+                                    }
+                                    Behavior on idx2X {
+                                        enabled: Config.animDuration > 0
+                                        NumberAnimation {
+                                            duration: Config.animDuration
+                                            easing.type: Easing.OutSine
+                                        }
+                                    }
+                                }
+
+                                Row {
+                                    id: aliasActionButtons
+                                    anchors.fill: parent
+                                    spacing: 4
+
+                                    Rectangle {
+                                        id: aliasCancelButton
+                                        width: 32
+                                        height: 32
+                                        color: "transparent"
+                                        radius: 6
+                                        z: 1
+
+                                        property bool isHighlighted: root.aliasButtonIndex === 0
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            onClicked: root.cancelAliasMode()
+                                            onEntered: {
+                                                root.aliasButtonIndex = 0;
+                                            }
+                                            onExited: parent.color = "transparent"
+                                        }
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: Icons.cancel
+                                            color: aliasCancelButton.isHighlighted ? Colors.secondary : Colors.overSecondary
+                                            font.pixelSize: 14
+                                            font.family: Icons.font
+                                            textFormat: Text.RichText
+
+                                            Behavior on color {
+                                                enabled: Config.animDuration > 0
+                                                ColorAnimation {
+                                                    duration: Config.animDuration / 2
+                                                    easing.type: Easing.OutQuart
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        id: aliasConfirmButton
+                                        width: 32
+                                        height: 32
+                                        color: "transparent"
+                                        radius: 6
+                                        z: 1
+
+                                        property bool isHighlighted: root.aliasButtonIndex === 1
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            onClicked: root.confirmAliasItem()
+                                            onEntered: {
+                                                root.aliasButtonIndex = 1;
+                                            }
+                                            onExited: parent.color = "transparent"
+                                        }
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: Icons.accept
+                                            color: aliasConfirmButton.isHighlighted ? Colors.secondary : Colors.overSecondary
+                                            font.pixelSize: 14
+                                            font.family: Icons.font
+                                            textFormat: Text.RichText
+
+                                            Behavior on color {
+                                                enabled: Config.animDuration > 0
+                                                ColorAnimation {
+                                                    duration: Config.animDuration / 2
+                                                    easing.type: Easing.OutQuart
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             onReleased: mouse => {
                                 longPressTimer.stop();
                                 isDragging = false;
@@ -858,15 +1100,15 @@ Item {
                                 mouseArea.enabled = false;
                             }
 
-                            onClosed: {
-                                root.optionsMenuOpen = false;
-                                root.menuItemIndex = -1;
-                                Qt.callLater(() => {
-                                    mouseArea.enabled = !root.deleteMode && !root.optionsMenuOpen;
-                                });
-                                root.menuJustClosed = true;
-                                menuClosedTimer.start();
-                            }
+                        onClosed: {
+                            root.optionsMenuOpen = false;
+                            root.menuItemIndex = -1;
+                            Qt.callLater(() => {
+                                mouseArea.enabled = !root.deleteMode && !root.aliasMode && !root.optionsMenuOpen;
+                            });
+                            root.menuJustClosed = true;
+                            menuClosedTimer.start();
+                        }
 
                             Timer {
                                 id: menuClosedTimer
@@ -890,6 +1132,26 @@ Item {
                                     }
                                 },
                                 {
+                                    text: modelData.pinned ? "Unpin" : "Pin",
+                                    icon: modelData.pinned ? Icons.unpin : Icons.pin,
+                                    highlightColor: Colors.primary,
+                                    textColor: Colors.overPrimary,
+                                    onTriggered: function () {
+                                        console.log("DEBUG: Pin/Unpin clicked from ContextMenu");
+                                        ClipboardService.togglePin(modelData.id);
+                                    }
+                                },
+                                {
+                                    text: "Alias",
+                                    icon: Icons.edit,
+                                    highlightColor: Colors.secondary,
+                                    textColor: Colors.overSecondary,
+                                    onTriggered: function () {
+                                        console.log("DEBUG: Alias clicked from ContextMenu");
+                                        root.enterAliasMode(modelData.id);
+                                    }
+                                },
+                                {
                                     text: "Delete",
                                     icon: Icons.trash,
                                     highlightColor: Colors.overError,
@@ -905,7 +1167,11 @@ Item {
                         RowLayout {
                             anchors.fill: parent
                             anchors.margins: 8
-                            anchors.rightMargin: isInDeleteMode ? 84 : 8
+                            anchors.rightMargin: {
+                                if (isInDeleteMode) return 84;
+                                if (isInAliasMode) return 84;
+                                return 8;
+                            }
                             spacing: 8
 
                             Behavior on anchors.rightMargin {
@@ -923,6 +1189,8 @@ Item {
                                 color: {
                                     if (isInDeleteMode) {
                                         return Colors.overError;
+                                    } else if (isInAliasMode) {
+                                        return Colors.overSecondary;
                                     } else if (isSelected) {
                                         return Colors.overPrimary;
                                     } else {
@@ -942,6 +1210,8 @@ Item {
                                 property string iconType: {
                                     if (isInDeleteMode) {
                                         return "trash";
+                                    } else if (isInAliasMode) {
+                                        return "edit";
                                     }
                                     return root.getIconForItem(modelData);
                                 }
@@ -973,6 +1243,8 @@ Item {
                                     text: {
                                         if (isInDeleteMode) {
                                             return Icons.trash;
+                                        } else if (isInAliasMode) {
+                                            return Icons.edit;
                                         }
                                         var iconStr = parent.iconType;
                                         // Check if it's a Nerd Font icon (starts with )
@@ -988,6 +1260,8 @@ Item {
                                     color: {
                                         if (isInDeleteMode) {
                                             return Colors.error;
+                                        } else if (isInAliasMode) {
+                                            return Colors.secondary;
                                         } else if (isSelected) {
                                             return Colors.primary;
                                         } else {
@@ -1013,36 +1287,121 @@ Item {
                                         }
                                     }
                                 }
+                                
+                                // Pin indicator badge
+                                Rectangle {
+                                    anchors.top: parent.top
+                                    anchors.right: parent.right
+                                    anchors.topMargin: -2
+                                    anchors.rightMargin: -2
+                                    width: 14
+                                    height: 14
+                                    radius: 7
+                                    visible: modelData.pinned && !isInDeleteMode && !isInAliasMode
+                                    color: Colors.primary
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: Icons.pin
+                                        font.family: Icons.font
+                                        font.pixelSize: 8
+                                        color: Colors.overPrimary
+                                        textFormat: Text.RichText
+                                    }
+                                }
                             }
 
                             Column {
                                 Layout.fillWidth: true
                                 spacing: 0
 
-                                Text {
+                                Loader {
                                     width: parent.width
-                                    text: displayText
-                                    color: {
-                                        if (isInDeleteMode) {
-                                            return Colors.overError;
-                                        } else if (isSelected) {
-                                            return Colors.overPrimary;
+                                    sourceComponent: {
+                                        if (root.aliasMode && modelData.id === root.itemToAlias) {
+                                            return aliasTextInput;
                                         } else {
-                                            return Colors.overBackground;
+                                            return normalText;
                                         }
                                     }
-                                    font.family: Config.theme.font
-                                    font.pixelSize: Config.theme.fontSize
-                                    font.weight: Font.Bold
-                                    elide: Text.ElideRight
-                                    maximumLineCount: 1
-                                    wrapMode: Text.NoWrap
+                                }
 
-                                    Behavior on color {
-                                        enabled: Config.animDuration > 0
-                                        ColorAnimation {
-                                            duration: Config.animDuration / 2
-                                            easing.type: Easing.OutQuart
+                                Component {
+                                    id: normalText
+                                    Text {
+                                        width: parent.width
+                                        text: displayText
+                                        color: {
+                                            if (isInDeleteMode) {
+                                                return Colors.overError;
+                                            } else if (isSelected) {
+                                                return Colors.overPrimary;
+                                            } else {
+                                                return Colors.overBackground;
+                                            }
+                                        }
+                                        font.family: Config.theme.font
+                                        font.pixelSize: Config.theme.fontSize
+                                        font.weight: Font.Bold
+                                        elide: Text.ElideRight
+                                        maximumLineCount: 1
+                                        wrapMode: Text.NoWrap
+
+                                        Behavior on color {
+                                            enabled: Config.animDuration > 0
+                                            ColorAnimation {
+                                                duration: Config.animDuration / 2
+                                                easing.type: Easing.OutQuart
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Component {
+                                    id: aliasTextInput
+                                    TextField {
+                                        text: root.newAlias
+                                        color: Colors.overSecondary
+                                        selectionColor: Colors.overSecondary
+                                        selectedTextColor: Colors.secondary
+                                        font.family: Config.theme.font
+                                        font.pixelSize: Config.theme.fontSize
+                                        font.weight: Font.Bold
+                                        background: Rectangle {
+                                            color: "transparent"
+                                            border.width: 0
+                                        }
+                                        selectByMouse: true
+
+                                        onTextChanged: {
+                                            root.newAlias = text;
+                                        }
+
+                                        Component.onCompleted: {
+                                            Qt.callLater(() => {
+                                                forceActiveFocus();
+                                                selectAll();
+                                            });
+                                        }
+
+                                        Keys.onPressed: event => {
+                                            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                                root.confirmAliasItem();
+                                                event.accepted = true;
+                                            } else if (event.key === Qt.Key_Escape) {
+                                                root.cancelAliasMode();
+                                                event.accepted = true;
+                                            } else if (event.key === Qt.Key_Left) {
+                                                if (cursorPosition === 0 && !selectedText) {
+                                                    root.aliasButtonIndex = 0;
+                                                    event.accepted = true;
+                                                }
+                                            } else if (event.key === Qt.Key_Right) {
+                                                if (cursorPosition === text.length && !selectedText) {
+                                                    root.aliasButtonIndex = 1;
+                                                    event.accepted = true;
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -2026,7 +2385,88 @@ Item {
         }
     }
 
-    // Handler de teclas global para manejar navegación en modo eliminar
+    // Options menu for keyboard shortcuts (Shift+Enter)
+    OptionsMenu {
+        id: keyboardOptionsMenu
+        x: root.keyboardMenuPosition.x
+        y: root.keyboardMenuPosition.y
+
+        onAboutToHide: {
+            // Disabled during menu interaction
+        }
+
+        onClosed: {
+            root.optionsMenuOpen = false;
+            root.keyboardOptionsMenuOpen = false;
+            root.menuItemIndex = -1;
+            Qt.callLater(() => {
+                searchInput.focusInput();
+            });
+            root.menuJustClosed = true;
+            menuClosedTimer.start();
+        }
+
+        Timer {
+            id: menuClosedTimer
+            interval: 100
+            repeat: false
+            onTriggered: {
+                root.menuJustClosed = false;
+            }
+        }
+
+        items: {
+            if (root.menuItemIndex >= 0 && root.menuItemIndex < root.allItems.length) {
+                let item = root.allItems[root.menuItemIndex];
+                return [
+                    {
+                        text: "Copy",
+                        icon: Icons.copy,
+                        highlightColor: Colors.primary,
+                        textColor: Colors.overPrimary,
+                        onTriggered: function () {
+                            console.log("DEBUG: Copy clicked from keyboard menu");
+                            root.copyToClipboard(item.id);
+                            Visibilities.setActiveModule("");
+                        }
+                    },
+                    {
+                        text: item.pinned ? "Unpin" : "Pin",
+                        icon: item.pinned ? Icons.unpin : Icons.pin,
+                        highlightColor: Colors.primary,
+                        textColor: Colors.overPrimary,
+                        onTriggered: function () {
+                            console.log("DEBUG: Pin/Unpin clicked from keyboard menu");
+                            ClipboardService.togglePin(item.id);
+                        }
+                    },
+                    {
+                        text: "Alias",
+                        icon: Icons.edit,
+                        highlightColor: Colors.secondary,
+                        textColor: Colors.overSecondary,
+                        onTriggered: function () {
+                            console.log("DEBUG: Alias clicked from keyboard menu");
+                            root.enterAliasMode(item.id);
+                        }
+                    },
+                    {
+                        text: "Delete",
+                        icon: Icons.trash,
+                        highlightColor: Colors.overError,
+                        textColor: Colors.error,
+                        onTriggered: function () {
+                            console.log("DEBUG: Delete clicked from keyboard menu");
+                            root.enterDeleteMode(item.id);
+                        }
+                    }
+                ];
+            }
+            return [];
+        }
+    }
+
+    // Handler de teclas global para manejar navegación en modo eliminar y alias
     Keys.onPressed: event => {
         if (root.deleteMode) {
             if (event.key === Qt.Key_Left) {
@@ -2049,13 +2489,40 @@ Item {
                 root.cancelDeleteMode();
                 event.accepted = true;
             }
+        } else if (root.aliasMode) {
+            if (event.key === Qt.Key_Left) {
+                root.aliasButtonIndex = 0;
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Right) {
+                root.aliasButtonIndex = 1;
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
+                if (root.aliasButtonIndex === 0) {
+                    console.log("DEBUG: Enter/Space pressed - canceling alias");
+                    root.cancelAliasMode();
+                } else {
+                    console.log("DEBUG: Enter/Space pressed - confirming alias");
+                    root.confirmAliasItem();
+                }
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Escape) {
+                console.log("DEBUG: Escape pressed in alias mode - canceling without closing notch");
+                root.cancelAliasMode();
+                event.accepted = true;
+            }
         }
     }
 
-    // Monitor cambios en deleteMode
+    // Monitor cambios en deleteMode y aliasMode
     onDeleteModeChanged: {
         if (!deleteMode) {
             console.log("DEBUG: Delete mode ended");
+        }
+    }
+
+    onAliasModeChanged: {
+        if (!aliasMode) {
+            console.log("DEBUG: Alias mode ended");
         }
     }
 

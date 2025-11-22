@@ -153,7 +153,9 @@ QtObject {
                             binaryPath: item.binary_path || "",
                             hash: item.content_hash || "",
                             size: item.size || 0,
-                            createdAt: item.created_at || 0
+                            createdAt: item.created_at || 0,
+                            pinned: item.pinned === 1,
+                            alias: item.alias || ""
                         });
                     }
                 } catch (e) {
@@ -260,19 +262,68 @@ QtObject {
         
         onExited: function(code) {
             if (code === 0) {
-                root.items = [];
-                root.imageDataById = {};
-                root.revision++;
-                root.listCompleted();
+                // Refresh list to show only pinned items
+                Qt.callLater(root.list);
+                // Clean binary data directory (will only remove files not referenced by pinned items)
                 cleanBinaryDataDirProcess.running = true;
             }
         }
     }
     
-    // Clean binary data directory
+    // Toggle pin status
+    property Process togglePinProcess: Process {
+        property string itemId: ""
+        running: false
+        
+        stderr: StdioCollector {
+            onStreamFinished: {
+                if (text.length > 0) {
+                    console.warn("ClipboardService: togglePinProcess stderr:", text);
+                }
+            }
+        }
+        
+        onExited: function(code) {
+            if (code === 0) {
+                Qt.callLater(root.list);
+            } else {
+                root._operationInProgress = false;
+            }
+        }
+    }
+    
+    // Set alias for item
+    property Process setAliasProcess: Process {
+        property string itemId: ""
+        running: false
+        
+        stderr: StdioCollector {
+            onStreamFinished: {
+                if (text.length > 0) {
+                    console.warn("ClipboardService: setAliasProcess stderr:", text);
+                }
+            }
+        }
+        
+        onExited: function(code) {
+            if (code === 0) {
+                Qt.callLater(root.list);
+            } else {
+                root._operationInProgress = false;
+            }
+        }
+    }
+    
+    // Clean binary data directory - only remove orphaned files
     property Process cleanBinaryDataDirProcess: Process {
         running: false
-        command: ["sh", "-c", "rm -f " + binaryDataDir + "/*"]
+        command: ["sh", "-c", 
+            "cd '" + binaryDataDir + "' && " +
+            "for f in *; do " +
+            "  [ -f \"$f\" ] || continue; " +
+            "  sqlite3 '" + dbPath + "' \"SELECT COUNT(*) FROM clipboard_items WHERE binary_path = '" + binaryDataDir + "/$f';\" | grep -q '^0$' && rm -f \"$f\"; " +
+            "done"
+        ]
     }
 
     // Load image data
@@ -397,9 +448,9 @@ QtObject {
         if (!_initialized) return;
         _operationInProgress = true;
         // Use JSON mode for reliable parsing, with timeout to avoid locks
-        // ORDER BY updated_at to show most recently used items first
+        // ORDER BY pinned DESC to show pinned items first, then by updated_at
         listProcess.command = ["sh", "-c", 
-            "sqlite3 '" + dbPath + "' <<'EOSQL'\n.timeout 5000\n.mode json\nSELECT id, mime_type, preview, is_image, binary_path, content_hash, size, created_at FROM clipboard_items ORDER BY updated_at DESC LIMIT 100;\nEOSQL"
+            "sqlite3 '" + dbPath + "' <<'EOSQL'\n.timeout 5000\n.mode json\nSELECT id, mime_type, preview, is_image, binary_path, content_hash, size, created_at, pinned, alias FROM clipboard_items ORDER BY pinned DESC, updated_at DESC LIMIT 100;\nEOSQL"
         ];
         listProcess.running = true;
     }
@@ -421,8 +472,30 @@ QtObject {
 
     function clear() {
         if (!_initialized) return;
-        clearProcess.command = ["sh", "-c", "sqlite3 '" + dbPath + "' '.timeout 5000' 'DELETE FROM clipboard_items;'"];
+        clearProcess.command = ["sh", "-c", "sqlite3 '" + dbPath + "' '.timeout 5000' 'DELETE FROM clipboard_items WHERE pinned = 0;'"];
         clearProcess.running = true;
+    }
+
+    function togglePin(id) {
+        if (!_initialized) return;
+        _operationInProgress = true;
+        togglePinProcess.itemId = id;
+        togglePinProcess.command = ["sh", "-c", "sqlite3 '" + dbPath + "' '.timeout 5000' 'UPDATE clipboard_items SET pinned = CASE WHEN pinned = 1 THEN 0 ELSE 1 END WHERE id = " + id + ";'"];
+        togglePinProcess.running = true;
+    }
+
+    function setAlias(id, alias) {
+        if (!_initialized) return;
+        _operationInProgress = true;
+        setAliasProcess.itemId = id;
+        // Escape single quotes in alias by replacing ' with ''
+        var escapedAlias = alias.replace(/'/g, "''");
+        if (alias.trim() === "") {
+            setAliasProcess.command = ["sh", "-c", "sqlite3 '" + dbPath + "' '.timeout 5000' 'UPDATE clipboard_items SET alias = NULL WHERE id = " + id + ";'"];
+        } else {
+            setAliasProcess.command = ["sh", "-c", "sqlite3 '" + dbPath + "' '.timeout 5000' \"UPDATE clipboard_items SET alias = '" + escapedAlias + "' WHERE id = " + id + ";\""];
+        }
+        setAliasProcess.running = true;
     }
 
     function decodeToDataUrl(id, mime) {
