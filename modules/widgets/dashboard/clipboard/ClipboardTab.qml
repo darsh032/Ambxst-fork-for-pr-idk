@@ -2063,22 +2063,99 @@ Item {
                     anchors.bottom: separator.top
                     anchors.bottomMargin: 8
 
-                    // Preview para imagen
+                    // Preview para imagen estática
                     Image {
                         id: previewImage
                         anchors.fill: parent
                         fillMode: Image.PreserveAspectFit
-                        visible: previewPanel.currentItem && previewPanel.currentItem.isImage
+                        visible: previewPanel.currentItem && (previewPanel.currentItem.isImage || isImageFile) && !isGifImage
                         source: {
-                            if (previewPanel.currentItem && previewPanel.currentItem.isImage) {
-                                ClipboardService.revision;
-                                return ClipboardService.getImageData(previewPanel.currentItem.id);
+                            if (previewPanel.currentItem) {
+                                if (previewPanel.currentItem.isImage && !isGifImage) {
+                                    ClipboardService.revision;
+                                    return ClipboardService.getImageData(previewPanel.currentItem.id);
+                                } else if (isImageFile && !isGifImage) {
+                                    var content = root.currentFullContent || previewPanel.currentItem.preview;
+                                    var filePath = root.getFilePathFromUri(content);
+                                    return filePath ? "file://" + filePath : "";
+                                }
                             }
                             return "";
                         }
                         clip: true
                         cache: false
                         asynchronous: true
+                        
+                        property bool isImageFile: {
+                            if (!previewPanel.currentItem || !previewPanel.currentItem.isFile) return false;
+                            var content = root.currentFullContent || previewPanel.currentItem.preview;
+                            var filePath = root.getFilePathFromUri(content);
+                            return root.isImageFile(filePath);
+                        }
+                        
+                        property bool isGifImage: {
+                            if (!previewPanel.currentItem) return false;
+                            // Check direct image mime type
+                            if (previewPanel.currentItem.mime === "image/gif") return true;
+                            // Check file extension for text/uri-list
+                            if (previewPanel.currentItem.isFile) {
+                                var content = root.currentFullContent || previewPanel.currentItem.preview;
+                                var filePath = root.getFilePathFromUri(content);
+                                if (filePath) {
+                                    var ext = filePath.split('.').pop().toLowerCase();
+                                    return ext === "gif";
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                    
+                    // Preview para GIF animado
+                    AnimatedImage {
+                        id: previewGif
+                        anchors.fill: parent
+                        fillMode: Image.PreserveAspectFit
+                        visible: previewPanel.currentItem && (previewPanel.currentItem.isImage || isImageFile) && isGifImage
+                        source: {
+                            if (previewPanel.currentItem && isGifImage) {
+                                if (previewPanel.currentItem.isImage) {
+                                    ClipboardService.revision;
+                                    return ClipboardService.getImageData(previewPanel.currentItem.id);
+                                } else if (isImageFile) {
+                                    var content = root.currentFullContent || previewPanel.currentItem.preview;
+                                    var filePath = root.getFilePathFromUri(content);
+                                    return filePath ? "file://" + filePath : "";
+                                }
+                            }
+                            return "";
+                        }
+                        clip: true
+                        cache: false
+                        asynchronous: true
+                        playing: true
+                        
+                        property bool isImageFile: {
+                            if (!previewPanel.currentItem || !previewPanel.currentItem.isFile) return false;
+                            var content = root.currentFullContent || previewPanel.currentItem.preview;
+                            var filePath = root.getFilePathFromUri(content);
+                            return root.isImageFile(filePath);
+                        }
+                        
+                        property bool isGifImage: {
+                            if (!previewPanel.currentItem) return false;
+                            // Check direct image mime type
+                            if (previewPanel.currentItem.mime === "image/gif") return true;
+                            // Check file extension for text/uri-list
+                            if (previewPanel.currentItem.isFile) {
+                                var content = root.currentFullContent || previewPanel.currentItem.preview;
+                                var filePath = root.getFilePathFromUri(content);
+                                if (filePath) {
+                                    var ext = filePath.split('.').pop().toLowerCase();
+                                    return ext === "gif";
+                                }
+                            }
+                            return false;
+                        }
                     }
 
                     // Placeholder cuando la imagen no está lista
@@ -2088,7 +2165,18 @@ Item {
                         height: 120
                         color: Colors.surfaceBright
                         radius: Config.roundness > 0 ? Config.roundness + 4 : 0
-                        visible: previewPanel.currentItem && previewPanel.currentItem.isImage && previewImage.status !== Image.Ready
+                        visible: {
+                            if (!previewPanel.currentItem) return false;
+                            var isImg = previewPanel.currentItem.isImage || previewImage.isImageFile || previewGif.isImageFile;
+                            if (!isImg) return false;
+                            
+                            if (previewImage.visible) {
+                                return previewImage.status !== Image.Ready;
+                            } else if (previewGif.visible) {
+                                return previewGif.status !== AnimatedImage.Ready;
+                            }
+                            return false;
+                        }
 
                         Text {
                             anchors.centerIn: parent
@@ -2588,10 +2676,10 @@ Item {
                         }
                     }
 
-                    // Preview para archivos (text/uri-list)
+                    // Preview para archivos (text/uri-list) - solo no-imágenes
                     Item {
                         anchors.fill: parent
-                        visible: previewPanel.currentItem && previewPanel.currentItem.isFile
+                        visible: previewPanel.currentItem && previewPanel.currentItem.isFile && !isImage
 
                         property string filePath: {
                             if (!previewPanel.currentItem)
@@ -2612,39 +2700,10 @@ Item {
                             }
                         }
 
-                        // Preview de imagen para archivos de imagen
-                        Image {
-                            anchors.fill: parent
-                            fillMode: Image.PreserveAspectFit
-                            visible: parent.isImage
-                            source: parent.isImage ? "file://" + parent.filePath : ""
-                            cache: false
-                            asynchronous: true
-
-                            Rectangle {
-                                anchors.centerIn: parent
-                                width: 120
-                                height: 120
-                                color: Colors.surfaceBright
-                                radius: Config.roundness > 0 ? Config.roundness + 4 : 0
-                                visible: parent.status === Image.Loading || parent.status === Image.Error
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: Icons.image
-                                    textFormat: Text.RichText
-                                    font.family: Icons.font
-                                    font.pixelSize: 48
-                                    color: Colors.primary
-                                }
-                            }
-                        }
-
-                        // Preview genérico para otros archivos
+                        // Preview genérico para archivos no-imagen
                         Column {
                             anchors.centerIn: parent
                             spacing: 16
-                            visible: !parent.isImage
 
                             Rectangle {
                                 width: 120
