@@ -476,7 +476,7 @@ FocusScope {
                                                 }
 
                                                 StyledRect {
-                                                    variant: "active"
+                                                    variant: "primary"
                                                     anchors.fill: parent
                                                     radius: Config.roundness
                                                     visible: oledCheckbox.checked

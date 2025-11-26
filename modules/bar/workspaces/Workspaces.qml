@@ -252,7 +252,7 @@ Item {
 
     // Horizontal active workspace highlight
     StyledRect {
-        variant: "active"
+        variant: "primary"
         id: activeHighlightH
         visible: orientation === "horizontal"
         z: 2
@@ -313,7 +313,7 @@ Item {
 
     // Vertical active workspace highlight
     StyledRect {
-        variant: "active"
+        variant: "primary"
         id: activeHighlightV
         visible: orientation === "vertical"
         z: 2

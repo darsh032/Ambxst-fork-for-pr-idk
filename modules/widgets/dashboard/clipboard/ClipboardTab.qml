@@ -1947,26 +1947,18 @@ Item {
                         }
                     }
 
-                    highlight: Rectangle {
-                        color: {
+                    highlight: StyledRect {
+                        variant: {
                             if (root.deleteMode) {
-                                return Colors.error;
+                                return "error";
                             } else if (root.expandedItemIndex >= 0 && root.selectedIndex === root.expandedItemIndex) {
-                                return Colors.surfaceBright;
+                                return "focus";
                             } else {
-                                return Colors.primary;
+                                return "primary";
                             }
                         }
                         radius: Config.roundness > 0 ? Config.roundness + 4 : 0
                         visible: root.selectedIndex >= 0 && !root.anyItemDragging
-
-                        Behavior on color {
-                            enabled: Config.animDuration > 0
-                            ColorAnimation {
-                                duration: Config.animDuration / 2
-                                easing.type: Easing.OutQuart
-                            }
-                        }
                     }
 
                     highlightMoveDuration: Config.animDuration > 0 ? Config.animDuration / 2 : 0

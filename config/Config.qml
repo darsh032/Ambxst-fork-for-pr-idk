@@ -88,24 +88,45 @@ Singleton {
                 property list<var> gradPane: [["surface", 0.0]]
                 property list<var> gradCommon: [["surface", 0.0]]
                 property list<var> gradFocus: [["surfaceBright", 0.0]]
-                property list<var> gradActive: [["primary", 0.0]]
-                property list<var> gradActiveFocus: [["overBackground", 0.0]]
+                property list<var> gradPrimary: [["primary", 0.0]]
+                property list<var> gradPrimaryFocus: [["overBackground", 0.0]]
+                property list<var> gradSecondary: [["secondary", 0.0]]
+                property list<var> gradSecondaryFocus: [["overBackground", 0.0]]
+                property list<var> gradTertiary: [["tertiary", 0.0]]
+                property list<var> gradTertiaryFocus: [["overBackground", 0.0]]
+                property list<var> gradError: [["error", 0.0]]
+                property list<var> gradErrorFocus: [["overBackground", 0.0]]
+                property list<var> gradOverError: [["overError", 0.0]]
 
                 // Border configurations [color, width]
                 property list<var> borderBg: ["surfaceBright", 0]
                 property list<var> borderPane: ["surfaceBright", 0]
                 property list<var> borderCommon: ["surfaceBright", 0]
                 property list<var> borderFocus: ["surfaceBright", 0]
-                property list<var> borderActive: ["primary", 0]
-                property list<var> borderActiveFocus: ["overBackground", 0]
+                property list<var> borderPrimary: ["primary", 0]
+                property list<var> borderPrimaryFocus: ["overBackground", 0]
+                property list<var> borderSecondary: ["secondary", 0]
+                property list<var> borderSecondaryFocus: ["overBackground", 0]
+                property list<var> borderTertiary: ["tertiary", 0]
+                property list<var> borderTertiaryFocus: ["overBackground", 0]
+                property list<var> borderError: ["error", 0]
+                property list<var> borderErrorFocus: ["overBackground", 0]
+                property list<var> borderOverError: ["overError", 0]
 
                 // Item color configurations
                 property string itemBg: "overBackground"
                 property string itemPane: "overBackground"
                 property string itemCommon: "overBackground"
                 property string itemFocus: "overBackground"
-                property string itemActive: "overPrimary"
-                property string itemActiveFocus: "overPrimary"
+                property string itemPrimary: "overPrimary"
+                property string itemPrimaryFocus: "overPrimary"
+                property string itemSecondary: "overSecondary"
+                property string itemSecondaryFocus: "overSecondary"
+                property string itemTertiary: "overTertiary"
+                property string itemTertiaryFocus: "overTertiary"
+                property string itemError: "overError"
+                property string itemErrorFocus: "overError"
+                property string itemOverError: "error"
             }
 
             property JsonObject bar: JsonObject {

@@ -1302,14 +1302,14 @@ Item {
                 }
             }
 
-            highlight: Rectangle {
-                color: {
+            highlight: StyledRect {
+                variant: {
                     if (root.deleteMode) {
-                        return Colors.error;
+                        return "error";
                     } else if (root.renameMode) {
-                        return Colors.secondary;
+                        return "secondary";
                     } else {
-                        return Colors.primary;
+                        return "primary";
                     }
                 }
                 radius: Config.roundness > 0 ? Config.roundness + 4 : 0

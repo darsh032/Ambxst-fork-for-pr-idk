@@ -231,8 +231,8 @@ FocusScope {
 
                     // Variante dinámica según estado
                     variant: {
-                        if (isActive && (hasFocus || isHovered)) return "activefocus";
-                        if (isActive) return "active";
+                        if (isActive && (hasFocus || isHovered)) return "primaryfocus";
+                        if (isActive) return "primary";
                         if (hasFocus || isHovered) return "focus";
                         return "common";
                     }

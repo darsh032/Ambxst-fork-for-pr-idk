@@ -64,7 +64,7 @@ StyledRect {
 
         // Prefix indicator
         StyledRect {
-            variant: "active"
+            variant: "primary"
             Layout.preferredWidth: 32
             Layout.preferredHeight: 32
             radius: Config.roundness > 0 ? Math.max(Config.roundness - 4, 0) : 0

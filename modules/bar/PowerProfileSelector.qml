@@ -66,7 +66,7 @@ StyledRect {
 
         // Sliding highlight indicator (behind buttons)
         StyledRect {
-            variant: "active"
+            variant: "primary"
             id: highlight
             z: 0
             radius: Math.max(0, Config.roundness - 2)

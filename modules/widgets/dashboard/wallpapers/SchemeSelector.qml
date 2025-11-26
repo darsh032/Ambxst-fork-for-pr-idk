@@ -254,7 +254,7 @@ Item {
                         }
 
                         StyledRect {
-                            variant: "active"
+                            variant: "primary"
                             z: 0
                             width: 36
                             height: 36
@@ -359,7 +359,7 @@ Item {
                         }
 
                         highlight: StyledRect {
-                            variant: "active"
+                            variant: "primary"
                             radius: Config.roundness
                             visible: selectedSchemeIndex >= 0
                             z: -1
@@ -413,7 +413,7 @@ Item {
                     }
 
                     contentItem: StyledRect {
-                        variant: "active"
+                        variant: "primary"
                         radius: Config.roundness
                     }
 

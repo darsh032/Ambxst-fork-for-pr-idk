@@ -15,8 +15,8 @@ StyledRect {
     property bool isHovered: mouseArea.containsMouse
 
     variant: {
-        if (isActive && isHovered) return "activefocus"
-        if (isActive) return "active"
+        if (isActive && isHovered) return "primaryfocus"
+        if (isActive) return "primary"
         if (isHovered) return "focus"
         return "pane"
     }

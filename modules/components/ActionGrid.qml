@@ -78,7 +78,7 @@ FocusScope {
 
         // Highlight que se desplaza entre botones con efecto elástico
         StyledRect {
-            variant: "active"
+            variant: "primary"
             id: highlight
             radius: Config.roundness > 0 ? Config.roundness + 4 : 0
             border.width: 0
