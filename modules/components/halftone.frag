@@ -52,9 +52,9 @@ void main() {
     vec2 relativePos = pixelPos - center;
     float projection = dot(relativePos, gradientDir);
     
-    // Normalizar e invertir para que vaya de max a min (arriba a abajo)
+    // Normalizar (sin invertir, para que vaya de arriba a abajo correctamente)
     float diagonal = sqrt(ubuf.canvasWidth * ubuf.canvasWidth + ubuf.canvasHeight * ubuf.canvasHeight);
-    float gradientPos = 1.0 - ((projection / diagonal) * 0.5 + 0.5);
+    float gradientPos = (projection / diagonal) * 0.5 + 0.5;
     
     // Interpolar tamaño del dot
     float t = smoothstep(ubuf.gradientStart, ubuf.gradientEnd, gradientPos);
