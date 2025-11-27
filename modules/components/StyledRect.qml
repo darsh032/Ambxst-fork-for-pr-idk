@@ -290,8 +290,6 @@ ClippingRectangle {
     }
 
     radius: Config.roundness
-    border.color: Config.resolveColor(borderData[0])
-    border.width: borderData[1]
     color: "transparent"
 
     // Gradiente source - con stretch completo
@@ -457,5 +455,14 @@ ClippingRectangle {
         shadowBlur: Config.theme.shadowBlur
         shadowColor: Config.resolveColor(Config.theme.shadowColor)
         shadowOpacity: Config.theme.shadowOpacity
+    }
+
+    // Border overlay to avoid ClippingRectangle artifacts
+    Rectangle {
+        anchors.fill: parent
+        radius: root.radius
+        color: "transparent"
+        border.color: Config.resolveColor(borderData[0])
+        border.width: borderData[1]
     }
 }
