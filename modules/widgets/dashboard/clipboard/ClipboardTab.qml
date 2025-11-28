@@ -1822,15 +1822,11 @@ Item {
                                                 root.cancelAliasMode();
                                                 event.accepted = true;
                                             } else if (event.key === Qt.Key_Left) {
-                                                if (cursorPosition === 0 && !selectedText) {
-                                                    root.aliasButtonIndex = 0;
-                                                    event.accepted = true;
-                                                }
+                                                root.aliasButtonIndex = 0;
+                                                event.accepted = true;
                                             } else if (event.key === Qt.Key_Right) {
-                                                if (cursorPosition === text.length && !selectedText) {
-                                                    root.aliasButtonIndex = 1;
-                                                    event.accepted = true;
-                                                }
+                                                root.aliasButtonIndex = 1;
+                                                event.accepted = true;
                                             }
                                         }
                                     }
@@ -1894,6 +1890,8 @@ Item {
                         variant: {
                             if (root.deleteMode) {
                                 return "error";
+                            } else if (root.aliasMode) {
+                                return "secondary";
                             } else if (root.expandedItemIndex >= 0 && root.selectedIndex === root.expandedItemIndex) {
                                 return "focus";
                             } else {

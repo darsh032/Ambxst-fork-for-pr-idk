@@ -1112,6 +1112,12 @@ Item {
                                     } else if (event.key === Qt.Key_Escape) {
                                         root.cancelRenameMode();
                                         event.accepted = true;
+                                    } else if (event.key === Qt.Key_Left) {
+                                        root.renameButtonIndex = 0;
+                                        event.accepted = true;
+                                    } else if (event.key === Qt.Key_Right) {
+                                        root.renameButtonIndex = 1;
+                                        event.accepted = true;
                                     }
                                 }
                             }
