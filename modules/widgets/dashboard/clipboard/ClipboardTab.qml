@@ -37,6 +37,11 @@ Item {
     property int selectedIndex: -1
     property var allItems: []
     property bool hasNavigatedFromSearch: false
+    
+    // Animated list model for smooth transitions
+    ListModel {
+        id: animatedItemsModel
+    }
     property bool clearButtonFocused: false
     property bool clearButtonConfirmState: false
     property bool anyItemDragging: false
@@ -280,6 +285,7 @@ Item {
         }
 
         allItems = newItems;
+        updateAnimatedModel(newItems);
 
         // If we have a pending item to select (after pin/alias operations), find it
         if (pendingItemIdToSelect !== "") {
@@ -313,6 +319,55 @@ Item {
                     selectedIndex = 0;
                     resultsList.currentIndex = 0;
                 }
+            }
+        }
+    }
+
+    // Update the animated model with smooth transitions
+    function updateAnimatedModel(newItems) {
+        // Create a map of item IDs to their new positions
+        var newItemsById = {};
+        for (var i = 0; i < newItems.length; i++) {
+            newItemsById[newItems[i].id] = i;
+        }
+
+        // Create a map of current items by ID
+        var currentItemsById = {};
+        for (var i = 0; i < animatedItemsModel.count; i++) {
+            var item = animatedItemsModel.get(i);
+            currentItemsById[item.itemId] = i;
+        }
+
+        // Remove items that are no longer in the filtered list
+        for (var i = animatedItemsModel.count - 1; i >= 0; i--) {
+            var item = animatedItemsModel.get(i);
+            if (!(item.itemId in newItemsById)) {
+                animatedItemsModel.remove(i);
+            }
+        }
+
+        // Add new items and reorder existing ones
+        for (var i = 0; i < newItems.length; i++) {
+            var newItem = newItems[i];
+            var currentIndex = -1;
+
+            // Find if this item already exists in the model
+            for (var j = 0; j < animatedItemsModel.count; j++) {
+                if (animatedItemsModel.get(j).itemId === newItem.id) {
+                    currentIndex = j;
+                    break;
+                }
+            }
+
+            if (currentIndex === -1) {
+                // Item doesn't exist, insert it
+                animatedItemsModel.insert(i, {
+                    itemId: newItem.id,
+                    itemData: newItem
+                });
+            } else if (currentIndex !== i) {
+                // Item exists but in wrong position, move it
+                animatedItemsModel.move(currentIndex, i, 1);
             }
         }
     }
@@ -775,18 +830,118 @@ Item {
                     reuseItems: false
                     boundsBehavior: Flickable.StopAtBounds
 
-                    model: root.allItems
+                    model: animatedItemsModel
                     currentIndex: root.selectedIndex
+                    
+                    // Smooth scroll animation
+                    Behavior on contentY {
+                        enabled: Config.animDuration > 0
+                        NumberAnimation {
+                            duration: Config.animDuration / 2
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    // Smooth animations for filtering
+                    displaced: Transition {
+                        NumberAnimation {
+                            properties: "y"
+                            duration: Config.animDuration > 0 ? Config.animDuration : 0
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    add: Transition {
+                        ParallelAnimation {
+                            NumberAnimation {
+                                property: "opacity"
+                                from: 0
+                                to: 1
+                                duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                easing.type: Easing.OutCubic
+                            }
+                            NumberAnimation {
+                                property: "y"
+                                duration: Config.animDuration > 0 ? Config.animDuration : 0
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                    }
+
+                    remove: Transition {
+                        SequentialAnimation {
+                            PauseAnimation {
+                                duration: 50
+                            }
+                            ParallelAnimation {
+                                NumberAnimation {
+                                    property: "opacity"
+                                    to: 0
+                                    duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                    easing.type: Easing.OutCubic
+                                }
+                                NumberAnimation {
+                                    property: "height"
+                                    to: 0
+                                    duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                        }
+                    }
 
                     onCurrentIndexChanged: {
                         if (currentIndex !== root.selectedIndex) {
                             root.selectedIndex = currentIndex;
                         }
+                        
+                        // Manual smooth auto-scroll (simplified for variable height items)
+                        if (currentIndex >= 0) {
+                            var itemY = 0;
+                            for (var i = 0; i < currentIndex && i < animatedItemsModel.count; i++) {
+                                var itemData = animatedItemsModel.get(i).itemData;
+                                var itemHeight = 48;
+                                if (i === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
+                                    var optionsCount = 4;
+                                    if (itemData.isFile || itemData.isImage || ClipboardUtils.isUrl(itemData.preview)) {
+                                        optionsCount++;
+                                    }
+                                    var listHeight = 36 * Math.min(3, optionsCount);
+                                    itemHeight = 48 + 4 + listHeight + 8;
+                                }
+                                itemY += itemHeight;
+                            }
+                            
+                            var currentItemHeight = 48;
+                            if (currentIndex === root.expandedItemIndex && !root.deleteMode && !root.aliasMode && currentIndex < animatedItemsModel.count) {
+                                var itemData = animatedItemsModel.get(currentIndex).itemData;
+                                var optionsCount = 4;
+                                if (itemData.isFile || itemData.isImage || ClipboardUtils.isUrl(itemData.preview)) {
+                                    optionsCount++;
+                                }
+                                var listHeight = 36 * Math.min(3, optionsCount);
+                                currentItemHeight = 48 + 4 + listHeight + 8;
+                            }
+                            
+                            var viewportTop = resultsList.contentY;
+                            var viewportBottom = viewportTop + resultsList.height;
+                            
+                            if (itemY < viewportTop) {
+                                // Item is above viewport, scroll up
+                                resultsList.contentY = itemY;
+                            } else if (itemY + currentItemHeight > viewportBottom) {
+                                // Item is below viewport, scroll down
+                                resultsList.contentY = itemY + currentItemHeight - resultsList.height;
+                            }
+                        }
                     }
 
                     delegate: Rectangle {
-                        required property var modelData
+                        required property string itemId
+                        required property var itemData
                         required property int index
+
+                        property var modelData: itemData
 
                         width: resultsList.width
                         height: {
@@ -1890,24 +2045,78 @@ Item {
                         }
                     }
 
-                    highlight: StyledRect {
-                        variant: {
-                            if (root.deleteMode) {
-                                return "error";
-                            } else if (root.aliasMode) {
-                                return "secondary";
-                            } else if (root.expandedItemIndex >= 0 && root.selectedIndex === root.expandedItemIndex) {
-                                return "focus";
-                            } else {
-                                return "primary";
+                    highlight: Item {
+                        width: resultsList.width
+                        height: {
+                            let baseHeight = 48;
+                            if (resultsList.currentIndex === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
+                                if (resultsList.currentIndex >= 0 && resultsList.currentIndex < animatedItemsModel.count) {
+                                    var itemData = animatedItemsModel.get(resultsList.currentIndex).itemData;
+                                    var optionsCount = 4;
+                                    if (itemData.isFile || itemData.isImage || ClipboardUtils.isUrl(itemData.preview)) {
+                                        optionsCount++;
+                                    }
+                                    var listHeight = 36 * Math.min(3, optionsCount);
+                                    return baseHeight + 4 + listHeight + 8;
+                                }
+                            }
+                            return baseHeight;
+                        }
+                        
+                        // Calculate Y position based on index, accounting for expanded items
+                        y: {
+                            var yPos = 0;
+                            for (var i = 0; i < resultsList.currentIndex && i < animatedItemsModel.count; i++) {
+                                var itemData = animatedItemsModel.get(i).itemData;
+                                var itemHeight = 48;
+                                if (i === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
+                                    var optionsCount = 4;
+                                    if (itemData.isFile || itemData.isImage || ClipboardUtils.isUrl(itemData.preview)) {
+                                        optionsCount++;
+                                    }
+                                    var listHeight = 36 * Math.min(3, optionsCount);
+                                    itemHeight = 48 + 4 + listHeight + 8;
+                                }
+                                yPos += itemHeight;
+                            }
+                            return yPos;
+                        }
+                        
+                        Behavior on y {
+                            enabled: Config.animDuration > 0
+                            NumberAnimation {
+                                duration: Config.animDuration / 2
+                                easing.type: Easing.OutCubic
                             }
                         }
-                        radius: Config.roundness > 0 ? Config.roundness + 4 : 0
-                        visible: root.selectedIndex >= 0 && !root.anyItemDragging
+                        
+                        Behavior on height {
+                            enabled: Config.animDuration > 0
+                            NumberAnimation {
+                                duration: Config.animDuration
+                                easing.type: Easing.OutQuart
+                            }
+                        }
+                        
+                        StyledRect {
+                            anchors.fill: parent
+                            variant: {
+                                if (root.deleteMode) {
+                                    return "error";
+                                } else if (root.aliasMode) {
+                                    return "secondary";
+                                } else if (root.expandedItemIndex >= 0 && root.selectedIndex === root.expandedItemIndex) {
+                                    return "focus";
+                                } else {
+                                    return "primary";
+                                }
+                            }
+                            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                            visible: root.selectedIndex >= 0 && !root.anyItemDragging
+                        }
                     }
 
-                    highlightMoveDuration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
-                    highlightMoveVelocity: -1
+                    highlightFollowsCurrentItem: false
                 }
 
                 MouseArea {

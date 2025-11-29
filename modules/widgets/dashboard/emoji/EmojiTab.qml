@@ -31,6 +31,30 @@ Rectangle {
     property var emojiData: []
     property var recentEmojis: []
     property var filteredEmojis: []
+    
+    // Performance optimization
+    property int maxResults: 30
+    property bool searchDebounceActive: false
+    
+    // Animated list models for smooth transitions
+    ListModel {
+        id: animatedEmojisModel
+    }
+    
+    ListModel {
+        id: animatedRecentModel
+    }
+    
+    // Debounce timer for search
+    Timer {
+        id: searchDebounceTimer
+        interval: 150
+        repeat: false
+        onTriggered: {
+            searchDebounceActive = false;
+            performSearch();
+        }
+    }
 
     onSelectedIndexChanged: {
         if (selectedIndex === -1 && emojiList.count > 0) {
@@ -39,7 +63,9 @@ Rectangle {
     }
 
     onSearchTextChanged: {
-        updateFilteredEmojis();
+        // Debounce search for better performance
+        searchDebounceActive = true;
+        searchDebounceTimer.restart();
     }
 
     function clearSearch() {
@@ -52,7 +78,9 @@ Rectangle {
         clearButtonFocused = false;
         clearButtonConfirmState = false;
         searchInput.focusInput();
-        updateFilteredEmojis();
+        
+        // Load initial emojis when clearing search
+        loadInitialEmojis();
     }
 
     function resetClearButton() {
@@ -71,29 +99,40 @@ Rectangle {
         searchInput.focusInput();
     }
 
+    function performSearch() {
+        // When search is empty, show initial 20 emojis
+        if (searchText.length === 0) {
+            loadInitialEmojis();
+            selectedIndex = -1;
+            selectedRecentIndex = -1;
+            return;
+        }
+        
+        updateFilteredEmojis();
+    }
+
     function updateFilteredEmojis() {
         var filtered = [];
         var searchLower = searchText.toLowerCase();
+        var resultCount = 0;
 
-        for (var i = 0; i < emojiData.length; i++) {
-            var emoji = emojiData[i];
-            var emojiText = emoji.emoji;
-            var searchTerms = emoji.search;
+        // Only search when there's text, limit results for performance
+        if (searchText.length > 0) {
+            for (var i = 0; i < emojiData.length && resultCount < maxResults; i++) {
+                var emoji = emojiData[i];
+                var emojiText = emoji.emoji;
+                var searchTerms = emoji.search;
 
-            // Check if search text matches emoji or any search term
-            var matches = searchText.length === 0;
-            if (!matches) {
+                // Check if search text matches emoji or any search term
                 if (emojiText.includes(searchText) || searchTerms.toLowerCase().includes(searchLower)) {
-                    matches = true;
+                    filtered.push(emoji);
+                    resultCount++;
                 }
-            }
-
-            if (matches) {
-                filtered.push(emoji);
             }
         }
 
         filteredEmojis = filtered;
+        updateAnimatedEmojisModel(filtered);
 
         if (searchText.length > 0 && filteredEmojis.length > 0 && !isRecentFocused) {
             selectedIndex = 0;
@@ -104,10 +143,123 @@ Rectangle {
         }
     }
 
+    // Update the animated emoji model with smooth transitions
+    function updateAnimatedEmojisModel(newItems) {
+        // If search is empty or too many results, just clear and batch insert
+        if (newItems.length === 0) {
+            animatedEmojisModel.clear();
+            return;
+        }
+        
+        // For initial population or complete refresh, use batch operations
+        if (animatedEmojisModel.count === 0 || Math.abs(newItems.length - animatedEmojisModel.count) > 50) {
+            animatedEmojisModel.clear();
+            for (var i = 0; i < newItems.length; i++) {
+                animatedEmojisModel.append({
+                    emojiId: newItems[i].search,
+                    emojiData: newItems[i]
+                });
+            }
+            return;
+        }
+        
+        // Create a unique ID for each emoji (using search term as ID)
+        var newItemsById = {};
+        for (var i = 0; i < newItems.length; i++) {
+            newItemsById[newItems[i].search] = i;
+        }
+
+        // Create map of current items for faster lookup
+        var currentItemsById = {};
+        for (var i = 0; i < animatedEmojisModel.count; i++) {
+            currentItemsById[animatedEmojisModel.get(i).emojiId] = i;
+        }
+
+        // Remove items that are no longer in the filtered list
+        for (var i = animatedEmojisModel.count - 1; i >= 0; i--) {
+            var item = animatedEmojisModel.get(i);
+            if (!(item.emojiId in newItemsById)) {
+                animatedEmojisModel.remove(i);
+            }
+        }
+
+        // Add new items and reorder existing ones
+        for (var i = 0; i < newItems.length; i++) {
+            var newItem = newItems[i];
+            var currentIndex = currentItemsById[newItem.search];
+
+            if (currentIndex === undefined) {
+                // Item doesn't exist, insert it
+                animatedEmojisModel.insert(i, {
+                    emojiId: newItem.search,
+                    emojiData: newItem
+                });
+            } else if (currentIndex !== i) {
+                // Item exists but in wrong position, move it
+                animatedEmojisModel.move(currentIndex, i, 1);
+            }
+        }
+    }
+
+    // Update the animated recent model with smooth transitions
+    function updateAnimatedRecentModel(newItems) {
+        var newItemsById = {};
+        for (var i = 0; i < newItems.length; i++) {
+            newItemsById[newItems[i].search] = i;
+        }
+
+        for (var i = animatedRecentModel.count - 1; i >= 0; i--) {
+            var item = animatedRecentModel.get(i);
+            if (!(item.emojiId in newItemsById)) {
+                animatedRecentModel.remove(i);
+            }
+        }
+
+        for (var i = 0; i < newItems.length; i++) {
+            var newItem = newItems[i];
+            var currentIndex = -1;
+
+            for (var j = 0; j < animatedRecentModel.count; j++) {
+                if (animatedRecentModel.get(j).emojiId === newItem.search) {
+                    currentIndex = j;
+                    break;
+                }
+            }
+
+            if (currentIndex === -1) {
+                animatedRecentModel.insert(i, {
+                    emojiId: newItem.search,
+                    emojiData: newItem
+                });
+            } else if (currentIndex !== i) {
+                animatedRecentModel.move(currentIndex, i, 1);
+            }
+        }
+    }
+
     function loadEmojiData() {
         // Load emoji data from fuzzel-emoji.sh
         emojiProcess.command = ["bash", "-c", "sed '1,/^### DATA ###$/d' /home/adriano/Repos/Axenide/Ambxst/scripts/fuzzel-emoji.sh"];
         emojiProcess.running = true;
+    }
+    
+    function loadInitialEmojis() {
+        // Load first 20 emojis for initial display
+        var initial = [];
+        for (var i = 0; i < Math.min(20, emojiData.length); i++) {
+            initial.push(emojiData[i]);
+        }
+        
+        // Populate the model with initial emojis
+        animatedEmojisModel.clear();
+        for (var i = 0; i < initial.length; i++) {
+            animatedEmojisModel.append({
+                emojiId: initial[i].search,
+                emojiData: initial[i]
+            });
+        }
+        
+        filteredEmojis = initial;
     }
 
     function loadRecentEmojis() {
@@ -147,6 +299,7 @@ Rectangle {
             return b.lastUsed - a.lastUsed;
         });
 
+        updateAnimatedRecentModel(recentEmojis);
         saveRecentEmojis();
     }
 
@@ -289,7 +442,9 @@ Rectangle {
                     }
                 }
                 emojiData = data;
-                updateFilteredEmojis();
+                
+                // Load first 20 emojis by default for initial display
+                loadInitialEmojis();
             }
         }
 
@@ -309,8 +464,10 @@ Rectangle {
             onStreamFinished: {
                 try {
                     recentEmojis = JSON.parse(text.trim());
+                    updateAnimatedRecentModel(recentEmojis);
                 } catch (e) {
                     recentEmojis = [];
+                    updateAnimatedRecentModel([]);
                 }
             }
         }
@@ -523,20 +680,95 @@ Rectangle {
                     height: 7 * 48
                     clip: true
                     cacheBuffer: 96
-                    reuseItems: true
+                    reuseItems: false
 
-                    model: root.filteredEmojis
+                    model: animatedEmojisModel
                     currentIndex: root.selectedIndex
+                    
+                    // Smooth scroll animation
+                    Behavior on contentY {
+                        enabled: Config.animDuration > 0
+                        NumberAnimation {
+                            duration: Config.animDuration / 2
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    // Smooth animations for filtering
+                    displaced: Transition {
+                        NumberAnimation {
+                            properties: "y"
+                            duration: Config.animDuration > 0 ? Config.animDuration : 0
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    add: Transition {
+                        ParallelAnimation {
+                            NumberAnimation {
+                                property: "opacity"
+                                from: 0
+                                to: 1
+                                duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                easing.type: Easing.OutCubic
+                            }
+                            NumberAnimation {
+                                property: "y"
+                                duration: Config.animDuration > 0 ? Config.animDuration : 0
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                    }
+
+                    remove: Transition {
+                        SequentialAnimation {
+                            PauseAnimation {
+                                duration: 50
+                            }
+                            ParallelAnimation {
+                                NumberAnimation {
+                                    property: "opacity"
+                                    to: 0
+                                    duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                    easing.type: Easing.OutCubic
+                                }
+                                NumberAnimation {
+                                    property: "height"
+                                    to: 0
+                                    duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                        }
+                    }
 
                     onCurrentIndexChanged: {
                         if (currentIndex !== root.selectedIndex && !root.isRecentFocused) {
                             root.selectedIndex = currentIndex;
                         }
+                        
+                        // Manual smooth auto-scroll
+                        if (currentIndex >= 0 && !root.isRecentFocused) {
+                            var itemY = currentIndex * 48;
+                            var viewportTop = emojiList.contentY;
+                            var viewportBottom = viewportTop + emojiList.height;
+                            
+                            if (itemY < viewportTop) {
+                                // Item is above viewport, scroll up
+                                emojiList.contentY = itemY;
+                            } else if (itemY + 48 > viewportBottom) {
+                                // Item is below viewport, scroll down
+                                emojiList.contentY = itemY + 48 - emojiList.height;
+                            }
+                        }
                     }
 
                     delegate: Rectangle {
-                        required property var modelData
+                        required property string emojiId
+                        required property var emojiData
                         required property int index
+
+                        property var modelData: emojiData
 
                         width: emojiList.width
                         height: 48
@@ -609,14 +841,44 @@ Rectangle {
                         }
                     }
 
-                    highlight: StyledRect {
-                        variant: "primary"
-                        radius: Config.roundness > 0 ? Config.roundness + 4 : 0
-                        visible: root.selectedIndex >= 0 && !root.isRecentFocused
+                    highlight: Item {
+                        width: emojiList.width
+                        height: 48
+                        
+                        // Calculate Y position based on index, not item position
+                        y: emojiList.currentIndex * 48
+                        
+                        Behavior on y {
+                            enabled: Config.animDuration > 0
+                            NumberAnimation {
+                                duration: Config.animDuration / 2
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        
+                        StyledRect {
+                            anchors.fill: parent
+                            variant: "primary"
+                            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                            visible: root.selectedIndex >= 0 && !root.isRecentFocused
+                        }
                     }
 
-                    highlightMoveDuration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
-                    highlightMoveVelocity: -1
+                    highlightFollowsCurrentItem: false
+                }
+                
+                // Info text when results are limited
+                Text {
+                    width: parent.width
+                    height: 20
+                    visible: searchText.length > 0 && filteredEmojis.length >= maxResults
+                    text: `Showing first ${maxResults} results - refine search for more`
+                    color: Colors.outline
+                    font.family: Config.theme.font
+                    font.pixelSize: Math.max(8, Config.theme.fontSize - 3)
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    opacity: 0.7
                 }
             }
 
@@ -641,21 +903,96 @@ Rectangle {
                     spacing: 0
                     clip: true
                     cacheBuffer: 96
-                    reuseItems: true
+                    reuseItems: false
 
-                    model: recentEmojis
+                    model: animatedRecentModel
                     currentIndex: root.selectedRecentIndex
+                    
+                    // Smooth scroll animation
+                    Behavior on contentY {
+                        enabled: Config.animDuration > 0
+                        NumberAnimation {
+                            duration: Config.animDuration / 2
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    // Smooth animations for filtering
+                    displaced: Transition {
+                        NumberAnimation {
+                            properties: "y"
+                            duration: Config.animDuration > 0 ? Config.animDuration : 0
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    add: Transition {
+                        ParallelAnimation {
+                            NumberAnimation {
+                                property: "opacity"
+                                from: 0
+                                to: 1
+                                duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                easing.type: Easing.OutCubic
+                            }
+                            NumberAnimation {
+                                property: "y"
+                                duration: Config.animDuration > 0 ? Config.animDuration : 0
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                    }
+
+                    remove: Transition {
+                        SequentialAnimation {
+                            PauseAnimation {
+                                duration: 50
+                            }
+                            ParallelAnimation {
+                                NumberAnimation {
+                                    property: "opacity"
+                                    to: 0
+                                    duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                    easing.type: Easing.OutCubic
+                                }
+                                NumberAnimation {
+                                    property: "height"
+                                    to: 0
+                                    duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                        }
+                    }
 
                     onCurrentIndexChanged: {
                         if (currentIndex !== root.selectedRecentIndex && root.isRecentFocused) {
                             root.selectedRecentIndex = currentIndex;
                             root.lastSelectedRecentIndex = currentIndex;
                         }
+                        
+                        // Manual smooth auto-scroll
+                        if (currentIndex >= 0 && root.isRecentFocused) {
+                            var itemY = currentIndex * 48;
+                            var viewportTop = recentList.contentY;
+                            var viewportBottom = viewportTop + recentList.height;
+                            
+                            if (itemY < viewportTop) {
+                                // Item is above viewport, scroll up
+                                recentList.contentY = itemY;
+                            } else if (itemY + 48 > viewportBottom) {
+                                // Item is below viewport, scroll down
+                                recentList.contentY = itemY + 48 - recentList.height;
+                            }
+                        }
                     }
 
                     delegate: Rectangle {
-                        required property var modelData
+                        required property string emojiId
+                        required property var emojiData
                         required property int index
+
+                        property var modelData: emojiData
 
                         width: recentList.width
                         height: 48
@@ -737,14 +1074,30 @@ Rectangle {
                         }
                     }
 
-                    highlight: StyledRect {
-                        variant: "primary"
-                        radius: Config.roundness > 0 ? Config.roundness + 4 : 0
-                        visible: root.isRecentFocused
+                    highlight: Item {
+                        width: recentList.width
+                        height: 48
+                        
+                        // Calculate Y position based on index, not item position
+                        y: recentList.currentIndex * 48
+                        
+                        Behavior on y {
+                            enabled: Config.animDuration > 0
+                            NumberAnimation {
+                                duration: Config.animDuration / 2
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        
+                        StyledRect {
+                            anchors.fill: parent
+                            variant: "primary"
+                            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                            visible: root.isRecentFocused
+                        }
                     }
 
-                    highlightMoveDuration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
-                    highlightMoveVelocity: -1
+                    highlightFollowsCurrentItem: false
                 }
             }
 

@@ -21,7 +21,12 @@ Item {
     property bool showResults: searchText.length > 0
     property int selectedIndex: -1
     property var tmuxSessions: []
-    property alias filteredSessions: listModel.sessions
+    property var filteredSessions: []
+    
+    // Animated list model for smooth transitions
+    ListModel {
+        id: animatedSessionsModel
+    }
 
     // Delete mode state
     property bool deleteMode: false
@@ -46,15 +51,6 @@ Item {
     property var sessionWindows: []
     property var sessionPanes: []
     property bool loadingSessionInfo: false
-
-    QtObject {
-        id: listModel
-        property var sessions: []
-
-        function updateSessions(newSessions) {
-            sessions = newSessions;
-        }
-    }
 
     onSelectedIndexChanged: {
         if (selectedIndex === -1 && resultsList.count > 0) {
@@ -134,7 +130,8 @@ Item {
             });
         }
 
-        listModel.updateSessions(newFilteredSessions);
+        filteredSessions = newFilteredSessions;
+        updateAnimatedSessionsModel(newFilteredSessions);
 
         if (!deleteMode && !renameMode) {
             if (searchText.length > 0 && newFilteredSessions.length > 0) {
@@ -157,6 +154,54 @@ Item {
             }
             if (pendingRenamedSession !== "") {
                 pendingRenamedSession = "";
+            }
+        }
+    }
+
+    // Update the animated sessions model with smooth transitions
+    function updateAnimatedSessionsModel(newSessions) {
+        // Create a map of session names to their new positions
+        var newSessionsById = {};
+        for (var i = 0; i < newSessions.length; i++) {
+            var sessionId = newSessions[i].isCreateButton ? "__create__" : 
+                           newSessions[i].isCreateSpecificButton ? "__create_" + newSessions[i].sessionNameToCreate :
+                           newSessions[i].name;
+            newSessionsById[sessionId] = i;
+        }
+
+        // Remove sessions that are no longer in the filtered list
+        for (var i = animatedSessionsModel.count - 1; i >= 0; i--) {
+            var item = animatedSessionsModel.get(i);
+            if (!(item.sessionId in newSessionsById)) {
+                animatedSessionsModel.remove(i);
+            }
+        }
+
+        // Add new sessions and reorder existing ones
+        for (var i = 0; i < newSessions.length; i++) {
+            var newSession = newSessions[i];
+            var sessionId = newSession.isCreateButton ? "__create__" : 
+                           newSession.isCreateSpecificButton ? "__create_" + newSession.sessionNameToCreate :
+                           newSession.name;
+            var currentIndex = -1;
+
+            // Find if this session already exists in the model
+            for (var j = 0; j < animatedSessionsModel.count; j++) {
+                if (animatedSessionsModel.get(j).sessionId === sessionId) {
+                    currentIndex = j;
+                    break;
+                }
+            }
+
+            if (currentIndex === -1) {
+                // Session doesn't exist, insert it
+                animatedSessionsModel.insert(i, {
+                    sessionId: sessionId,
+                    sessionData: newSession
+                });
+            } else if (currentIndex !== i) {
+                // Session exists but in wrong position, move it
+                animatedSessionsModel.move(currentIndex, i, 1);
             }
         }
     }
@@ -646,20 +691,95 @@ Item {
             clip: true
             interactive: !root.deleteMode && !root.renameMode && !root.optionsMenuOpen
             cacheBuffer: 96
-            reuseItems: true
+            reuseItems: false
 
-            model: root.filteredSessions
+            model: animatedSessionsModel
             currentIndex: root.selectedIndex
+            
+            // Smooth scroll animation
+            Behavior on contentY {
+                enabled: Config.animDuration > 0
+                NumberAnimation {
+                    duration: Config.animDuration / 2
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            // Smooth animations for filtering
+            displaced: Transition {
+                NumberAnimation {
+                    properties: "y"
+                    duration: Config.animDuration > 0 ? Config.animDuration : 0
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            add: Transition {
+                ParallelAnimation {
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                        easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        property: "y"
+                        duration: Config.animDuration > 0 ? Config.animDuration : 0
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
+
+            remove: Transition {
+                SequentialAnimation {
+                    PauseAnimation {
+                        duration: 50
+                    }
+                    ParallelAnimation {
+                        NumberAnimation {
+                            property: "opacity"
+                            to: 0
+                            duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                            easing.type: Easing.OutCubic
+                        }
+                        NumberAnimation {
+                            property: "height"
+                            to: 0
+                            duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                }
+            }
 
             onCurrentIndexChanged: {
                 if (currentIndex !== root.selectedIndex) {
                     root.selectedIndex = currentIndex;
                 }
+                
+                // Manual smooth auto-scroll
+                if (currentIndex >= 0) {
+                    var itemY = currentIndex * 48;
+                    var viewportTop = resultsList.contentY;
+                    var viewportBottom = viewportTop + resultsList.height;
+                    
+                    if (itemY < viewportTop) {
+                        // Item is above viewport, scroll up
+                        resultsList.contentY = itemY;
+                    } else if (itemY + 48 > viewportBottom) {
+                        // Item is below viewport, scroll down
+                        resultsList.contentY = itemY + 48 - resultsList.height;
+                    }
+                }
             }
 
             delegate: Rectangle {
-                required property var modelData
+                required property string sessionId
+                required property var sessionData
                 required property int index
+
+                property var modelData: sessionData
 
                 width: resultsList.width
                 height: 48
@@ -1284,38 +1404,54 @@ Item {
                 }
             }
 
-            highlight: StyledRect {
-                variant: {
-                    if (root.deleteMode) {
-                        return "error";
-                    } else if (root.renameMode) {
-                        return "secondary";
-                    } else {
-                        return "primary";
-                    }
-                }
-                radius: Config.roundness > 0 ? Config.roundness + 4 : 0
-                visible: root.selectedIndex >= 0 && (root.optionsMenuOpen ? root.selectedIndex === root.menuItemIndex : true)
-
-                Behavior on color {
-                    enabled: Config.animDuration > 0
-                    ColorAnimation {
-                        duration: Config.animDuration / 2
-                        easing.type: Easing.OutQuart
-                    }
-                }
-
-                Behavior on opacity {
+            highlight: Item {
+                width: resultsList.width
+                height: 48
+                
+                // Calculate Y position based on index, not item position
+                y: resultsList.currentIndex * 48
+                
+                Behavior on y {
                     enabled: Config.animDuration > 0
                     NumberAnimation {
                         duration: Config.animDuration / 2
-                        easing.type: Easing.OutQuart
+                        easing.type: Easing.OutCubic
+                    }
+                }
+                
+                StyledRect {
+                    anchors.fill: parent
+                    variant: {
+                        if (root.deleteMode) {
+                            return "error";
+                        } else if (root.renameMode) {
+                            return "secondary";
+                        } else {
+                            return "primary";
+                        }
+                    }
+                    radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                    visible: root.selectedIndex >= 0 && (root.optionsMenuOpen ? root.selectedIndex === root.menuItemIndex : true)
+
+                    Behavior on color {
+                        enabled: Config.animDuration > 0
+                        ColorAnimation {
+                            duration: Config.animDuration / 2
+                            easing.type: Easing.OutQuart
+                        }
+                    }
+
+                    Behavior on opacity {
+                        enabled: Config.animDuration > 0
+                        NumberAnimation {
+                            duration: Config.animDuration / 2
+                            easing.type: Easing.OutQuart
+                        }
                     }
                 }
             }
 
-             highlightMoveDuration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
-             highlightMoveVelocity: -1
+            highlightFollowsCurrentItem: false
 
              MouseArea {
                  anchors.fill: parent

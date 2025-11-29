@@ -388,11 +388,35 @@ Rectangle {
 
                     model: animatedModel
                     currentIndex: appLauncher.selectedIndex
+                    
+                    // Smooth scroll animation
+                    Behavior on contentY {
+                        enabled: Config.animDuration > 0
+                        NumberAnimation {
+                            duration: Config.animDuration / 2
+                            easing.type: Easing.OutCubic
+                        }
+                    }
 
                     onCurrentIndexChanged: {
                         if (currentIndex !== appLauncher.selectedIndex) {
                             GlobalStates.launcherSelectedIndex = currentIndex;
                             appLauncher.selectedIndex = currentIndex;
+                        }
+                        
+                        // Manual smooth auto-scroll
+                        if (currentIndex >= 0) {
+                            var itemY = currentIndex * 48;
+                            var viewportTop = resultsList.contentY;
+                            var viewportBottom = viewportTop + resultsList.height;
+                            
+                            if (itemY < viewportTop) {
+                                // Item is above viewport, scroll up
+                                resultsList.contentY = itemY;
+                            } else if (itemY + 48 > viewportBottom) {
+                                // Item is below viewport, scroll down
+                                resultsList.contentY = itemY + 48 - resultsList.height;
+                            }
                         }
                     }
 
