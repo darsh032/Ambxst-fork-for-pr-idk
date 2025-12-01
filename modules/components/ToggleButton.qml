@@ -15,7 +15,7 @@ Button {
     required property var onToggle
     property bool iconTint: false
     property bool iconFullTint: false
-    property int iconSize: 22
+    property int iconSize: 18
     property bool enableShadow: true
 
     implicitWidth: 36
