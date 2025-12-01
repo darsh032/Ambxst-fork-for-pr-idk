@@ -55,7 +55,7 @@ Rectangle {
     RoundCorner {
         id: cornerLeft
         visible: Config.theme.enableCorners
-        size: Config.roundness > 0 ? Config.roundness + 4 : 0
+        size: Styling.radius(4)
         x: root.position === "left" ? parent.width : (root.position === "right" ? -size : 0)
         y: root.position === "top" ? parent.height : (root.position === "bottom" ? -size : 0)
         corner: {
@@ -81,7 +81,7 @@ Rectangle {
     RoundCorner {
         id: cornerRight
         visible: Config.theme.enableCorners
-        size: Config.roundness > 0 ? Config.roundness + 4 : 0
+        size: Styling.radius(4)
         x: root.position === "left" ? parent.width : (root.position === "right" ? -size : parent.width - size)
         y: root.position === "top" ? parent.height : (root.position === "bottom" ? -size : parent.height - size)
         corner: {

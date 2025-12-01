@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs.modules.corners
+import qs.modules.theme
 import qs.config
 
 PanelWindow {
@@ -25,7 +26,7 @@ PanelWindow {
 
     RoundCorner {
         id: topLeft
-        size: Config.roundness > 0 ? Config.roundness + 4 : 0
+        size: Styling.radius(4)
         anchors.left: parent.left
         anchors.top: parent.top
         corner: RoundCorner.CornerEnum.TopLeft
@@ -33,7 +34,7 @@ PanelWindow {
 
     RoundCorner {
         id: topRight
-        size: Config.roundness > 0 ? Config.roundness + 4 : 0
+        size: Styling.radius(4)
         anchors.right: parent.right
         anchors.top: parent.top
         corner: RoundCorner.CornerEnum.TopRight
@@ -41,7 +42,7 @@ PanelWindow {
 
     RoundCorner {
         id: bottomLeft
-        size: Config.roundness > 0 ? Config.roundness + 4 : 0
+        size: Styling.radius(4)
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         corner: RoundCorner.CornerEnum.BottomLeft
@@ -49,7 +50,7 @@ PanelWindow {
 
     RoundCorner {
         id: bottomRight
-        size: Config.roundness > 0 ? Config.roundness + 4 : 0
+        size: Styling.radius(4)
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         corner: RoundCorner.CornerEnum.BottomRight

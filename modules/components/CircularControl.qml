@@ -25,7 +25,7 @@ StyledRect {
     property real lineWidth: 4
     property real gapAngle: 45
 
-    radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+    radius: Styling.radius(4)
     width: 48
     height: 48
 

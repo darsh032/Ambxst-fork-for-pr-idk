@@ -47,7 +47,7 @@ StyledRect {
     }
 
     implicitHeight: 48
-    radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+    radius: Styling.radius(4)
 
     RowLayout {
         anchors.fill: parent
@@ -67,7 +67,7 @@ StyledRect {
             variant: "primary"
             Layout.preferredWidth: 32
             Layout.preferredHeight: 32
-            radius: Config.roundness > 0 ? Math.max(Config.roundness - 4, 0) : 0
+            radius: Styling.radius(-4)
             visible: root.prefixText.length > 0 || root.prefixIcon.length > 0
 
             Text {

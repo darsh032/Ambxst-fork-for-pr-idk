@@ -43,7 +43,7 @@ Item {
     StyledRect {
         variant: "common"
         anchors.fill: parent
-        radius: Config.roundness > 0 ? Math.max(Config.roundness - 4, 0) : 0
+        radius: Styling.radius(-4)
 
         WavyLine {
             id: noPlayerWavyLine
@@ -73,7 +73,7 @@ Item {
 
         ClippingRectangle {
             anchors.fill: parent
-            radius: Config.roundness > 0 ? Math.max(Config.roundness - 4, 0) : 0
+            radius: Styling.radius(-4)
             color: "transparent"
 
             Image {
@@ -128,7 +128,7 @@ Item {
                 visible: compactPlayer.player !== null
                 ClippingRectangle {
                     anchors.fill: parent
-                    radius: compactPlayer.isPlaying ? (Config.roundness > 0 ? Math.max(Config.roundness - 8, 0) : 0) : (Config.roundness > 0 ? Math.max(Config.roundness - 4, 0) : 0)
+                    radius: compactPlayer.isPlaying ? Styling.radius(-8) : Styling.radius(-4)
                     color: "transparent"
                     Behavior on radius {
                         enabled: Config.animDuration > 0

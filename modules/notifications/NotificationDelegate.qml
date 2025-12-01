@@ -100,7 +100,7 @@ Item {
                 id: stripeContainer
                 anchors.fill: parent
                 visible: latestNotification && latestNotification.urgency == NotificationUrgency.Critical
-                radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                radius: Styling.radius(4)
                 animationRunning: visible
             }
 
@@ -427,7 +427,7 @@ Item {
                                 anchors.fill: parent
                                 visible: parent.isCritical
                                 color: parent.parent.hovered ? Qt.lighter(Colors.criticalRed, 1.3) : Colors.criticalRed
-                                radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                                radius: Styling.radius(4)
 
                                 Behavior on color {
                                     enabled: Config.animDuration > 0
@@ -442,7 +442,7 @@ Item {
                                 anchors.fill: parent
                                 visible: !parent.isCritical
                                 variant: parent.parent.pressed ? "primary" : (parent.parent.hovered ? "focus" : "common")
-                                radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                                radius: Styling.radius(4)
                             }
                         }
 

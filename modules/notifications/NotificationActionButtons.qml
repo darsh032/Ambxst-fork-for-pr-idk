@@ -44,7 +44,7 @@ Item {
                         anchors.fill: parent
                         visible: root.urgency == NotificationUrgency.Critical
                         color: parent.parent.hovered ? Qt.lighter(Colors.criticalRed, 1.3) : Colors.criticalRed
-                        radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                        radius: Styling.radius(4)
 
                         Behavior on color {
                             enabled: Config.animDuration > 0
@@ -59,7 +59,7 @@ Item {
                         anchors.fill: parent
                         visible: root.urgency != NotificationUrgency.Critical
                         variant: parent.parent.pressed ? "primary" : (parent.parent.hovered ? "focus" : "common")
-                        radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                        radius: Styling.radius(4)
                     }
                 }
 

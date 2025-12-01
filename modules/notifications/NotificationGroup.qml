@@ -144,7 +144,7 @@ Item {
         anchors.left: parent.left
         width: parent.width
         color: Colors.background
-        radius: Config.roundness > 0 ? Config.roundness : 0
+        radius: Styling.radius(0)
         border.color: Colors.surfaceContainerHigh
         border.width: 0
         anchors.leftMargin: root.xOffset

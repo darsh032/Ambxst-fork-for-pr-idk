@@ -22,7 +22,7 @@ Button {
             anchors.fill: parent
             visible: urgency == NotificationUrgency.Critical
             color: parent.parent.hovered ? Qt.lighter(Colors.criticalRed, 1.3) : Colors.criticalRed
-            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+            radius: Styling.radius(4)
 
             Behavior on color {
                 enabled: Config.animDuration > 0
@@ -37,7 +37,7 @@ Button {
             anchors.fill: parent
             visible: urgency != NotificationUrgency.Critical
             variant: parent.parent.pressed ? "error" : (parent.parent.hovered ? "focus" : "common")
-            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+            radius: Styling.radius(4)
         }
     }
 

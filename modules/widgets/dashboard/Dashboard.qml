@@ -148,7 +148,7 @@ NotchAnimationBehavior {
                 id: tabHighlight
                 variant: "primary"
                 width: parent.width
-                radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                radius: Styling.radius(4)
                 z: 0
 
                 property real idx1: root.state.currentTab
@@ -194,7 +194,7 @@ NotchAnimationBehavior {
 
                         background: Rectangle {
                             color: "transparent"
-                            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                            radius: Styling.radius(4)
                         }
 
                         contentItem: Text {
