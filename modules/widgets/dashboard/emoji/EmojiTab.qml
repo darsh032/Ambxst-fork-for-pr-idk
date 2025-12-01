@@ -36,7 +36,6 @@ Rectangle {
 
     // Skin tone support
     property var skinTones: [
-        { name: "Default", modifier: "", emoji: "👋" },
         { name: "Light", modifier: "🏻", emoji: "👋🏻" },
         { name: "Medium-Light", modifier: "🏼", emoji: "👋🏼" },
         { name: "Medium", modifier: "🏽", emoji: "👋🏽" },
@@ -456,16 +455,9 @@ Rectangle {
                                 // Execute selected option when menu is expanded
                                 let emoji = root.filteredEmojis[root.expandedItemIndex];
                                 if (emoji) {
-                                    if (root.selectedOptionIndex === 0) {
-                                        // Default emoji
-                                        root.copyEmoji(emoji, "");
-                                    } else {
-                                        // Skin tone option
-                                        var skinToneIndex = root.selectedOptionIndex - 1;
-                                        if (skinToneIndex >= 0 && skinToneIndex < root.skinTones.length) {
-                                            var skinTone = root.skinTones[skinToneIndex];
-                                            root.copyEmoji(emoji, skinTone.modifier);
-                                        }
+                                    var skinTone = root.skinTones[root.selectedOptionIndex];
+                                    if (skinTone) {
+                                        root.copyEmoji(emoji, skinTone.modifier);
                                     }
                                 }
                             } else if (isRecentFocused && selectedRecentIndex >= 0 && selectedRecentIndex < recentEmojis.length) {
@@ -518,7 +510,7 @@ Rectangle {
                                 // Navigate options when menu is expanded
                                 var emoji = root.filteredEmojis[root.expandedItemIndex];
                                 if (emoji && emoji.skin_tone_support) {
-                                    var maxOptions = root.skinTones.length + 1; // +1 for default
+                                    var maxOptions = root.skinTones.length;
                                     if (root.selectedOptionIndex < maxOptions - 1) {
                                         root.selectedOptionIndex++;
                                         root.keyboardNavigation = true;
@@ -697,9 +689,9 @@ Rectangle {
                             for (var i = 0; i < currentIndex; i++) {
                                 var itemHeight = 48;
                                 if (i === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
-                                    var itemData = itemsModel.get(i).itemData;
+                                    var itemData = emojisModel.get(i).emojiData;
                                     if (itemData && itemData.skin_tone_support) {
-                                        var optionsCount = root.skinTones.length + 1;
+                                        var optionsCount = root.skinTones.length;
                                         var listHeight = 36 * Math.min(3, optionsCount);
                                         itemHeight = 48 + 4 + listHeight + 8;
                                     }
@@ -709,9 +701,9 @@ Rectangle {
 
                             var currentItemHeight = 48;
                             if (currentIndex === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
-                                var itemData = itemsModel.get(currentIndex).itemData;
+                                var itemData = emojisModel.get(currentIndex).emojiData;
                                 if (itemData && itemData.skin_tone_support) {
-                                    var optionsCount = root.skinTones.length + 1;
+                                    var optionsCount = root.skinTones.length;
                                     var listHeight = 36 * Math.min(3, optionsCount);
                                     currentItemHeight = 48 + 4 + listHeight + 8;
                                 }
@@ -739,7 +731,7 @@ Rectangle {
                         height: {
                             let baseHeight = 48;
                             if (index === root.expandedItemIndex && !root.deleteMode && !root.aliasMode && modelData.skin_tone_support) {
-                                var optionsCount = root.skinTones.length + 1; // +1 for default
+                                var optionsCount = root.skinTones.length;
                                 var listHeight = 36 * Math.min(3, optionsCount);
                                 return baseHeight + 4 + listHeight + 8; // base + spacing + list + bottom margin
                             }
@@ -868,7 +860,7 @@ Rectangle {
                             ClippingRectangle {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: {
-                                    var optionsCount = root.skinTones.length + 1; // +1 for default
+                                    var optionsCount = root.skinTones.length;
                                     return 36 * Math.min(3, optionsCount);
                                 }
                                 color: Colors.background
@@ -889,7 +881,7 @@ Rectangle {
                                     interactive: true
                                     boundsBehavior: Flickable.StopAtBounds
                                     model: {
-                                        var options = [{ text: "Default", emoji: modelData.emoji, modifier: "" }];
+                                        var options = [];
                                         for (var i = 0; i < root.skinTones.length; i++) {
                                             options.push({
                                                 text: root.skinTones[i].name,
@@ -1015,14 +1007,14 @@ Rectangle {
                             ScrollBar {
                                 Layout.preferredWidth: 8
                                 Layout.preferredHeight: {
-                                    var optionsCount = root.skinTones.length + 1;
+                                    var optionsCount = root.skinTones.length;
                                     var listHeight = 36 * Math.min(3, optionsCount);
                                     return Math.max(0, listHeight - 32);
                                 }
                                 Layout.alignment: Qt.AlignVCenter
                                 orientation: Qt.Vertical
                                 visible: {
-                                    var optionsCount = root.skinTones.length + 1;
+                                    var optionsCount = root.skinTones.length;
                                     return optionsCount > 3;
                                 }
 
