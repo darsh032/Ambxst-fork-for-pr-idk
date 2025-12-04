@@ -192,7 +192,8 @@ FloatingWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            spacing: 0
+            anchors.margins: 16
+            spacing: 8
 
             // Title bar
             StyledRect {
@@ -202,9 +203,9 @@ FloatingWindow {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 8
-                    spacing: 12
+                    anchors.leftMargin: 16
+                    anchors.rightMargin: 16
+                    spacing: 8
 
                     // Title
                     Text {
@@ -338,7 +339,6 @@ FloatingWindow {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.margins: 8
                 spacing: 8
 
                 // Left side: Vertical tabs
