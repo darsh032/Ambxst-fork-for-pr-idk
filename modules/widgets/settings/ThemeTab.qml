@@ -44,9 +44,10 @@ Item {
         return variantId;
     }
 
-    StyledRect {
+    Rectangle {
         anchors.fill: parent
-        variant: "pane"
+        color: Colors.surfaceContainer
+        radius: Styling.radius(-1)
 
         ColumnLayout {
             anchors.fill: parent
@@ -62,8 +63,8 @@ Item {
                 // Selected variant preview
                 StyledRect {
                     id: selectedPreview
-                    Layout.preferredWidth: 64
-                    Layout.preferredHeight: 64
+                    Layout.preferredWidth: 128
+                    Layout.preferredHeight: 128
                     Layout.alignment: Qt.AlignTop
                     variant: root.selectedVariant
                     enableBorder: true
@@ -73,7 +74,7 @@ Item {
                         anchors.centerIn: parent
                         text: Icons.cube
                         font.family: Icons.font
-                        font.pixelSize: 24
+                        font.pixelSize: 72
                         color: selectedPreview.itemColor
                     }
                 }

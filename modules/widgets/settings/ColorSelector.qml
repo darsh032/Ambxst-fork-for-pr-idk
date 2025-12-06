@@ -4,7 +4,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import qs.modules.theme
-import qs.modules.components
 import qs.config
 
 Item {
@@ -62,8 +61,11 @@ Item {
                 root.colorChanged(colorName);
             }
 
-            background: StyledRect {
-                variant: colorDropdown.hovered ? "focus" : "common"
+            background: Rectangle {
+                color: colorDropdown.hovered ? Colors.surfaceContainerHigh : Colors.surfaceContainer
+                radius: Styling.radius(-2)
+                border.color: Colors.outlineVariant
+                border.width: 1
             }
 
             contentItem: RowLayout {
@@ -109,9 +111,11 @@ Item {
                 implicitHeight: popupListView.contentHeight > 300 ? 300 : popupListView.contentHeight
                 padding: 4
 
-                background: StyledRect {
-                    variant: "pane"
-                    enableShadow: true
+                background: Rectangle {
+                    color: Colors.surfaceContainerLow
+                    radius: Styling.radius(-1)
+                    border.color: Colors.outlineVariant
+                    border.width: 1
                 }
 
                 ListView {
@@ -143,8 +147,9 @@ Item {
                 width: ListView.view.width - 8
                 height: 36
 
-                background: StyledRect {
-                    variant: delegateItem.highlighted ? "focus" : "common"
+                background: Rectangle {
+                    color: delegateItem.highlighted ? Colors.surfaceContainerHigh : "transparent"
+                    radius: Styling.radius(-2)
                 }
 
                 contentItem: RowLayout {
@@ -187,11 +192,14 @@ Item {
         }
 
         // HEX input
-        StyledRect {
+        Rectangle {
             id: hexInputContainer
             Layout.preferredWidth: 110
             Layout.preferredHeight: 40
-            variant: hexInput.activeFocus ? "focus" : "common"
+            color: hexInput.activeFocus ? Colors.surfaceContainerHigh : Colors.surfaceContainer
+            radius: Styling.radius(-2)
+            border.color: hexInput.activeFocus ? Colors.primary : Colors.outlineVariant
+            border.width: 1
             opacity: root.isHexColor ? 1.0 : 0.5
 
             RowLayout {
@@ -280,8 +288,11 @@ Item {
             Layout.preferredWidth: 40
             Layout.preferredHeight: 40
 
-            background: StyledRect {
-                variant: pickerButton.hovered ? "focus" : "common"
+            background: Rectangle {
+                color: pickerButton.hovered ? Colors.surfaceContainerHigh : Colors.surfaceContainer
+                radius: Styling.radius(-2)
+                border.color: Colors.outlineVariant
+                border.width: 1
             }
 
             contentItem: Text {

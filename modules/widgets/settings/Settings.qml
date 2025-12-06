@@ -184,11 +184,11 @@ FloatingWindow {
         configVar.opacity = snapshot.opacity;
     }
 
-    StyledRect {
+    Rectangle {
         id: background
         anchors.fill: parent
-        variant: "bg"
-        enableShadow: true
+        color: Colors.surfaceContainerLowest
+        radius: Styling.radius(0)
 
         ColumnLayout {
             anchors.fill: parent
@@ -196,15 +196,16 @@ FloatingWindow {
             spacing: 8
 
             // Title bar
-            StyledRect {
+            Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 44
-                variant: "pane"
+                color: Colors.surfaceContainer
+                radius: Styling.radius(-1)
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 16
-                    anchors.rightMargin: 16
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 8
                     spacing: 8
 
                     // Title
@@ -223,7 +224,6 @@ FloatingWindow {
                         text: "Unsaved changes"
                         font.family: Styling.defaultFont
                         font.pixelSize: Styling.fontSize(0)
-                        font.italic: true
                         color: Colors.error
                         opacity: 0.8
                     }
@@ -232,11 +232,14 @@ FloatingWindow {
                     Button {
                         id: discardButton
                         visible: root.hasChanges
-                        Layout.preferredWidth: 100
                         Layout.preferredHeight: 32
+                        leftPadding: 12
+                        rightPadding: 12
 
-                        background: StyledRect {
-                            variant: discardButton.hovered ? "errorfocus" : "error"
+                        background: Rectangle {
+                            color: Colors.error
+                            radius: Styling.radius(-4)
+                            opacity: discardButton.hovered ? 0.8 : 1.0
                         }
 
                         contentItem: RowLayout {
@@ -270,12 +273,14 @@ FloatingWindow {
                     // Apply button
                     Button {
                         id: applyButton
-                        Layout.preferredWidth: 100
                         Layout.preferredHeight: 32
+                        leftPadding: 12
+                        rightPadding: 12
 
-                        background: StyledRect {
-                            variant: root.hasChanges ? (applyButton.hovered ? "primaryfocus" : "primary") : "common"
-                            opacity: root.hasChanges ? 1.0 : 0.5
+                        background: Rectangle {
+                            color: root.hasChanges ? Colors.primary : Colors.surfaceContainer
+                            radius: Styling.radius(-4)
+                            opacity: root.hasChanges ? (applyButton.hovered ? 0.8 : 1.0) : 0.5
                         }
 
                         contentItem: RowLayout {
@@ -312,15 +317,16 @@ FloatingWindow {
                         Layout.preferredWidth: 32
                         Layout.preferredHeight: 32
 
-                        background: StyledRect {
-                            variant: titleCloseButton.hovered ? "error" : "common"
+                        background: Rectangle {
+                            color: titleCloseButton.hovered ? Colors.overErrorContainer : Colors.error
+                            radius: Styling.radius(-4)
                         }
 
                         contentItem: Text {
                             text: Icons.cancel
                             font.family: Icons.font
                             font.pixelSize: 18
-                            color: titleCloseButton.hovered ? Colors.overError : Colors.overBackground
+                            color: titleCloseButton.hovered ? Colors.error : Colors.overError
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -342,11 +348,12 @@ FloatingWindow {
                 spacing: 8
 
                 // Left side: Vertical tabs
-                StyledRect {
+                Rectangle {
                     id: tabsContainer
                     Layout.preferredWidth: 160
                     Layout.fillHeight: true
-                    variant: "pane"
+                    color: Colors.surfaceContainer
+                    radius: Styling.radius(-1)
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -389,12 +396,13 @@ FloatingWindow {
 
                                 readonly property bool isSelected: tabStack.currentIndex === index
 
-                                background: StyledRect {
-                                    variant: tabButton.isSelected ? "primary" : (tabButton.hovered ? "focus" : "common")
+                                background: Rectangle {
+                                    color: tabButton.isSelected ? Colors.primary : (tabButton.hovered ? Colors.surfaceContainerHigh : Colors.surfaceContainer)
+                                    radius: Styling.radius(-2)
 
-                                    Behavior on opacity {
+                                    Behavior on color {
                                         enabled: (Config.animDuration ?? 0) > 0
-                                        NumberAnimation {
+                                        ColorAnimation {
                                             duration: (Config.animDuration ?? 0) / 2
                                         }
                                     }
@@ -447,8 +455,9 @@ FloatingWindow {
                     }
 
                     // Bar tab (placeholder)
-                    StyledRect {
-                        variant: "pane"
+                    Rectangle {
+                        color: Colors.surfaceContainer
+                        radius: Styling.radius(-1)
 
                         Text {
                             anchors.centerIn: parent
@@ -460,8 +469,9 @@ FloatingWindow {
                     }
 
                     // Hyprland tab (placeholder)
-                    StyledRect {
-                        variant: "pane"
+                    Rectangle {
+                        color: Colors.surfaceContainer
+                        radius: Styling.radius(-1)
 
                         Text {
                             anchors.centerIn: parent

@@ -4,7 +4,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import qs.modules.theme
-import qs.modules.components
 import qs.config
 import "../../../config/ConfigDefaults.js" as ConfigDefaults
 
@@ -45,8 +44,11 @@ GroupBox {
 
     title: "Gradient Stops (" + stops.length + "/20)"
 
-    background: StyledRect {
-        variant: "common"
+    background: Rectangle {
+        color: Colors.surfaceContainer
+        radius: Styling.radius(-1)
+        border.color: Colors.outlineVariant
+        border.width: 1
     }
 
     label: Text {
@@ -81,9 +83,10 @@ GroupBox {
                 Layout.alignment: Qt.AlignTop
                 enabled: root.stops.length < 20
 
-                background: StyledRect {
-                    variant: addButton.enabled ? (addButton.hovered ? "primaryfocus" : "primary") : "common"
-                    opacity: addButton.enabled ? 1.0 : 0.5
+                background: Rectangle {
+                    color: addButton.enabled ? Colors.primary : Colors.surfaceContainer
+                    radius: Styling.radius(-4)
+                    opacity: addButton.enabled ? (addButton.hovered ? 0.8 : 1.0) : 0.5
                 }
 
                 contentItem: Text {
@@ -123,7 +126,7 @@ GroupBox {
                     anchors.right: parent.right
                     anchors.top: parent.top
                     height: 32
-                    radius: Styling.radius(-12)
+                    radius: Styling.radius(-4)
                     border.color: Colors.outline
                     border.width: 1
 
@@ -334,8 +337,10 @@ GroupBox {
                 Layout.preferredHeight: 32
                 Layout.alignment: Qt.AlignTop
 
-                background: StyledRect {
-                    variant: resetButton.hovered ? "errorfocus" : "error"
+                background: Rectangle {
+                    color: Colors.error
+                    radius: Styling.radius(-4)
+                    opacity: resetButton.hovered ? 0.8 : 1.0
                 }
 
                 contentItem: Text {
@@ -402,10 +407,13 @@ GroupBox {
                     opacity: 0.7
                 }
 
-                StyledRect {
+                Rectangle {
                     Layout.preferredWidth: 70
                     Layout.preferredHeight: 28
-                    variant: positionInput.activeFocus ? "focus" : "common"
+                    color: positionInput.activeFocus ? Colors.surfaceContainerHigh : Colors.surfaceContainer
+                    radius: Styling.radius(-2)
+                    border.color: positionInput.activeFocus ? Colors.primary : Colors.outlineVariant
+                    border.width: 1
 
                     TextInput {
                         id: positionInput
@@ -448,8 +456,11 @@ GroupBox {
                     Layout.preferredHeight: 28
                     enabled: root.stops.length > 1
 
-                    background: StyledRect {
-                        variant: deleteStopButton.enabled ? (deleteStopButton.hovered ? "error" : "common") : "common"
+                    background: Rectangle {
+                        color: deleteStopButton.enabled ? (deleteStopButton.hovered ? Colors.error : Colors.surfaceContainer) : Colors.surfaceContainer
+                        radius: Styling.radius(-2)
+                        border.color: deleteStopButton.enabled ? (deleteStopButton.hovered ? Colors.error : Colors.outlineVariant) : Colors.outlineVariant
+                        border.width: 1
                         opacity: deleteStopButton.enabled ? 1.0 : 0.3
                     }
 
@@ -519,8 +530,11 @@ GroupBox {
                         root.updateStops(newStops);
                     }
 
-                    background: StyledRect {
-                        variant: stopColorCombo.hovered ? "focus" : "common"
+                    background: Rectangle {
+                        color: stopColorCombo.hovered ? Colors.surfaceContainerHigh : Colors.surfaceContainer
+                        radius: Styling.radius(-2)
+                        border.color: Colors.outlineVariant
+                        border.width: 1
                     }
 
                     contentItem: Text {
@@ -548,9 +562,11 @@ GroupBox {
                         implicitHeight: contentItem.implicitHeight > 200 ? 200 : contentItem.implicitHeight
                         padding: 2
 
-                        background: StyledRect {
-                            variant: "pane"
-                            enableShadow: true
+                        background: Rectangle {
+                            color: Colors.surfaceContainerLow
+                            radius: Styling.radius(-1)
+                            border.color: Colors.outlineVariant
+                            border.width: 1
                         }
 
                         contentItem: ListView {
@@ -570,8 +586,9 @@ GroupBox {
                         width: stopColorCombo.width - 4
                         height: 28
 
-                        background: StyledRect {
-                            variant: colorDelegate.highlighted ? "focus" : "common"
+                        background: Rectangle {
+                            color: colorDelegate.highlighted ? Colors.surfaceContainerHigh : "transparent"
+                            radius: Styling.radius(-2)
                         }
 
                         contentItem: RowLayout {
@@ -616,8 +633,11 @@ GroupBox {
                     Layout.preferredWidth: 32
                     Layout.preferredHeight: 32
 
-                    background: StyledRect {
-                        variant: pickerButton.hovered ? "focus" : "common"
+                    background: Rectangle {
+                        color: pickerButton.hovered ? Colors.surfaceContainerHigh : Colors.surfaceContainer
+                        radius: Styling.radius(-2)
+                        border.color: Colors.outlineVariant
+                        border.width: 1
                     }
 
                     contentItem: Text {
@@ -651,10 +671,13 @@ GroupBox {
                     opacity: 0.7
                 }
 
-                StyledRect {
+                Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 28
-                    variant: hexInput.activeFocus ? "focus" : "common"
+                    color: hexInput.activeFocus ? Colors.surfaceContainerHigh : Colors.surfaceContainer
+                    radius: Styling.radius(-2)
+                    border.color: hexInput.activeFocus ? Colors.primary : Colors.outlineVariant
+                    border.width: 1
 
                     RowLayout {
                         anchors.fill: parent

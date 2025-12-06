@@ -7,7 +7,7 @@ import qs.modules.theme
 import qs.modules.components
 import qs.config
 
-StyledRect {
+Rectangle {
     id: root
 
     required property string variantId
@@ -15,7 +15,8 @@ StyledRect {
     signal updateVariant(string property, var value)
     signal close
 
-    variant: "pane"
+    color: Colors.surfaceContainerLow
+    radius: Styling.radius(0)
 
     // Get the Config object for this variant (reads directly from Config)
     readonly property var variantConfig: {
@@ -85,11 +86,12 @@ StyledRect {
             enabled: root.variantConfig !== null
 
             // === GRADIENT TYPE SELECTOR ===
-            StyledRect {
+            Rectangle {
                 id: typeSelector
                 Layout.fillWidth: true
                 Layout.preferredHeight: 40
-                variant: "bg"
+                color: Colors.surfaceContainerHighest
+                radius: Styling.radius(-1)
 
                 readonly property int buttonCount: 3
                 readonly property int spacing: 2
@@ -107,9 +109,9 @@ StyledRect {
                     anchors.margins: typeSelector.padding
 
                     // Sliding highlight
-                    StyledRect {
+                    Rectangle {
                         id: typeHighlight
-                        variant: "primary"
+                        color: Colors.primary
                         z: 0
                         radius: Styling.radius(-2)
 
@@ -210,10 +212,13 @@ StyledRect {
                 spacing: 8
 
                 // Item Color
-                StyledRect {
+                Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 56
-                    variant: "common"
+                    color: Colors.surfaceContainer
+                    radius: Styling.radius(-1)
+                    border.color: Colors.outlineVariant
+                    border.width: 1
 
                     RowLayout {
                         anchors.fill: parent
@@ -280,9 +285,11 @@ StyledRect {
                         height: 290
                         padding: 4
 
-                        background: StyledRect {
-                            variant: "pane"
-                            enableShadow: true
+                        background: Rectangle {
+                            color: Colors.surfaceContainerLow
+                            radius: Styling.radius(-1)
+                            border.color: Colors.outlineVariant
+                            border.width: 1
                         }
 
                         ColumnLayout {
@@ -290,11 +297,14 @@ StyledRect {
                             spacing: 4
 
                             // Custom HEX input
-                            StyledRect {
+                            Rectangle {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 36
                                 Layout.margins: 2
-                                variant: itemColorHexInput.activeFocus ? "focus" : "common"
+                                color: itemColorHexInput.activeFocus ? Colors.surfaceContainerHigh : Colors.surfaceContainer
+                                radius: Styling.radius(-2)
+                                border.color: itemColorHexInput.activeFocus ? Colors.primary : Colors.outlineVariant
+                                border.width: 1
 
                                 RowLayout {
                                     anchors.fill: parent
@@ -399,8 +409,9 @@ StyledRect {
                                     width: ListView.view.width
                                     height: 32
 
-                                    background: StyledRect {
-                                        variant: colorItem.hovered ? "focus" : "common"
+                                    background: Rectangle {
+                                        color: colorItem.hovered ? Colors.surfaceContainerHigh : "transparent"
+                                        radius: Styling.radius(-2)
                                     }
 
                                     contentItem: RowLayout {
@@ -443,10 +454,13 @@ StyledRect {
                 }
 
                 // Opacity & Border
-                StyledRect {
+                Rectangle {
                     Layout.preferredWidth: 140
                     Layout.preferredHeight: 56
-                    variant: "common"
+                    color: Colors.surfaceContainer
+                    radius: Styling.radius(-1)
+                    border.color: Colors.outlineVariant
+                    border.width: 1
 
                     RowLayout {
                         anchors.fill: parent
@@ -521,9 +535,11 @@ StyledRect {
                         width: 260
                         padding: 12
 
-                        background: StyledRect {
-                            variant: "pane"
-                            enableShadow: true
+                        background: Rectangle {
+                            color: Colors.surfaceContainerLow
+                            radius: Styling.radius(-1)
+                            border.color: Colors.outlineVariant
+                            border.width: 1
                         }
 
                         ColumnLayout {
@@ -660,10 +676,13 @@ StyledRect {
             }
 
             // === LINEAR SETTINGS ===
-            StyledRect {
+            Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 56
-                variant: "common"
+                color: Colors.surfaceContainer
+                radius: Styling.radius(-1)
+                border.color: Colors.outlineVariant
+                border.width: 1
                 visible: root.variantConfig && root.variantConfig.gradientType === "linear"
 
                 RowLayout {
@@ -729,10 +748,13 @@ StyledRect {
             }
 
             // === RADIAL SETTINGS ===
-            StyledRect {
+            Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 100
-                variant: "common"
+                color: Colors.surfaceContainer
+                radius: Styling.radius(-1)
+                border.color: Colors.outlineVariant
+                border.width: 1
                 visible: root.variantConfig && root.variantConfig.gradientType === "radial"
 
                 ColumnLayout {
@@ -834,10 +856,13 @@ StyledRect {
                     spacing: 8
 
                     // Dot Color
-                    StyledRect {
+                    Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 56
-                        variant: "common"
+                        color: Colors.surfaceContainer
+                        radius: Styling.radius(-1)
+                        border.color: Colors.outlineVariant
+                        border.width: 1
 
                         RowLayout {
                             anchors.fill: parent
@@ -895,9 +920,11 @@ StyledRect {
                             height: 290
                             padding: 4
 
-                            background: StyledRect {
-                                variant: "pane"
-                                enableShadow: true
+                            background: Rectangle {
+                                color: Colors.surfaceContainerLow
+                                radius: Styling.radius(-1)
+                                border.color: Colors.outlineVariant
+                                border.width: 1
                             }
 
                             ColumnLayout {
@@ -905,11 +932,14 @@ StyledRect {
                                 spacing: 4
 
                                 // Custom HEX input
-                                StyledRect {
+                                Rectangle {
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: 36
                                     Layout.margins: 2
-                                    variant: dotColorHexInput.activeFocus ? "focus" : "common"
+                                    color: dotColorHexInput.activeFocus ? Colors.surfaceContainerHigh : Colors.surfaceContainer
+                                    radius: Styling.radius(-2)
+                                    border.color: dotColorHexInput.activeFocus ? Colors.primary : Colors.outlineVariant
+                                    border.width: 1
 
                                     RowLayout {
                                         anchors.fill: parent
@@ -1013,8 +1043,9 @@ StyledRect {
                                         width: ListView.view.width
                                         height: 32
 
-                                        background: StyledRect {
-                                            variant: dotColorItem.hovered ? "focus" : "common"
+                                        background: Rectangle {
+                                            color: dotColorItem.hovered ? Colors.surfaceContainerHigh : "transparent"
+                                            radius: Styling.radius(-2)
                                         }
 
                                         contentItem: RowLayout {
@@ -1057,10 +1088,13 @@ StyledRect {
                     }
 
                     // Background Color
-                    StyledRect {
+                    Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 56
-                        variant: "common"
+                        color: Colors.surfaceContainer
+                        radius: Styling.radius(-1)
+                        border.color: Colors.outlineVariant
+                        border.width: 1
 
                         RowLayout {
                             anchors.fill: parent
@@ -1119,9 +1153,11 @@ StyledRect {
                             height: 290
                             padding: 4
 
-                            background: StyledRect {
-                                variant: "pane"
-                                enableShadow: true
+                            background: Rectangle {
+                                color: Colors.surfaceContainerLow
+                                radius: Styling.radius(-1)
+                                border.color: Colors.outlineVariant
+                                border.width: 1
                             }
 
                             ColumnLayout {
@@ -1129,11 +1165,14 @@ StyledRect {
                                 spacing: 4
 
                                 // Custom HEX input
-                                StyledRect {
+                                Rectangle {
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: 36
                                     Layout.margins: 2
-                                    variant: bgColorHexInput.activeFocus ? "focus" : "common"
+                                    color: bgColorHexInput.activeFocus ? Colors.surfaceContainerHigh : Colors.surfaceContainer
+                                    radius: Styling.radius(-2)
+                                    border.color: bgColorHexInput.activeFocus ? Colors.primary : Colors.outlineVariant
+                                    border.width: 1
 
                                     RowLayout {
                                         anchors.fill: parent
@@ -1237,8 +1276,9 @@ StyledRect {
                                         width: ListView.view.width
                                         height: 32
 
-                                        background: StyledRect {
-                                            variant: bgColorItem.hovered ? "focus" : "common"
+                                        background: Rectangle {
+                                            color: bgColorItem.hovered ? Colors.surfaceContainerHigh : "transparent"
+                                            radius: Styling.radius(-2)
                                         }
 
                                         contentItem: RowLayout {
@@ -1282,10 +1322,13 @@ StyledRect {
                 }
 
                 // Halftone controls
-                StyledRect {
+                Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 160
-                    variant: "common"
+                    color: Colors.surfaceContainer
+                    radius: Styling.radius(-1)
+                    border.color: Colors.outlineVariant
+                    border.width: 1
 
                     ColumnLayout {
                         anchors.fill: parent
