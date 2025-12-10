@@ -96,7 +96,7 @@ Item {
             anchors.fill: parent
             color: Colors.primary
             opacity: root.isHovered && !root.isExpanded ? 0.25 : 0
-            radius: parent.radius
+            radius: parent.radius ?? 0
 
             Behavior on opacity {
                 enabled: Config.animDuration > 0

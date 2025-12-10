@@ -67,7 +67,7 @@ Item {
             anchors.fill: parent
             color: Colors.primary
             opacity: root.isHovered && !root.isExpanded ? 0.25 : 0
-            radius: parent.radius
+            radius: parent.radius ?? 0
 
             Behavior on opacity {
                 enabled: Config.animDuration > 0
@@ -128,11 +128,14 @@ Item {
             }
 
             Connections {
-                target: Audio.source?.audio
+                target: Audio.source?.audio ?? null
+                ignoreUnknownSignals: true
                 function onVolumeChanged() {
-                    micSlider.value = Audio.source.audio.volume;
-                    root.externalVolumeChange = true;
-                    externalChangeTimer.restart();
+                    if (Audio.source?.audio) {
+                        micSlider.value = Audio.source.audio.volume;
+                        root.externalVolumeChange = true;
+                        externalChangeTimer.restart();
+                    }
                 }
             }
 

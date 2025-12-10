@@ -76,7 +76,16 @@ Item {
         bottomLeftRadius: defaultRadius
         bottomRightRadius: defaultRadius
 
-        Behavior on radius {
+        Behavior on bottomLeftRadius {
+            enabled: Config.animDuration > 0
+            NumberAnimation {
+                duration: Config.animDuration
+                easing.type: screenNotchOpen || hasActiveNotifications ? Easing.OutBack : Easing.OutQuart
+                easing.overshoot: screenNotchOpen || hasActiveNotifications ? 1.2 : 1.0
+            }
+        }
+
+        Behavior on bottomRightRadius {
             enabled: Config.animDuration > 0
             NumberAnimation {
                 duration: Config.animDuration
@@ -186,15 +195,6 @@ Item {
             bottomLeftRadius: parent.bottomLeftRadius
             bottomRightRadius: parent.bottomRightRadius
             
-            Behavior on radius {
-                enabled: Config.animDuration > 0
-                NumberAnimation {
-                    duration: Config.animDuration
-                    easing.type: screenNotchOpen || hasActiveNotifications ? Easing.OutBack : Easing.OutQuart
-                    easing.overshoot: screenNotchOpen || hasActiveNotifications ? 1.2 : 1.0
-                }
-            }
-
             Behavior on topLeftRadius {
                 enabled: Config.animDuration > 0
                 NumberAnimation {

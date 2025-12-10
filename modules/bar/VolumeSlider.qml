@@ -69,7 +69,7 @@ Item {
             anchors.fill: parent
             color: Colors.primary
             opacity: root.isHovered && !root.isExpanded ? 0.25 : 0
-            radius: parent.radius
+            radius: parent.radius ?? 0
 
             Behavior on opacity {
                 enabled: Config.animDuration > 0
@@ -141,11 +141,14 @@ Item {
             }
 
             Connections {
-                target: Audio.sink?.audio
+                target: Audio.sink?.audio ?? null
+                ignoreUnknownSignals: true
                 function onVolumeChanged() {
-                    volumeSlider.value = Audio.sink.audio.volume;
-                    root.externalVolumeChange = true;
-                    externalChangeTimer.restart();
+                    if (Audio.sink?.audio) {
+                        volumeSlider.value = Audio.sink.audio.volume;
+                        root.externalVolumeChange = true;
+                        externalChangeTimer.restart();
+                    }
                 }
             }
 

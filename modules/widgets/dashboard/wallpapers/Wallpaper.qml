@@ -324,18 +324,6 @@ PanelWindow {
         }
     }
 
-    Keys.onLeftPressed: {
-        if (wallpaperPaths.length > 0) {
-            previousWallpaper();
-        }
-    }
-
-    Keys.onRightPressed: {
-        if (wallpaperPaths.length > 0) {
-            nextWallpaper();
-        }
-    }
-
     Process {
         id: checkWallpapersJson
         running: false
@@ -634,6 +622,19 @@ PanelWindow {
         id: background
         anchors.fill: parent
         color: "black"
+        focus: true
+
+        Keys.onLeftPressed: {
+            if (wallpaper.wallpaperPaths.length > 0) {
+                wallpaper.previousWallpaper();
+            }
+        }
+
+        Keys.onRightPressed: {
+            if (wallpaper.wallpaperPaths.length > 0) {
+                wallpaper.nextWallpaper();
+            }
+        }
 
         WallpaperImage {
             id: wallImage
