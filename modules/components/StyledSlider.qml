@@ -356,7 +356,7 @@ Item {
             if (root.vertical) {
                 ratio = 1 - ratio; // Invert for vertical
             }
-            return ratio;
+            return Math.round(ratio * 100) / 100;
         }
 
         onPressed: mouse => {
@@ -396,9 +396,9 @@ Item {
         onWheel: wheel => {
             if (root.scroll) {
                 if (wheel.angleDelta.y > 0) {
-                    root.value = Math.min(1, root.value + 0.1);
+                    root.value = Math.round(Math.min(1, root.value + 0.1) * 100) / 100;
                 } else {
-                    root.value = Math.max(0, root.value - 0.1);
+                    root.value = Math.round(Math.max(0, root.value - 0.1) * 100) / 100;
                 }
             } else {
                 wheel.accepted = false;
