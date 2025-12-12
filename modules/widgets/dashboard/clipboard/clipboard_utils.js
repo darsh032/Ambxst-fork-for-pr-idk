@@ -11,7 +11,7 @@ function getIconForMime(mimeType, content) {
             // Extract domain for favicon
             try {
                 var url = new URL(content.trim());
-                return url.origin + "/favicon.ico";
+                return getGoogleFaviconUrl(url.hostname);
             } catch (e) {
                 // Invalid URL, fall through to default handling
             }
@@ -65,13 +65,19 @@ function isUrl(text) {
     return /^https?:\/\/[^\s]+/.test(trimmed);
 }
 
-// Extract favicon URL from content
+// Get Google Favicon service URL (always returns PNG, handles SVG conversion)
+function getGoogleFaviconUrl(domain) {
+    if (!domain) return "";
+    return "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(domain) + "&sz=64";
+}
+
+// Extract favicon URL from content (uses Google service for reliability)
 function getFaviconUrl(text) {
     if (!text) return "";
     try {
         var trimmed = text.trim();
         var url = new URL(trimmed);
-        return url.origin + "/favicon.ico";
+        return getGoogleFaviconUrl(url.hostname);
     } catch (e) {
         return "";
     }

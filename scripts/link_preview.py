@@ -118,6 +118,8 @@ class MetaTagParser(HTMLParser):
         }
         self.in_title = False
         self.title_text = ""
+        # Store all found favicons with their sizes for priority selection
+        self.favicon_candidates = []
 
     def handle_starttag(self, tag, attrs):
         attrs_dict = dict(attrs)
@@ -126,12 +128,40 @@ class MetaTagParser(HTMLParser):
         if tag == "title":
             self.in_title = True
 
-        # Handle link tag for favicon
+        # Handle link tag for favicon - collect all candidates
         if tag == "link":
             rel = attrs_dict.get("rel", "")
             href = attrs_dict.get("href", "")
-            if rel and "icon" in rel and href:
-                self.metadata["favicon"] = href
+            sizes = attrs_dict.get("sizes", "")
+            link_type = attrs_dict.get("type", "")
+
+            if rel and href and ("icon" in rel.lower()):
+                # Parse size if available (e.g., "96x96", "32x32")
+                size = 0
+                if sizes and "x" in sizes:
+                    try:
+                        size = int(sizes.split("x")[0])
+                    except ValueError:
+                        size = 0
+
+                # Prefer PNG/SVG over ICO
+                priority = 0
+                if ".svg" in href.lower() or "svg" in link_type.lower():
+                    priority = 3  # SVG is scalable, high priority
+                elif ".png" in href.lower() or "png" in link_type.lower():
+                    priority = 2
+                elif ".ico" in href.lower() or "ico" in link_type.lower():
+                    priority = 1
+                else:
+                    priority = 1  # Default for unknown formats
+
+                self.favicon_candidates.append(
+                    {"href": href, "size": size, "priority": priority, "rel": rel}
+                )
+
+                # Also set immediate favicon for backwards compatibility
+                if not self.metadata["favicon"]:
+                    self.metadata["favicon"] = href
 
         # Handle meta tags
         if tag == "meta":
@@ -177,6 +207,30 @@ class MetaTagParser(HTMLParser):
             if not self.metadata["title"]:
                 self.metadata["title"] = self.title_text.strip()
 
+    def get_best_favicon(self):
+        """Select the best favicon from collected candidates."""
+        if not self.favicon_candidates:
+            return self.metadata["favicon"]
+
+        # Sort by: priority (format) desc, then size desc (prefer larger icons)
+        # Prefer sizes around 32-96px for good quality without being too large
+        def score(fav):
+            size = fav["size"]
+            priority = fav["priority"]
+            # Prefer sizes between 32 and 128, with 64-96 being ideal
+            if 32 <= size <= 128:
+                size_score = size
+            elif size > 128:
+                size_score = 128 - (size - 128) // 10  # Penalize very large
+            else:
+                size_score = size  # Small or unknown (0)
+            return (priority, size_score)
+
+        sorted_favicons = sorted(self.favicon_candidates, key=score, reverse=True)
+        return (
+            sorted_favicons[0]["href"] if sorted_favicons else self.metadata["favicon"]
+        )
+
 
 def fetch_preview(url, timeout=5):
     """
@@ -219,8 +273,12 @@ def fetch_preview(url, timeout=5):
 
         req = urllib.request.Request(url, headers=headers)
 
-        # Fetch the page
+        # Fetch the page (urllib follows redirects automatically)
         with urllib.request.urlopen(req, timeout=timeout) as response:
+            # Get the final URL after redirects
+            final_url = response.geturl()
+            final_parsed = urlparse(final_url)
+
             # Only parse HTML content
             content_type = response.headers.get("Content-Type", "")
             if "text/html" not in content_type:
@@ -233,28 +291,34 @@ def fetch_preview(url, timeout=5):
         parser = MetaTagParser()
         parser.feed(html)
 
-        # Resolve relative URLs
-        base_url = f"{parsed.scheme}://{parsed.netloc}"
+        # Use the final URL after redirects for resolving relative URLs
+        base_url = f"{final_parsed.scheme}://{final_parsed.netloc}"
         metadata = parser.metadata
+
+        # Get the best favicon from candidates
+        best_favicon = parser.get_best_favicon()
+        if best_favicon:
+            metadata["favicon"] = best_favicon
 
         if metadata["image"] and not metadata["image"].startswith(
             ("http://", "https://")
         ):
-            metadata["image"] = urljoin(url, metadata["image"])
+            metadata["image"] = urljoin(final_url, metadata["image"])
 
         if metadata["favicon"] and not metadata["favicon"].startswith(
             ("http://", "https://")
         ):
-            metadata["favicon"] = urljoin(url, metadata["favicon"])
+            metadata["favicon"] = urljoin(final_url, metadata["favicon"])
         elif not metadata["favicon"]:
+            # Try common favicon locations before falling back to /favicon.ico
             metadata["favicon"] = f"{base_url}/favicon.ico"
 
         if not metadata["url"]:
-            metadata["url"] = url
+            metadata["url"] = url  # Keep original URL, not redirected
 
         # Set site name from domain if not present
         if not metadata["site_name"]:
-            metadata["site_name"] = parsed.netloc
+            metadata["site_name"] = final_parsed.netloc
 
         return metadata
 

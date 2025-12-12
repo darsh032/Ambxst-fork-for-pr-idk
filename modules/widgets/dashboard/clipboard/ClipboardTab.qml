@@ -116,6 +116,7 @@ Item {
     property string currentFullContent: ""
     property var linkPreviewData: null
     property bool loadingLinkPreview: false
+    property int linkPreviewCacheRevision: 0  // Increments when cache updates, triggers favicon rebinding
 
     // Helper function to get file path from URI
     function getFilePathFromUri(content) {
@@ -154,11 +155,40 @@ Item {
     }
 
     // Helper function to get favicon URL for item
+    // First checks the linkPreviewCache for the best favicon, falls back to Google Favicon service
     function getFaviconUrl(item) {
         if (!item || item.isImage || item.isFile)
             return "";
         var content = item.preview || "";
+        if (!ClipboardUtils.isUrl(content))
+            return "";
+        
+        // Check if we have cached link preview data with a favicon
+        var trimmedUrl = content.trim();
+        var cachedData = ClipboardService.linkPreviewCache[trimmedUrl];
+        if (cachedData && cachedData.favicon) {
+            var favicon = cachedData.favicon;
+            // If favicon is SVG, use Google service instead (Qt has issues with remote SVGs)
+            if (favicon.toLowerCase().endsWith('.svg')) {
+                return ClipboardUtils.getFaviconUrl(content);
+            }
+            return favicon;
+        }
+        
+        // Fallback to Google Favicon service
         return ClipboardUtils.getFaviconUrl(content);
+    }
+
+    // Helper function to get usable favicon from link preview data
+    // Converts SVG to Google Favicon service URL since Qt can't load remote SVGs
+    function getUsableFavicon(faviconUrl, originalUrl) {
+        if (!faviconUrl)
+            return "";
+        // If favicon is SVG, use Google service instead
+        if (faviconUrl.toLowerCase().endsWith('.svg') && originalUrl) {
+            return ClipboardUtils.getFaviconUrl(originalUrl);
+        }
+        return faviconUrl;
     }
 
     implicitWidth: 400
@@ -506,6 +536,8 @@ Item {
 
         function onLinkPreviewFetched(url, metadata) {
             root.loadingLinkPreview = false;
+            // Increment cache revision to trigger favicon rebinding in list items
+            root.linkPreviewCacheRevision++;
             if (root.selectedIndex >= 0 && root.selectedIndex < root.allItems.length) {
                 let item = root.allItems[root.selectedIndex];
                 let currentContent = root.currentFullContent || item.preview;
@@ -1906,6 +1938,8 @@ Item {
                                     }
 
                                     property string faviconUrl: {
+                                        // Depend on cache revision to rebind when new previews are fetched
+                                        var _rev = root.linkPreviewCacheRevision;
                                         if (iconType !== "link")
                                             return "";
                                         var url = root.getFaviconUrl(modelData);
@@ -1920,6 +1954,8 @@ Item {
                                         anchors.centerIn: parent
                                         width: 20
                                         height: 20
+                                        sourceSize.width: 20
+                                        sourceSize.height: 20
                                         visible: iconBackground.iconType === "link" && iconBackground.faviconLoaded && status === Image.Ready
                                         fillMode: Image.PreserveAspectFit
                                         asynchronous: true
@@ -1934,10 +1970,18 @@ Item {
                                         }
                                     }
 
+                                    // Update favicon when URL changes (e.g., from cache update)
+                                    onFaviconUrlChanged: {
+                                        if (faviconUrl !== "" && faviconUrl !== faviconImage.source) {
+                                            faviconLoaded = false;
+                                            faviconImage.source = faviconUrl;
+                                        }
+                                    }
+
                                     Timer {
                                         id: faviconLoader
                                         interval: 1
-                                        running: iconBackground.iconType === "link" && iconBackground.faviconUrl !== ""
+                                        running: iconBackground.iconType === "link" && iconBackground.faviconUrl !== "" && faviconImage.source === ""
                                         onTriggered: {
                                             if (iconBackground.faviconUrl !== "") {
                                                 faviconImage.source = iconBackground.faviconUrl;
@@ -2465,7 +2509,9 @@ Item {
                                         Image {
                                             width: 16
                                             height: 16
-                                            source: root.linkPreviewData && root.linkPreviewData.favicon ? root.linkPreviewData.favicon : ""
+                                            sourceSize.width: 16
+                                            sourceSize.height: 16
+                                            source: root.linkPreviewData && root.linkPreviewData.favicon ? root.getUsableFavicon(root.linkPreviewData.favicon, root.currentFullContent) : ""
                                             fillMode: Image.PreserveAspectFit
                                             asynchronous: true
                                             cache: true
@@ -2607,7 +2653,9 @@ Item {
                                             Image {
                                                 width: 16
                                                 height: 16
-                                                source: root.linkPreviewData && root.linkPreviewData.favicon ? root.linkPreviewData.favicon : ""
+                                                sourceSize.width: 16
+                                                sourceSize.height: 16
+                                                source: root.linkPreviewData && root.linkPreviewData.favicon ? root.getUsableFavicon(root.linkPreviewData.favicon, root.currentFullContent) : ""
                                                 fillMode: Image.PreserveAspectFit
                                                 asynchronous: true
                                                 cache: true
