@@ -665,7 +665,7 @@ Scope {
                             ctx.strokeStyle = borderColor;
                             ctx.lineWidth = borderWidth;
                             ctx.lineJoin = "round";
-                            ctx.lineCap = "round";
+                            ctx.lineCap = "butt";
 
                             var offset = borderWidth / 2;
                             var cs = dockContainer.cornerSize;
@@ -679,350 +679,103 @@ Scope {
                             ctx.beginPath();
                             
                             if (root.isBottom) {
-                                // Bottom Edge is Open.
-                                // Start at Bottom Right (end of Right Fillet)
-                                // We are drawing from Right -> Top -> Left.
-                                
-                                // Right Fillet ends at (width - offset, height - cs)? No.
-                                // Right Fillet: Center (width - offset, height - cs).
-                                // Connects Right side (Angle 0) to Bottom Edge (Angle 90).
-                                // Wait, previous code:
-                                // "ACW from 180 (Left) to 90 (Bottom)" for Left Fillet?
-                                // Let's re-verify the logic.
-                                
-                                // To have an open bottom, we should draw the path "around" the dock.
-                                // Let's go Clockwise or Counter-Clockwise.
-                                // Let's go from Bottom Right -> Up -> Left -> Down -> Bottom Left.
-                                
-                                // Start point: Bottom Right of the shape (on the screen edge).
-                                // This is the end of the Right Fillet if we were coming down.
-                                // Point: (width - offset, height - offset).
-                                ctx.moveTo(width - offset, height - offset);
-                                
-                                // Right Fillet (Screen Edge -> Right Side).
-                                // Center: (width - offset, height - cs).
-                                // Start Angle: 90 degrees (Math.PI/2) [Bottom].
-                                // End Angle: 0 degrees (0) [Right].
-                                // Direction: 90 -> 0. ACW (Decreasing).
-                                ctx.arc(width - offset, height - cs, cs - offset, Math.PI / 2, 0, true);
-                                
-                                // Line Up
-                                ctx.lineTo(width - offset, cs); // to top fillet start? No, Top Right corner.
-                                // Top Right Corner start
-                                // If tr > 0, we stop early.
-                                
-                                // Wait, previous code had Top Right Corner logic:
-                                // ctx.lineTo(width - cs - tr, offset); ...
-                                // Let's use standard arcTo or arc logic.
-                                
-                                // Current pos: (width - offset, height - cs) after fillet?
-                                // No, arc ends at (width + R * cos 0, ...) = (width - offset + cs - offset, ...) = (width + cs - 2offset).
-                                // This is wrong.
-                                // Fillet Center (width - offset, height - cs). R = cs - offset.
-                                // Angle 0 point: (width - offset + cs - offset, height - cs).
-                                // This pushes OUT.
-                                // Fillet should be concave? No, convex relative to the dock.
-                                // Dock is solid. Outline is outside.
-                                // Wait, the fillet mimics the screen corner filling in?
-                                // The notch code had corner masks.
-                                // In notch: "Left top corner arc".
-                                // This is the fillet connecting the bar to the screen.
-                                // It curves IN.
-                                // So the center of the circle is OUTSIDE the dock shape.
-                                // Center should be at (width - cs, height - offset) ?
-                                // If center is (width - cs, height - offset), and R = cs - offset.
-                                // At Angle 0 (Right): (width - cs + cs - offset, height - offset) = (width - offset, height - offset).
-                                // At Angle 270 (Top): (width - cs, height - offset - (cs - offset)) = (width - cs, height - cs).
-                                // This connects Bottom Edge to Right Edge? No.
-                                // This connects Right Edge to Bottom Edge.
-                                // 0 (Right) -> 270 (-90) (Top)? No.
-                                
-                                // Let's stick to the previous successfully drawn shape, just change the start/end.
-                                // Previous Bottom Dock:
-                                // 1. Start (offset, height - offset).
-                                // 2. Left Fillet: arc(offset, height - cs, cs - offset, PI/2, 0, true).
-                                //    Center (offset, height - cs).
-                                //    Start Angle PI/2 (Bottom). Point: (offset, height - cs + cs - offset) = (offset, height - offset). Correct.
-                                //    End Angle 0 (Right). Point: (offset + cs - offset, height - cs) = (cs, height - cs).
-                                //    This point is inside the dock area?
-                                //    (cs, height - cs). Yes.
-                                //    So the fillet goes from Bottom Left (on edge) to (cs, height - cs).
-                                //    It curves "in". Concave corner?
-                                //    Yes, it smoothens the transition from screen edge to dock side.
-                                
-                                // So, to leave Bottom OPEN:
-                                // Start at the end of the Right Fillet (which is on the bottom edge)
-                                // OR Start at the end of the shape and go backwards?
-                                // Let's just trace the path from Right to Left.
-                                
-                                // Right Fillet (Right Side -> Bottom Edge).
-                                // Previous code: 
-                                // ctx.arc(width - offset, height - cs, cs - offset, Math.PI, Math.PI / 2, true);
-                                // Center (width - offset, height - cs).
-                                // Start PI (Left). Point: (width - offset - (cs-offset), height - cs) = (width - cs, height - cs).
-                                // End PI/2 (Bottom). Point: (width - offset, height - cs + cs - offset) = (width - offset, height - offset).
-                                // This traces form Side to Bottom.
-                                
-                                // So let's start at the START of the Right Fillet (on the side) and go to Bottom?
-                                // No, we want to Draw:
-                                // Start at Bottom Right Edge -> Right Side -> Top -> Left Side -> Bottom Left Edge.
-                                
-                                // Start: (width - offset, height - offset). (Bottom point of Right Fillet).
-                                ctx.moveTo(width - offset, height - offset);
-                                
-                                // Right Fillet (Bottom -> Right).
-                                // Center (width - offset, height - cs).
-                                // Start Angle PI/2 (Bottom). End Angle PI (Left/Side).
-                                // Direction: PI/2 -> PI. Increasing. CW (false).
-                                // Wait, PI/2 (Down) -> PI (Left).
-                                // On Screen: Down -> Left is Clockwise. Correct.
-                                ctx.arc(width - offset, height - cs, cs - offset, Math.PI / 2, Math.PI, false);
-                                
-                                // Now we are at (width - cs, height - cs).
-                                // We need to go Up to Top Right Corner.
-                                // Line to (width - cs, cs) ?
-                                // Top Right Corner Radius `tr`.
-                                // If tr > 0:
-                                // We are going Up. Top Right Corner turns Left.
-                                // We need to reach (width - cs, tr + something).
-                                // Actually, standard rounded rect logic.
-                                // We are at x = width - cs. We go up.
-                                
-                                // Let's reuse the logic but reversed? Or just trace it carefully.
-                                // Line Up to start of Top Right corner.
-                                // Top Right Corner center is (width - cs - tr, tr). ? No.
-                                // The dock is centered? No.
-                                // Previous code:
-                                // Line Right: ctx.lineTo(width - cs - tr, offset);
-                                // Top Right Corner: ctx.arcTo(width - cs, offset, width - cs, offset + tr, tr - offset);
-                                // This implies the Right Edge of the top part is at `width - cs`.
-                                
-                                // So we are going UP along `x = width - cs`.
-                                ctx.lineTo(width - cs, tr > 0 ? tr + offset : offset); 
-                                // Wait, `tr - offset` is radius.
-                                // Center of Top Right corner: (width - cs - tr, tr). 
-                                // No, `tr` is the outer radius?
-                                // Previous code: `ctx.arcTo(width - cs, offset, ...)`
-                                // Target point 1 (corner): (width - cs, offset).
-                                // Target point 2 (next): (width - cs, offset + tr).
-                                // Radius: tr - offset.
-                                // This creates a rounded corner at (width - cs, offset).
-                                // So we approach (width - cs, offset) from left? No, previous code approached from Left.
-                                // Now we approach from Bottom.
-                                
-                                // So:
-                                // Line Up to start of TR corner.
-                                ctx.lineTo(width - cs, offset + tr); // Start of corner (if tr=0, just offset)
-                                
-                                if (tr > 0) {
-                                    // Corner from Right side to Top side.
-                                    // Center (width - cs - tr, offset + tr).
-                                    // Start Angle 0 (Right). End Angle 270 (Top).
-                                    // Direction: 0 -> -90 (270). ACW.
-                                    // ctx.arc(width - cs - tr, offset + tr, tr - offset, 0, 3 * Math.PI / 2, true);
-                                    
-                                    // Or use arcTo.
-                                    // Current point (width - cs, offset + tr).
-                                    // Control point (width - cs, offset).
-                                    // End point (width - cs - tr, offset).
-                                    ctx.arcTo(width - cs, offset, width - cs - tr, offset, tr - offset);
-                                } else {
-                                    ctx.lineTo(width - cs, offset);
-                                }
-
-                                // Line Left to start of TL corner.
-                                ctx.lineTo(cs + tl, offset);
-                                
-                                // Top Left Corner
-                                if (tl > 0) {
-                                    // Control point (cs, offset).
-                                    // End point (cs, offset + tl).
-                                    ctx.arcTo(cs, offset, cs, offset + tl, tl - offset);
-                                } else {
-                                    ctx.lineTo(cs, offset);
-                                }
-                                
-                                // Line Down to start of Left Fillet.
-                                ctx.lineTo(cs, height - cs);
-                                
-                                // Left Fillet (Side -> Bottom).
-                                // Center (offset, height - cs).
-                                // Start Angle 0 (Right). End Angle PI/2 (Bottom).
-                                // Direction: 0 -> 90. CW.
-                                ctx.arc(offset, height - cs, cs - offset, 0, Math.PI / 2, false);
-                                
-                                // End point is (offset, height - offset).
-                                // Done. Path is open at bottom.
-                                
-                            } else if (root.isLeft) {
-                                // Left Edge is Open.
-                                // Start at Bottom Left (end of Bottom Fillet).
-                                // Bottom Fillet Center (offset, height - offset - (cs-offset))? 
-                                // Let's check previous Left Dock Bottom Fillet.
-                                // ctx.arc(cs, height - offset, cs - offset, 3 * Math.PI / 2, Math.PI, true);
-                                // Center (cs, height - offset).
-                                // Start 270 (Top). End 180 (Left). ACW.
-                                // Point at 180: (cs - (cs-offset), ...) = (offset, height - offset).
-                                
-                                // We want to start at (offset, height - offset).
+                                // Draw Left to Right (Start Bottom Left)
                                 ctx.moveTo(offset, height - offset);
                                 
-                                // Bottom Fillet (Left -> Bottom).
-                                // Center (cs, height - offset).
-                                // Start 180 (Left). End 270 (-90) (Top).
-                                // Direction: 180 -> 270. CW (false)? 
-                                // Screen: Left -> Top (visually Up). 
-                                // Left (180). Top (270).
-                                // 180 -> 270 is ACW (increasing).
-                                // Wait, visually: Left -> Up is Clockwise on screen?
-                                // Center (cs, height - offset).
-                                // (offset, height - offset) is Left of Center.
-                                // We want to go to (cs, height - cs). This is Up-Right.
-                                // (cs, height - cs) relative to center: (0, -R). Angle 270.
-                                // 180 -> 270. Increasing.
-                                // arc(..., 180, 270, false) ?
-                                // false = Clockwise.
-                                // 180 -> 270 CW goes through 0, 90? No.
-                                // Canvas Default is CW.
-                                // If start=PI, end=1.5PI.
-                                // CW: PI -> 1.5PI. 
-                                // PI (Left) -> 1.5PI (Top).
-                                // Yes, Left -> Top is CW on screen coords (Y down).
-                                ctx.arc(cs, height - offset, cs - offset, Math.PI, 3 * Math.PI / 2, false);
+                                // Left Fillet (Bottom Edge -> Left Side)
+                                // Center (offset, height - cs).
+                                // Start 90 (Bottom). End 0 (Right). ACW.
+                                ctx.arc(offset, height - cs, cs - offset, Math.PI / 2, 0, true);
                                 
-                                // Now at (cs, height - cs).
-                                // Line Right to Bottom Right Corner.
-                                // Bottom Right corner starts at x = width - cs?
-                                // No, dock width extends to right.
-                                // Previous code Left Dock:
-                                // Line Down: ctx.lineTo(width - offset, height - cs - br);
-                                // So Right Edge is at `width - offset`.
+                                // Line Up to Top Left Corner
+                                ctx.lineTo(cs, tl > 0 ? tl + offset : offset);
+
+                                // Top Left Corner
+                                if (tl > 0) ctx.arcTo(cs, offset, cs + tl, offset, tl - offset);
+                                else ctx.lineTo(cs, offset);
                                 
-                                // Line Right
-                                ctx.lineTo(width - offset - br, height - cs);
-                                
-                                // Bottom Right Corner
-                                if (br > 0) {
-                                    // Control (width - offset, height - cs).
-                                    // End (width - offset, height - cs - br).
-                                    ctx.arcTo(width - offset, height - cs, width - offset, height - cs - br, br - offset);
-                                } else {
-                                    ctx.lineTo(width - offset, height - cs);
-                                }
-                                
-                                // Line Up
-                                ctx.lineTo(width - offset, cs + tr); // wait, Top Right
+                                // Line Right to Top Right Corner
+                                ctx.lineTo(width - cs - tr, offset);
                                 
                                 // Top Right Corner
-                                if (tr > 0) {
-                                    // Control (width - offset, cs).
-                                    // End (width - offset - tr, cs).
-                                    ctx.arcTo(width - offset, cs, width - offset - tr, cs, tr - offset);
-                                } else {
-                                    ctx.lineTo(width - offset, cs);
-                                }
+                                if (tr > 0) ctx.arcTo(width - cs, offset, width - cs, offset + tr, tr - offset);
+                                else ctx.lineTo(width - cs, offset);
                                 
-                                // Line Left to Top Fillet start.
+                                // Line Down to Right Fillet
+                                ctx.lineTo(width - cs, height - cs);
+                                
+                                // Right Fillet (Right Side -> Bottom Edge)
+                                // Center (width - offset, height - cs).
+                                // Start 180 (Left). End 90 (Bottom). ACW (Decreasing).
+                                ctx.arc(width - offset, height - cs, cs - offset, Math.PI, Math.PI / 2, true);
+                                
+                                // End at Bottom Right (width - offset, height - offset)
+                                
+                            } else if (root.isLeft) {
+                                // Draw Bottom to Top (Start Bottom Left)
+                                ctx.moveTo(offset, height - offset);
+                                
+                                // Bottom Fillet (Left Edge -> Bottom Side)
+                                // Center (cs, height - offset).
+                                // Start 180 (Left). End 270 (Top). CW (Increasing).
+                                ctx.arc(cs, height - offset, cs - offset, Math.PI, 3 * Math.PI / 2, false);
+                                
+                                // Line Right to Bottom Right
+                                ctx.lineTo(width - cs - br, height - cs);
+                                
+                                // Bottom Right Corner
+                                if (br > 0) ctx.arcTo(width - offset, height - cs, width - offset, height - cs - br, br - offset);
+                                else ctx.lineTo(width - offset, height - cs);
+                                
+                                // Line Up to Top Right
+                                ctx.lineTo(width - offset, cs + tr);
+                                
+                                // Top Right Corner
+                                if (tr > 0) ctx.arcTo(width - offset, cs, width - offset - tr, cs, tr - offset);
+                                else ctx.lineTo(width - offset, cs);
+                                
+                                // Line Left to Top Fillet
                                 ctx.lineTo(cs, cs);
                                 
-                                // Top Fillet (Top -> Left).
+                                // Top Fillet (Top Side -> Left Edge)
                                 // Center (cs, offset).
-                                // Start 90 (Bottom). End 180 (Left).
-                                // Wait, previous Top Fillet:
-                                // ctx.arc(cs, offset, cs - offset, Math.PI, Math.PI / 2, true);
-                                // Center (cs, offset).
-                                // Start 180. End 90. ACW.
-                                // Here we go 90 -> 180.
-                                // 90 -> 180. Increasing. CW (false).
+                                // Start 90 (Bottom). End 180 (Left). CW (Increasing).
                                 ctx.arc(cs, offset, cs - offset, Math.PI / 2, Math.PI, false);
                                 
-                                // End at (offset, offset).
+                                // End at Top Left (offset, offset)
                                 
                             } else if (root.isRight) {
-                                // Right Edge is Open.
-                                // Start at Top Right (end of Top Fillet).
-                                // Previous Top Fillet:
-                                // ctx.arc(width - cs, offset, cs - offset, 0, Math.PI / 2, false);
-                                // Center (width - cs, offset).
-                                // Start 0 (Right). End 90 (Bottom). CW.
-                                // Point at 0: (width - cs + R, offset) = (width - offset, offset).
-                                
+                                // Draw Top to Bottom (Start Top Right)
                                 ctx.moveTo(width - offset, offset);
                                 
-                                // Top Fillet (Right -> Top).
+                                // Top Fillet (Right Edge -> Top Side)
                                 // Center (width - cs, offset).
-                                // Start 0. End 90? No.
-                                // We are traversing Reverse of previous.
-                                // Previous: Top Edge -> Right Edge.
-                                // Now: Right Edge -> Top Edge.
-                                // Start 0 (Right). End 90 (Bottom)? No.
-                                // Top Edge is tangent at 90 (Bottom of circle).
-                                // Wait, previous Top Fillet:
-                                // "Top Fillet (Right Edge -> Top Side)"
-                                // "Tangent Start: Down (0, 1)." (Angle 90? No, Angle 0 tangent is Vertical Down).
-                                // "Tangent End: Left (-1, 0)." (Angle 90 tangent is Horizontal Left).
-                                // So previous was 0 -> 90.
-                                // Now we want 0 -> 90? No.
-                                // We want Right Edge -> Top Edge.
-                                // From (width - offset, offset) to (width - cs, cs).
-                                // (width - offset, offset) is at Angle 0 relative to Center (width - cs, offset).
-                                // (width - cs, cs) is at Angle 90 relative to Center.
-                                // Path: 0 -> 90. CW.
-                                // Tangent at 0: Down.
-                                // Tangent at 90: Left.
-                                // If we go 0 -> 90, we move Down then Left.
-                                // This curves IN to the dock.
+                                // Start 0 (Right). End 90 (Bottom). CW (Increasing).
                                 ctx.arc(width - cs, offset, cs - offset, 0, Math.PI / 2, false);
                                 
-                                // Line Left
-                                ctx.lineTo(tl + offset, cs); // Top Left
+                                // Line Left to Top Left
+                                ctx.lineTo(tl + offset, cs);
                                 
                                 // Top Left Corner
-                                if (tl > 0) {
-                                    // Control (offset, cs).
-                                    // End (offset, cs + tl).
-                                    ctx.arcTo(offset, cs, offset, cs + tl, tl - offset);
-                                } else {
-                                    ctx.lineTo(offset, cs);
-                                }
+                                if (tl > 0) ctx.arcTo(offset, cs, offset, cs + tl, tl - offset);
+                                else ctx.lineTo(offset, cs);
                                 
-                                // Line Down
+                                // Line Down to Bottom Left
                                 ctx.lineTo(offset, height - cs - bl);
                                 
                                 // Bottom Left Corner
-                                if (bl > 0) {
-                                    // Control (offset, height - cs).
-                                    // End (offset + bl, height - cs).
-                                    ctx.arcTo(offset, height - cs, offset + bl, height - cs, bl - offset);
-                                } else {
-                                    ctx.lineTo(offset, height - cs);
-                                }
+                                if (bl > 0) ctx.arcTo(offset, height - cs, offset + bl, height - cs, bl - offset);
+                                else ctx.lineTo(offset, height - cs);
                                 
-                                // Line Right
+                                // Line Right to Bottom Fillet
                                 ctx.lineTo(width - cs, height - cs);
                                 
-                                // Bottom Fillet (Bottom -> Right).
+                                // Bottom Fillet (Bottom Side -> Right Edge)
                                 // Center (width - cs, height - offset).
-                                // Previous: 270 -> 0. CW.
-                                // Now: Bottom Edge -> Right Edge.
-                                // Tangent Right (1, 0) at 270 (Top).
-                                // Tangent Up (0, -1) at 0 (Right).
-                                // Wait, Bottom Fillet connects Bottom Edge to Right Edge.
-                                // Point (width - cs, height - cs). Angle 270 (Top of circle).
-                                // Point (width - offset, height - offset). Angle 0 (Right of circle).
-                                // 270 -> 360(0). CW.
-                                // Tangent at 270: Right (1, 0).
-                                // Tangent at 0: Down (0, 1).
-                                // Wait, we want to go Right then Down?
-                                // No, we are coming from Left. We hit (width - cs, height - cs).
-                                // We want to curve to (width - offset, height - offset).
-                                // This is Down-Right.
-                                // Tangent at 270 is Right.
-                                // Tangent at 0 is Down.
-                                // So 270 -> 0 is correct.
+                                // Start 270 (Top). End 0 (Right). CW (Increasing).
                                 ctx.arc(width - cs, height - offset, cs - offset, 3 * Math.PI / 2, 2 * Math.PI, false);
                                 
-                                // End at (width - offset, height - offset).
+                                // End at Bottom Right (width - offset, height - offset)
                             }
                             
                             ctx.stroke();
