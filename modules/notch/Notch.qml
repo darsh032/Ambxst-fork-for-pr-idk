@@ -440,7 +440,7 @@ Item {
             var bl = notchRect.bottomLeftRadius;
             var br = notchRect.bottomRightRadius;
             var wCenter = notchRect.width;
-            var yBottom = height - 1 - offset;
+            var yBottom = height - offset;
 
             ctx.beginPath();
             if (rTop > 0) {
