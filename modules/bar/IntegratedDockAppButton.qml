@@ -20,13 +20,13 @@ Button {
     property string orientation: "horizontal"
 
     readonly property bool isVertical: orientation === "vertical"
-    readonly property bool isSeparator: appToplevel.appId === "SEPARATOR"
-    readonly property var desktopEntry: isSeparator ? null : DesktopEntries.heuristicLookup(appToplevel.appId)
-    readonly property bool appIsActive: !isSeparator && appToplevel.toplevels.some(t => t.activated === true)
-    readonly property bool appIsRunning: !isSeparator && appToplevel.toplevelCount > 0
+    readonly property bool isSeparator: appToplevel?.appId === "SEPARATOR"
+    readonly property var desktopEntry: (isSeparator || !appToplevel) ? null : DesktopEntries.heuristicLookup(appToplevel.appId)
+    readonly property bool appIsActive: !isSeparator && (appToplevel?.toplevels?.some(t => t.activated === true) ?? false)
+    readonly property bool appIsRunning: !isSeparator && (appToplevel?.toplevelCount ?? 0) > 0
 
     readonly property bool showIndicators: !isSeparator && (Config.dock?.showRunningIndicators ?? true) && appIsRunning
-    readonly property int instanceCount: isSeparator ? 0 : appToplevel.toplevelCount
+    readonly property int instanceCount: (isSeparator || !appToplevel) ? 0 : appToplevel.toplevelCount
     readonly property real indicatorDotSize: 4
 
     enabled: !isSeparator
