@@ -18,7 +18,7 @@ Rectangle {
 
     radius: Styling.radius(0)
     clip: true
-    
+
     // Request weather update when widget becomes visible if no data
     onVisibleChanged: {
         if (visible && !WeatherService.dataAvailable && !WeatherService.isLoading) {
@@ -39,12 +39,12 @@ Rectangle {
     readonly property color dayTop: "#87CEEB"
     readonly property color dayMid: "#B0E0E6"
     readonly property color dayBot: "#E0F6FF"
-    
+
     // Evening colors (sunset)
     readonly property color eveningTop: "#1a1a2e"
     readonly property color eveningMid: "#e94560"
     readonly property color eveningBot: "#ffeaa7"
-    
+
     // Night colors (dark blue)
     readonly property color nightTop: "#0f0f23"
     readonly property color nightMid: "#1a1a3a"
@@ -58,9 +58,18 @@ Rectangle {
 
     // Dynamic gradient based on time of day (smooth interpolation)
     gradient: Gradient {
-        GradientStop { position: 0.0; color: root.topColor }
-        GradientStop { position: 0.5; color: root.midColor }
-        GradientStop { position: 1.0; color: root.botColor }
+        GradientStop {
+            position: 0.0
+            color: root.topColor
+        }
+        GradientStop {
+            position: 0.5
+            color: root.midColor
+        }
+        GradientStop {
+            position: 1.0
+            color: root.botColor
+        }
     }
 
     // Weather effect properties
@@ -68,12 +77,7 @@ Rectangle {
     readonly property real weatherIntensity: WeatherService.effectiveWeatherIntensity
 
     // Check if weather is overcast (clouds, rain, drizzle, snow, thunderstorm, fog)
-    readonly property bool isOvercast: weatherEffect === "clouds" || 
-                                        weatherEffect === "rain" || 
-                                        weatherEffect === "drizzle" || 
-                                        weatherEffect === "snow" || 
-                                        weatherEffect === "thunderstorm" ||
-                                        weatherEffect === "fog"
+    readonly property bool isOvercast: weatherEffect === "clouds" || weatherEffect === "rain" || weatherEffect === "drizzle" || weatherEffect === "snow" || weatherEffect === "thunderstorm" || weatherEffect === "fog"
 
     // Overcast overlay - darkens/grays the sky based on weather
     Rectangle {
@@ -84,30 +88,27 @@ Rectangle {
 
         // Gray gradient that adapts to time of day
         gradient: Gradient {
-            GradientStop { 
+            GradientStop {
                 position: 0.0
-                color: root.blend.night > 0.5 
-                    ? Qt.rgba(0.15, 0.15, 0.2, 0.9)   // Dark gray-blue at night
-                    : root.blend.evening > 0.3
-                        ? Qt.rgba(0.3, 0.25, 0.3, 0.85)  // Purple-gray at evening
-                        : Qt.rgba(0.5, 0.52, 0.55, 0.8)  // Light gray during day
+                color: root.blend.night > 0.5 ? Qt.rgba(0.15, 0.15, 0.2, 0.9)   // Dark gray-blue at night
+                : root.blend.evening > 0.3 ? Qt.rgba(0.3, 0.25, 0.3, 0.85)  // Purple-gray at evening
+                : Qt.rgba(0.5, 0.52, 0.55, 0.8)  // Light gray during day
             }
-            GradientStop { 
+            GradientStop {
                 position: 0.6
-                color: root.blend.night > 0.5 
-                    ? Qt.rgba(0.2, 0.2, 0.25, 0.7)
-                    : root.blend.evening > 0.3
-                        ? Qt.rgba(0.35, 0.3, 0.35, 0.6)
-                        : Qt.rgba(0.6, 0.62, 0.65, 0.5)
+                color: root.blend.night > 0.5 ? Qt.rgba(0.2, 0.2, 0.25, 0.7) : root.blend.evening > 0.3 ? Qt.rgba(0.35, 0.3, 0.35, 0.6) : Qt.rgba(0.6, 0.62, 0.65, 0.5)
             }
-            GradientStop { 
+            GradientStop {
                 position: 1.0
                 color: Qt.rgba(0.5, 0.5, 0.5, 0.2)  // Fade out at bottom
             }
         }
 
         Behavior on opacity {
-            NumberAnimation { duration: 500; easing.type: Easing.InOutQuad }
+            NumberAnimation {
+                duration: 500
+                easing.type: Easing.InOutQuad
+            }
         }
     }
 
@@ -120,12 +121,14 @@ Rectangle {
         id: starsEffect
         anchors.fill: parent
         // Show stars when night blend > 0.3 and weather is clear
-        opacity: (root.blend.night > 0.3 && root.weatherEffect === "clear") 
-                 ? Math.min(1, (root.blend.night - 0.3) / 0.4) : 0
+        opacity: (root.blend.night > 0.3 && root.weatherEffect === "clear") ? Math.min(1, (root.blend.night - 0.3) / 0.4) : 0
         visible: opacity > 0
 
         Behavior on opacity {
-            NumberAnimation { duration: 1000; easing.type: Easing.InOutQuad }
+            NumberAnimation {
+                duration: 1000
+                easing.type: Easing.InOutQuad
+            }
         }
 
         Repeater {
@@ -169,20 +172,22 @@ Rectangle {
     // Sun rays during clear day - follows celestialBody position
     Item {
         id: sunRaysEffect
-        
+
         // Follow the visual position of celestialBody (after animation)
         x: celestialBody.x + celestialBody.width / 2
         y: celestialBody.y + celestialBody.height / 2
         width: 0
         height: 0
-        
+
         // Show rays when day blend > 0.3 and weather is clear
-        opacity: (root.blend.day > 0.3 && root.weatherEffect === "clear") 
-                 ? Math.min(1.0, (root.blend.day - 0.3) * 1.5) : 0
+        opacity: (root.blend.day > 0.3 && root.weatherEffect === "clear") ? Math.min(1.0, (root.blend.day - 0.3) * 1.5) : 0
         visible: opacity > 0
 
         Behavior on opacity {
-            NumberAnimation { duration: 800; easing.type: Easing.InOutQuad }
+            NumberAnimation {
+                duration: 800
+                easing.type: Easing.InOutQuad
+            }
         }
 
         Repeater {
@@ -202,11 +207,17 @@ Rectangle {
                 radius: 1
                 rotation: ray.angle * 180 / Math.PI
                 transformOrigin: Item.Left
-                
+
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: Qt.rgba(1, 0.95, 0.7, 0.9) }
-                    GradientStop { position: 1.0; color: Qt.rgba(1, 0.95, 0.7, 0) }
+                    GradientStop {
+                        position: 0.0
+                        color: Qt.rgba(1, 0.95, 0.7, 0.9)
+                    }
+                    GradientStop {
+                        position: 1.0
+                        color: Qt.rgba(1, 0.95, 0.7, 0)
+                    }
                 }
 
                 SequentialAnimation on opacity {
@@ -236,35 +247,20 @@ Rectangle {
     Item {
         id: cloudEffect
         anchors.fill: parent
-        visible: root.weatherEffect === "clouds" || 
-                 root.weatherEffect === "rain" || 
-                 root.weatherEffect === "drizzle" || 
-                 root.weatherEffect === "snow" || 
-                 root.weatherEffect === "thunderstorm"
+        visible: root.weatherEffect === "clouds" || root.weatherEffect === "rain" || root.weatherEffect === "drizzle" || root.weatherEffect === "snow" || root.weatherEffect === "thunderstorm"
         opacity: root.weatherEffect === "clouds" ? root.weatherIntensity : 0.8
 
         // Cloud color based on time of day and weather
         // Darker gray for stormy weather, lighter for just cloudy
-        property bool isStormy: root.weatherEffect === "rain" || 
-                                root.weatherEffect === "thunderstorm" ||
-                                root.weatherEffect === "drizzle"
-        
+        property bool isStormy: root.weatherEffect === "rain" || root.weatherEffect === "thunderstorm" || root.weatherEffect === "drizzle"
+
         // Cloud base color adapts to time of day
-        property color cloudColorDark: root.blend.night > 0.5 
-            ? Qt.rgba(0.2, 0.2, 0.25, 1)      // Dark blue-gray at night
-            : root.blend.evening > 0.3
-                ? Qt.rgba(0.35, 0.3, 0.35, 1)  // Purple-gray at evening
-                : isStormy 
-                    ? Qt.rgba(0.4, 0.42, 0.45, 1)  // Dark gray for storms during day
-                    : Qt.rgba(0.85, 0.87, 0.9, 1)  // Light gray-white for fair clouds
-        
-        property color cloudColorLight: root.blend.night > 0.5 
-            ? Qt.rgba(0.3, 0.3, 0.35, 1)
-            : root.blend.evening > 0.3
-                ? Qt.rgba(0.45, 0.4, 0.45, 1)
-                : isStormy 
-                    ? Qt.rgba(0.5, 0.52, 0.55, 1)
-                    : Qt.rgba(0.92, 0.94, 0.96, 1)
+        property color cloudColorDark: root.blend.night > 0.5 ? Qt.rgba(0.2, 0.2, 0.25, 1)      // Dark blue-gray at night
+        : root.blend.evening > 0.3 ? Qt.rgba(0.35, 0.3, 0.35, 1)  // Purple-gray at evening
+        : isStormy ? Qt.rgba(0.4, 0.42, 0.45, 1)  // Dark gray for storms during day
+        : Qt.rgba(0.85, 0.87, 0.9, 1)  // Light gray-white for fair clouds
+
+        property color cloudColorLight: root.blend.night > 0.5 ? Qt.rgba(0.3, 0.3, 0.35, 1) : root.blend.evening > 0.3 ? Qt.rgba(0.45, 0.4, 0.45, 1) : isStormy ? Qt.rgba(0.5, 0.52, 0.55, 1) : Qt.rgba(0.92, 0.94, 0.96, 1)
 
         // Background layer - larger, slower, more transparent clouds
         Repeater {
@@ -375,9 +371,18 @@ Rectangle {
         opacity: root.weatherIntensity * 0.5
 
         gradient: Gradient {
-            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.1) }
-            GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.3) }
-            GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.4) }
+            GradientStop {
+                position: 0.0
+                color: Qt.rgba(1, 1, 1, 0.1)
+            }
+            GradientStop {
+                position: 0.5
+                color: Qt.rgba(1, 1, 1, 0.3)
+            }
+            GradientStop {
+                position: 1.0
+                color: Qt.rgba(1, 1, 1, 0.4)
+            }
         }
 
         // Animated fog wisps
@@ -422,7 +427,7 @@ Rectangle {
         id: rainEffect
         anchors.fill: parent
         visible: root.weatherEffect === "rain" || root.weatherEffect === "drizzle"
-        
+
         property int dropCount: Math.round(20 * root.weatherIntensity)
         property real angle: 15  // degrees from vertical
         property real angleRad: angle * Math.PI / 180
@@ -450,7 +455,9 @@ Rectangle {
                     loops: Animation.Infinite
                     running: rainEffect.visible
 
-                    PauseAnimation { duration: rainDrop.delay }
+                    PauseAnimation {
+                        duration: rainDrop.delay
+                    }
 
                     ParallelAnimation {
                         NumberAnimation {
@@ -486,7 +493,7 @@ Rectangle {
         id: snowEffect
         anchors.fill: parent
         visible: root.weatherEffect === "snow"
-        
+
         property int flakeCount: Math.round(25 * root.weatherIntensity)
 
         Repeater {
@@ -510,7 +517,9 @@ Rectangle {
                     loops: Animation.Infinite
                     running: snowEffect.visible
 
-                    PropertyAction { value: -10 - Math.random() * 30 }
+                    PropertyAction {
+                        value: -10 - Math.random() * 30
+                    }
                     NumberAnimation {
                         to: snowEffect.height + 10
                         duration: snowFlake.fallSpeed
@@ -522,7 +531,9 @@ Rectangle {
                     loops: Animation.Infinite
                     running: snowEffect.visible
 
-                    PropertyAction { value: Math.random() * snowEffect.width }
+                    PropertyAction {
+                        value: Math.random() * snowEffect.width
+                    }
                     NumberAnimation {
                         to: snowFlake.startX + snowFlake.swayAmount
                         duration: snowFlake.fallSpeed / 2
@@ -571,7 +582,9 @@ Rectangle {
                     loops: Animation.Infinite
                     running: thunderstormEffect.visible
 
-                    PauseAnimation { duration: stormRainDrop.delay }
+                    PauseAnimation {
+                        duration: stormRainDrop.delay
+                    }
 
                     ParallelAnimation {
                         NumberAnimation {
@@ -613,8 +626,10 @@ Rectangle {
                 loops: Animation.Infinite
                 running: thunderstormEffect.visible
 
-                PauseAnimation { duration: 3000 + Math.random() * 5000 }
-                
+                PauseAnimation {
+                    duration: 3000 + Math.random() * 5000
+                }
+
                 NumberAnimation {
                     target: lightningFlash
                     property: "opacity"
@@ -664,25 +679,24 @@ Rectangle {
             anchors.fill: parent
 
             // Arc color based on time of day
-            property color arcColor: WeatherService.effectiveIsDay ? 
-                Qt.rgba(1, 1, 1, 0.7) : Qt.rgba(1, 1, 1, 0.4)
+            property color arcColor: WeatherService.effectiveIsDay ? Qt.rgba(1, 1, 1, 0.7) : Qt.rgba(1, 1, 1, 0.4)
 
             onPaint: {
                 var ctx = getContext("2d");
                 ctx.reset();
-                
+
                 var cx = arcContainer.arcCenterX;
                 var cy = arcContainer.arcCenterY;
                 var rx = arcContainer.arcWidth / 2;
                 var ry = arcContainer.arcHeight;
                 var lineWidth = 20;  // Same as celestialBody diameter
-                
+
                 // Create horizontal gradient for the arc (left to right)
                 var gradient = ctx.createLinearGradient(cx - rx, cy, cx + rx, cy);
                 gradient.addColorStop(0, Qt.rgba(arcColor.r, arcColor.g, arcColor.b, 0));
                 gradient.addColorStop(0.5, Qt.rgba(arcColor.r, arcColor.g, arcColor.b, arcColor.a));
                 gradient.addColorStop(1, Qt.rgba(arcColor.r, arcColor.g, arcColor.b, 0));
-                
+
                 // Draw the arc as a single continuous path
                 ctx.beginPath();
                 var steps = 60;
@@ -690,14 +704,14 @@ Rectangle {
                     var angle = Math.PI - (Math.PI * i / steps);  // PI to 0
                     var x = cx + rx * Math.cos(angle);
                     var y = cy - ry * Math.sin(angle);
-                    
+
                     if (i === 0) {
                         ctx.moveTo(x, y);
                     } else {
                         ctx.lineTo(x, y);
                     }
                 }
-                
+
                 ctx.strokeStyle = gradient;
                 ctx.lineWidth = lineWidth;
                 ctx.lineCap = "round";
@@ -705,12 +719,14 @@ Rectangle {
             }
 
             Component.onCompleted: requestPaint()
-            
+
             Connections {
                 target: WeatherService
-                function onEffectiveIsDayChanged() { arcCanvas.requestPaint() }
+                function onEffectiveIsDayChanged() {
+                    arcCanvas.requestPaint();
+                }
             }
-            
+
             onWidthChanged: requestPaint()
             onHeightChanged: requestPaint()
             onArcColorChanged: requestPaint()
@@ -724,7 +740,7 @@ Rectangle {
             radius: 10
 
             property real progress: WeatherService.effectiveSunProgress
-            
+
             // Elliptical arc position calculation
             property real angle: Math.PI * (1 - progress)  // PI to 0
             property real posX: arcContainer.arcCenterX + (arcContainer.arcWidth / 2) * Math.cos(angle) - width / 2
@@ -733,19 +749,29 @@ Rectangle {
             x: posX
             y: posY
 
-            Behavior on x { NumberAnimation { duration: 300; easing.type: Easing.OutQuad } }
-            Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.OutQuad } }
+            Behavior on x {
+                NumberAnimation {
+                    duration: 300
+                    easing.type: Easing.OutQuad
+                }
+            }
+            Behavior on y {
+                NumberAnimation {
+                    duration: 300
+                    easing.type: Easing.OutQuad
+                }
+            }
 
             gradient: Gradient {
-                GradientStop { 
+                GradientStop {
                     position: 0.0
                     color: WeatherService.effectiveIsDay ? "#FFF9C4" : "#FFFFFF"
                 }
-                GradientStop { 
+                GradientStop {
                     position: 0.5
                     color: WeatherService.effectiveIsDay ? "#FFE082" : "#E8E8E8"
                 }
-                GradientStop { 
+                GradientStop {
                     position: 1.0
                     color: WeatherService.effectiveIsDay ? "#FFB74D" : "#C0C0C0"
                 }
@@ -758,8 +784,7 @@ Rectangle {
                 height: parent.height + 12
                 radius: width / 2
                 color: "transparent"
-                border.color: WeatherService.effectiveIsDay ? 
-                    Qt.rgba(1, 0.95, 0.7, 0.4) : Qt.rgba(1, 1, 1, 0.2)
+                border.color: WeatherService.effectiveIsDay ? Qt.rgba(1, 0.95, 0.7, 0.4) : Qt.rgba(1, 1, 1, 0.2)
                 border.width: 3
                 z: -1
             }
@@ -771,8 +796,7 @@ Rectangle {
                 height: parent.height + 6
                 radius: width / 2
                 color: "transparent"
-                border.color: WeatherService.effectiveIsDay ? 
-                    Qt.rgba(1, 0.95, 0.7, 0.6) : Qt.rgba(1, 1, 1, 0.3)
+                border.color: WeatherService.effectiveIsDay ? Qt.rgba(1, 0.95, 0.7, 0.6) : Qt.rgba(1, 1, 1, 0.3)
                 border.width: 2
                 z: -1
             }
@@ -799,9 +823,7 @@ Rectangle {
             // Weather description (top)
             Text {
                 id: descText
-                text: WeatherService.dataAvailable 
-                    ? WeatherService.effectiveWeatherDescription
-                    : "Error"
+                text: WeatherService.dataAvailable ? WeatherService.effectiveWeatherDescription : "Error"
                 color: Qt.rgba(1, 1, 1, 0.85)
                 font.family: "Noto Sans"
                 font.pixelSize: Config.theme.fontSize - 2
@@ -852,14 +874,16 @@ Rectangle {
             var dayName = date.toLocaleDateString(Qt.locale(), "ddd");
             var monthName = date.toLocaleDateString(Qt.locale(), "MMM");
             var dayNum = date.getDate();
-            
+
             // Capitalize first letter and ensure abbreviation dot
             dayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-            if (!dayName.endsWith(".")) dayName += ".";
-            
+            if (!dayName.endsWith("."))
+                dayName += ".";
+
             monthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
-            if (!monthName.endsWith(".")) monthName += ".";
-            
+            if (!monthName.endsWith("."))
+                monthName += ".";
+
             return dayName + " " + monthName + " " + dayNum;
         }
 
@@ -901,14 +925,18 @@ Rectangle {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.margins: 8
-        width: 20; height: 20
+        width: 20
+        height: 20
         radius: 10
         color: WeatherService.debugMode ? Colors.primary : "#555"
         opacity: (debugButtonHover.containsMouse || WeatherService.debugMode) ? 0.8 : 0
         visible: root.showDebugControls
 
         Behavior on opacity {
-            NumberAnimation { duration: 150; easing.type: Easing.InOutQuad }
+            NumberAnimation {
+                duration: 150
+                easing.type: Easing.InOutQuad
+            }
         }
 
         Text {

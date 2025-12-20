@@ -12,7 +12,7 @@ ToolTip {
 
     text: tooltipText
     delay: 1000
-    timeout: 5000
+    timeout: -1
     visible: show && tooltipText.length > 0
 
     background: StyledRect {
