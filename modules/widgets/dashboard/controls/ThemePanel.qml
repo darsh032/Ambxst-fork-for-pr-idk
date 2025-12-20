@@ -628,367 +628,6 @@ Item {
                         }
                     }
 
-                    // Variant selector section
-                    Item {
-                        id: variantSelectorPane
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: variantSelectorContent.implicitHeight
-
-                        property bool variantExpanded: false
-
-                        Behavior on Layout.preferredHeight {
-                            enabled: (Config.animDuration ?? 0) > 0
-                            NumberAnimation {
-                                duration: (Config.animDuration ?? 0) / 2
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-
-                        ColumnLayout {
-                            id: variantSelectorContent
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            spacing: 8
-
-                            Text {
-                                text: "Variant"
-                                font.family: Config.theme.font
-                                font.pixelSize: Styling.fontSize(-1)
-                                font.weight: Font.Medium
-                                color: Colors.overSurfaceVariant
-                                Layout.bottomMargin: -4
-                            }
-
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 8
-                                Layout.alignment: Qt.AlignTop
-
-                                // Collapsed mode: horizontal scrollable row with scrollbar
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 4
-                                    visible: !variantSelectorPane.variantExpanded
-
-                                    Flickable {
-                                        id: variantFlickable
-                                        Layout.fillWidth: true
-                                        Layout.preferredHeight: 32
-                                        contentWidth: variantRow.width
-                                        flickableDirection: Flickable.HorizontalFlick
-                                        clip: true
-                                        boundsBehavior: Flickable.StopAtBounds
-
-                                        Row {
-                                            id: variantRow
-                                            spacing: 4
-
-                                            Repeater {
-                                                model: root.allVariants
-
-                                                delegate: StyledRect {
-                                                    id: variantTagRow
-                                                    required property var modelData
-                                                    required property int index
-
-                                                    property bool isSelected: root.selectedVariant === modelData.id
-                                                    property bool isHovered: false
-
-                                                    variant: modelData.id
-                                                    enableShadow: true
-
-                                                    width: tagContentRow.width + 24 + (isSelected ? checkIconRow.width + 4 : 0)
-                                                    height: 32
-                                                    radius: isSelected ? Styling.radius(0) / 2 : Styling.radius(0)
-
-                                                    Behavior on width {
-                                                        enabled: (Config.animDuration ?? 0) > 0
-                                                        NumberAnimation {
-                                                            duration: (Config.animDuration ?? 0) / 3
-                                                            easing.type: Easing.OutCubic
-                                                        }
-                                                    }
-
-                                                    Item {
-                                                        anchors.fill: parent
-                                                        anchors.margins: 8
-
-                                                        Row {
-                                                            anchors.centerIn: parent
-                                                            spacing: variantTagRow.isSelected ? 4 : 0
-
-                                                            Item {
-                                                                width: checkIconRow.visible ? checkIconRow.width : 0
-                                                                height: checkIconRow.height
-                                                                clip: true
-
-                                                                Text {
-                                                                    id: checkIconRow
-                                                                    text: Icons.accept
-                                                                    font.family: Icons.font
-                                                                    font.pixelSize: 16
-                                                                    color: variantTagRow.itemColor
-                                                                    visible: variantTagRow.isSelected
-                                                                    opacity: variantTagRow.isSelected ? 1 : 0
-
-                                                                    Behavior on opacity {
-                                                                        enabled: (Config.animDuration ?? 0) > 0
-                                                                        NumberAnimation {
-                                                                            duration: (Config.animDuration ?? 0) / 3
-                                                                            easing.type: Easing.OutCubic
-                                                                        }
-                                                                    }
-                                                                }
-
-                                                                Behavior on width {
-                                                                    enabled: (Config.animDuration ?? 0) > 0
-                                                                    NumberAnimation {
-                                                                        duration: (Config.animDuration ?? 0) / 3
-                                                                        easing.type: Easing.OutCubic
-                                                                    }
-                                                                }
-                                                            }
-
-                                                            Text {
-                                                                id: tagContentRow
-                                                                text: variantTagRow.modelData.label
-                                                                font.family: Config.theme.font
-                                                                font.pixelSize: Config.theme.fontSize
-                                                                font.bold: true
-                                                                color: variantTagRow.itemColor
-
-                                                                Behavior on color {
-                                                                    enabled: (Config.animDuration ?? 0) > 0
-                                                                    ColorAnimation {
-                                                                        duration: (Config.animDuration ?? 0) / 3
-                                                                        easing.type: Easing.OutCubic
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-
-                                                    Rectangle {
-                                                        anchors.fill: parent
-                                                        color: Colors.primary
-                                                        radius: variantTagRow.radius ?? 0
-                                                        opacity: variantTagRow.isHovered ? 0.15 : 0
-
-                                                        Behavior on opacity {
-                                                            enabled: (Config.animDuration ?? 0) > 0
-                                                            NumberAnimation {
-                                                                duration: (Config.animDuration ?? 0) / 2
-                                                            }
-                                                        }
-                                                    }
-
-                                                    MouseArea {
-                                                        anchors.fill: parent
-                                                        hoverEnabled: true
-                                                        cursorShape: Qt.PointingHandCursor
-
-                                                        onEntered: variantTagRow.isHovered = true
-                                                        onExited: variantTagRow.isHovered = false
-
-                                                        onClicked: root.selectedVariant = variantTagRow.modelData.id
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    ScrollBar {
-                                        id: variantScrollBar
-                                        Layout.fillWidth: true
-                                        Layout.preferredHeight: 8
-                                        orientation: Qt.Horizontal
-
-                                        position: variantFlickable.contentWidth > 0 ? variantFlickable.contentX / variantFlickable.contentWidth : 0
-                                        size: variantFlickable.contentWidth > 0 ? variantFlickable.width / variantFlickable.contentWidth : 1
-
-                                        property bool scrollBarPressed: false
-
-                                        background: Rectangle {
-                                            implicitHeight: 8
-                                            color: Colors.surface
-                                            radius: 4
-                                        }
-
-                                        contentItem: Rectangle {
-                                            implicitHeight: 8
-                                            color: Colors.primary
-                                            radius: 4
-                                        }
-
-                                        onPressedChanged: {
-                                            scrollBarPressed = pressed;
-                                        }
-
-                                        onPositionChanged: {
-                                            if (scrollBarPressed && variantFlickable.contentWidth > variantFlickable.width) {
-                                                variantFlickable.contentX = position * variantFlickable.contentWidth;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // Expanded mode: Flow grid
-                                Flow {
-                                    id: variantsFlow
-                                    Layout.fillWidth: true
-                                    spacing: 4
-                                    visible: variantSelectorPane.variantExpanded
-
-                                    Repeater {
-                                        model: root.allVariants
-
-                                        delegate: StyledRect {
-                                            id: variantTag
-                                            required property var modelData
-                                            required property int index
-
-                                            property bool isSelected: root.selectedVariant === modelData.id
-                                            property bool isHovered: false
-
-                                            variant: modelData.id
-                                            enableShadow: true
-
-                                            width: tagContent.width + 24 + (isSelected ? checkIcon.width + 4 : 0)
-                                            height: 32
-                                            radius: isSelected ? Styling.radius(0) / 2 : Styling.radius(0)
-
-                                            Behavior on width {
-                                                enabled: (Config.animDuration ?? 0) > 0
-                                                NumberAnimation {
-                                                    duration: (Config.animDuration ?? 0) / 3
-                                                    easing.type: Easing.OutCubic
-                                                }
-                                            }
-
-                                            Item {
-                                                anchors.fill: parent
-                                                anchors.margins: 8
-
-                                                Row {
-                                                    anchors.centerIn: parent
-                                                    spacing: variantTag.isSelected ? 4 : 0
-
-                                                    Item {
-                                                        width: checkIcon.visible ? checkIcon.width : 0
-                                                        height: checkIcon.height
-                                                        clip: true
-
-                                                        Text {
-                                                            id: checkIcon
-                                                            text: Icons.accept
-                                                            font.family: Icons.font
-                                                            font.pixelSize: 16
-                                                            color: variantTag.itemColor
-                                                            visible: variantTag.isSelected
-                                                            opacity: variantTag.isSelected ? 1 : 0
-
-                                                            Behavior on opacity {
-                                                                enabled: (Config.animDuration ?? 0) > 0
-                                                                NumberAnimation {
-                                                                    duration: (Config.animDuration ?? 0) / 3
-                                                                    easing.type: Easing.OutCubic
-                                                                }
-                                                            }
-                                                        }
-
-                                                        Behavior on width {
-                                                            enabled: (Config.animDuration ?? 0) > 0
-                                                            NumberAnimation {
-                                                                duration: (Config.animDuration ?? 0) / 3
-                                                                easing.type: Easing.OutCubic
-                                                            }
-                                                        }
-                                                    }
-
-                                                    Text {
-                                                        id: tagContent
-                                                        text: variantTag.modelData.label
-                                                        font.family: Config.theme.font
-                                                        font.pixelSize: Config.theme.fontSize
-                                                        font.bold: true
-                                                        color: variantTag.itemColor
-
-                                                        Behavior on color {
-                                                            enabled: (Config.animDuration ?? 0) > 0
-                                                            ColorAnimation {
-                                                                duration: (Config.animDuration ?? 0) / 3
-                                                                easing.type: Easing.OutCubic
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                            Rectangle {
-                                                id: hoverOverlay
-                                                anchors.fill: parent
-                                                color: Colors.primary
-                                                radius: variantTag.radius ?? 0
-                                                opacity: variantTag.isHovered ? 0.15 : 0
-
-                                                Behavior on opacity {
-                                                    enabled: (Config.animDuration ?? 0) > 0
-                                                    NumberAnimation {
-                                                        duration: (Config.animDuration ?? 0) / 2
-                                                    }
-                                                }
-                                            }
-
-                                            MouseArea {
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                cursorShape: Qt.PointingHandCursor
-
-                                                onEntered: variantTag.isHovered = true
-                                                onExited: variantTag.isHovered = false
-
-                                                onClicked: root.selectedVariant = variantTag.modelData.id
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // Toggle expand/collapse button
-                                StyledRect {
-                                    id: expandToggleButton
-                                    variant: isHovered ? "focus" : "common"
-                                    width: 32
-                                    height: 32
-                                    radius: Styling.radius(-2)
-                                    Layout.alignment: Qt.AlignTop
-                                    enableShadow: true
-
-                                    property bool isHovered: false
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: variantSelectorPane.variantExpanded ? Icons.caretUp : Icons.caretDown
-                                        font.family: Icons.font
-                                        font.pixelSize: 16
-                                        color: expandToggleButton.itemColor
-                                    }
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-
-                                        onEntered: expandToggleButton.isHovered = true
-                                        onExited: expandToggleButton.isHovered = false
-
-                                        onClicked: variantSelectorPane.variantExpanded = !variantSelectorPane.variantExpanded
-                                    }
-                                }
-                            }
-                        }
-                    }
-
                     // Roundness section
                     Item {
                         Layout.fillWidth: true
@@ -1364,6 +1003,367 @@ Item {
                                                 }
                                             );
                                         }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Variant selector section
+                    Item {
+                        id: variantSelectorPane
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: variantSelectorContent.implicitHeight
+
+                        property bool variantExpanded: false
+
+                        Behavior on Layout.preferredHeight {
+                            enabled: (Config.animDuration ?? 0) > 0
+                            NumberAnimation {
+                                duration: (Config.animDuration ?? 0) / 2
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+
+                        ColumnLayout {
+                            id: variantSelectorContent
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            spacing: 8
+
+                            Text {
+                                text: "Variant"
+                                font.family: Config.theme.font
+                                font.pixelSize: Styling.fontSize(-1)
+                                font.weight: Font.Medium
+                                color: Colors.overSurfaceVariant
+                                Layout.bottomMargin: -4
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+                                Layout.alignment: Qt.AlignTop
+
+                                // Collapsed mode: horizontal scrollable row with scrollbar
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 4
+                                    visible: !variantSelectorPane.variantExpanded
+
+                                    Flickable {
+                                        id: variantFlickable
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: 32
+                                        contentWidth: variantRow.width
+                                        flickableDirection: Flickable.HorizontalFlick
+                                        clip: true
+                                        boundsBehavior: Flickable.StopAtBounds
+
+                                        Row {
+                                            id: variantRow
+                                            spacing: 4
+
+                                            Repeater {
+                                                model: root.allVariants
+
+                                                delegate: StyledRect {
+                                                    id: variantTagRow
+                                                    required property var modelData
+                                                    required property int index
+
+                                                    property bool isSelected: root.selectedVariant === modelData.id
+                                                    property bool isHovered: false
+
+                                                    variant: modelData.id
+                                                    enableShadow: true
+
+                                                    width: tagContentRow.width + 24 + (isSelected ? checkIconRow.width + 4 : 0)
+                                                    height: 32
+                                                    radius: isSelected ? Styling.radius(0) / 2 : Styling.radius(0)
+
+                                                    Behavior on width {
+                                                        enabled: (Config.animDuration ?? 0) > 0
+                                                        NumberAnimation {
+                                                            duration: (Config.animDuration ?? 0) / 3
+                                                            easing.type: Easing.OutCubic
+                                                        }
+                                                    }
+
+                                                    Item {
+                                                        anchors.fill: parent
+                                                        anchors.margins: 8
+
+                                                        Row {
+                                                            anchors.centerIn: parent
+                                                            spacing: variantTagRow.isSelected ? 4 : 0
+
+                                                            Item {
+                                                                width: checkIconRow.visible ? checkIconRow.width : 0
+                                                                height: checkIconRow.height
+                                                                clip: true
+
+                                                                Text {
+                                                                    id: checkIconRow
+                                                                    text: Icons.accept
+                                                                    font.family: Icons.font
+                                                                    font.pixelSize: 16
+                                                                    color: variantTagRow.itemColor
+                                                                    visible: variantTagRow.isSelected
+                                                                    opacity: variantTagRow.isSelected ? 1 : 0
+
+                                                                    Behavior on opacity {
+                                                                        enabled: (Config.animDuration ?? 0) > 0
+                                                                        NumberAnimation {
+                                                                            duration: (Config.animDuration ?? 0) / 3
+                                                                            easing.type: Easing.OutCubic
+                                                                        }
+                                                                    }
+                                                                }
+
+                                                                Behavior on width {
+                                                                    enabled: (Config.animDuration ?? 0) > 0
+                                                                    NumberAnimation {
+                                                                        duration: (Config.animDuration ?? 0) / 3
+                                                                        easing.type: Easing.OutCubic
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            Text {
+                                                                id: tagContentRow
+                                                                text: variantTagRow.modelData.label
+                                                                font.family: Config.theme.font
+                                                                font.pixelSize: Config.theme.fontSize
+                                                                font.bold: true
+                                                                color: variantTagRow.itemColor
+
+                                                                Behavior on color {
+                                                                    enabled: (Config.animDuration ?? 0) > 0
+                                                                    ColorAnimation {
+                                                                        duration: (Config.animDuration ?? 0) / 3
+                                                                        easing.type: Easing.OutCubic
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Rectangle {
+                                                        anchors.fill: parent
+                                                        color: Colors.primary
+                                                        radius: variantTagRow.radius ?? 0
+                                                        opacity: variantTagRow.isHovered ? 0.15 : 0
+
+                                                        Behavior on opacity {
+                                                            enabled: (Config.animDuration ?? 0) > 0
+                                                            NumberAnimation {
+                                                                duration: (Config.animDuration ?? 0) / 2
+                                                            }
+                                                        }
+                                                    }
+
+                                                    MouseArea {
+                                                        anchors.fill: parent
+                                                        hoverEnabled: true
+                                                        cursorShape: Qt.PointingHandCursor
+
+                                                        onEntered: variantTagRow.isHovered = true
+                                                        onExited: variantTagRow.isHovered = false
+
+                                                        onClicked: root.selectedVariant = variantTagRow.modelData.id
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    ScrollBar {
+                                        id: variantScrollBar
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: 8
+                                        orientation: Qt.Horizontal
+
+                                        position: variantFlickable.contentWidth > 0 ? variantFlickable.contentX / variantFlickable.contentWidth : 0
+                                        size: variantFlickable.contentWidth > 0 ? variantFlickable.width / variantFlickable.contentWidth : 1
+
+                                        property bool scrollBarPressed: false
+
+                                        background: Rectangle {
+                                            implicitHeight: 8
+                                            color: Colors.surface
+                                            radius: 4
+                                        }
+
+                                        contentItem: Rectangle {
+                                            implicitHeight: 8
+                                            color: Colors.primary
+                                            radius: 4
+                                        }
+
+                                        onPressedChanged: {
+                                            scrollBarPressed = pressed;
+                                        }
+
+                                        onPositionChanged: {
+                                            if (scrollBarPressed && variantFlickable.contentWidth > variantFlickable.width) {
+                                                variantFlickable.contentX = position * variantFlickable.contentWidth;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Expanded mode: Flow grid
+                                Flow {
+                                    id: variantsFlow
+                                    Layout.fillWidth: true
+                                    spacing: 4
+                                    visible: variantSelectorPane.variantExpanded
+
+                                    Repeater {
+                                        model: root.allVariants
+
+                                        delegate: StyledRect {
+                                            id: variantTag
+                                            required property var modelData
+                                            required property int index
+
+                                            property bool isSelected: root.selectedVariant === modelData.id
+                                            property bool isHovered: false
+
+                                            variant: modelData.id
+                                            enableShadow: true
+
+                                            width: tagContent.width + 24 + (isSelected ? checkIcon.width + 4 : 0)
+                                            height: 32
+                                            radius: isSelected ? Styling.radius(0) / 2 : Styling.radius(0)
+
+                                            Behavior on width {
+                                                enabled: (Config.animDuration ?? 0) > 0
+                                                NumberAnimation {
+                                                    duration: (Config.animDuration ?? 0) / 3
+                                                    easing.type: Easing.OutCubic
+                                                }
+                                            }
+
+                                            Item {
+                                                anchors.fill: parent
+                                                anchors.margins: 8
+
+                                                Row {
+                                                    anchors.centerIn: parent
+                                                    spacing: variantTag.isSelected ? 4 : 0
+
+                                                    Item {
+                                                        width: checkIcon.visible ? checkIcon.width : 0
+                                                        height: checkIcon.height
+                                                        clip: true
+
+                                                        Text {
+                                                            id: checkIcon
+                                                            text: Icons.accept
+                                                            font.family: Icons.font
+                                                            font.pixelSize: 16
+                                                            color: variantTag.itemColor
+                                                            visible: variantTag.isSelected
+                                                            opacity: variantTag.isSelected ? 1 : 0
+
+                                                            Behavior on opacity {
+                                                                enabled: (Config.animDuration ?? 0) > 0
+                                                                NumberAnimation {
+                                                                    duration: (Config.animDuration ?? 0) / 3
+                                                                    easing.type: Easing.OutCubic
+                                                                }
+                                                            }
+                                                        }
+
+                                                        Behavior on width {
+                                                            enabled: (Config.animDuration ?? 0) > 0
+                                                            NumberAnimation {
+                                                                duration: (Config.animDuration ?? 0) / 3
+                                                                easing.type: Easing.OutCubic
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Text {
+                                                        id: tagContent
+                                                        text: variantTag.modelData.label
+                                                        font.family: Config.theme.font
+                                                        font.pixelSize: Config.theme.fontSize
+                                                        font.bold: true
+                                                        color: variantTag.itemColor
+
+                                                        Behavior on color {
+                                                            enabled: (Config.animDuration ?? 0) > 0
+                                                            ColorAnimation {
+                                                                duration: (Config.animDuration ?? 0) / 3
+                                                                easing.type: Easing.OutCubic
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                id: hoverOverlay
+                                                anchors.fill: parent
+                                                color: Colors.primary
+                                                radius: variantTag.radius ?? 0
+                                                opacity: variantTag.isHovered ? 0.15 : 0
+
+                                                Behavior on opacity {
+                                                    enabled: (Config.animDuration ?? 0) > 0
+                                                    NumberAnimation {
+                                                        duration: (Config.animDuration ?? 0) / 2
+                                                    }
+                                                }
+                                            }
+
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+
+                                                onEntered: variantTag.isHovered = true
+                                                onExited: variantTag.isHovered = false
+
+                                                onClicked: root.selectedVariant = variantTag.modelData.id
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Toggle expand/collapse button
+                                StyledRect {
+                                    id: expandToggleButton
+                                    variant: isHovered ? "focus" : "common"
+                                    width: 32
+                                    height: 32
+                                    radius: Styling.radius(-2)
+                                    Layout.alignment: Qt.AlignTop
+                                    enableShadow: true
+
+                                    property bool isHovered: false
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: variantSelectorPane.variantExpanded ? Icons.caretUp : Icons.caretDown
+                                        font.family: Icons.font
+                                        font.pixelSize: 16
+                                        color: expandToggleButton.itemColor
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+
+                                        onEntered: expandToggleButton.isHovered = true
+                                        onExited: expandToggleButton.isHovered = false
+
+                                        onClicked: variantSelectorPane.variantExpanded = !variantSelectorPane.variantExpanded
                                     }
                                 }
                             }
