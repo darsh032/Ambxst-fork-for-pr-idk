@@ -666,7 +666,7 @@ Rectangle {
 
             // Arc color based on time of day
             property color arcColor: WeatherService.effectiveIsDay ? 
-                Qt.rgba(1, 1, 1, 0.4) : Qt.rgba(1, 1, 1, 0.2)
+                Qt.rgba(1, 1, 1, 0.7) : Qt.rgba(1, 1, 1, 0.4)
 
             onPaint: {
                 var ctx = getContext("2d");
@@ -676,7 +676,7 @@ Rectangle {
                 var cy = arcContainer.arcCenterY;
                 var rx = arcContainer.arcWidth / 2;
                 var ry = arcContainer.arcHeight;
-                var lineWidth = 3;
+                var lineWidth = 20;  // Same as celestialBody diameter
                 
                 // Create horizontal gradient for the arc (left to right)
                 var gradient = ctx.createLinearGradient(cx - rx, cy, cx + rx, cy);
