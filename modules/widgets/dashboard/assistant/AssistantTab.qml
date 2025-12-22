@@ -462,32 +462,173 @@ Item {
                                 }
                             }
                             
-                            // Bubble
-                            StyledRect {
-                                id: bubble
-                                variant: isSystem ? "surface" : (isUser ? "primaryContainer" : "surfaceVariant")
-                                radius: Styling.radius(12)
-                                border.width: isSystem ? 1 : 0
-                                border.color: Colors.surfaceDim
+                            // Bubble Area
+                            MouseArea {
+                                id: bubbleArea
+                                width: Math.min(Math.max(bubbleContent.implicitWidth + 24, 100), chatView.width * (isSystem ? 0.9 : 0.7))
+                                height: bubble.height
+                                hoverEnabled: true
                                 
-                                // Auto-sizing logic
-                                width: Math.min(Math.max(msgContent.implicitWidth + 24, 100), chatView.width * (isSystem ? 0.9 : 0.7))
-                                height: msgContent.implicitHeight + 24
-                                
-                                TextEdit {
-                                    id: msgContent
-                                    anchors.centerIn: parent
-                                    width: parent.width - 24
-                                    text: modelData.content
-                                    textFormat: Text.MarkdownText
-                                    color: isSystem ? Colors.outline : (isUser ? Colors.overPrimaryContainer : Colors.overSurfaceVariant)
-                                    font.family: Config.theme.font
-                                    font.pixelSize: 14
-                                    wrapMode: Text.Wrap
-                                    readOnly: true
-                                    selectByMouse: true
+                                // Action Buttons (Visible on Hover)
+                                Row {
+                                    anchors.bottom: parent.top
+                                    anchors.right: isUser ? undefined : parent.right // Align right for assistant
+                                    anchors.left: isUser ? parent.left : undefined   // Align left for user
+                                    anchors.bottomMargin: 4
+                                    spacing: 4
+                                    visible: parent.containsMouse
                                     
-                                    // Markdown styling overrides if needed could go here
+                                    // Copy
+                                    Button {
+                                        width: 24; height: 24
+                                        flat: true
+                                        padding: 0
+                                        contentItem: Text { text: Icons.copy; font.family: Icons.font; color: Colors.surfaceDim; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                        background: Rectangle { color: parent.hovered ? Colors.surfaceBright : "transparent"; radius: 4 }
+                                        onClicked: {
+                                            // TODO: specific clipboard implementation 
+                                            // For now assuming a clipboard utility or just not implemented error
+                                            // Quickshell.clipboard seems not standard, might need QClipboard via C++ or `wl-copy`
+                                            // Using `wl-copy` via Process for safety
+                                            let p = Qt.createQmlObject('import Quickshell; import Quickshell.Io; Process { command: ["wl-copy", "' + modelData.content.replace(/"/g, '\\"') + '"] }', parent);
+                                            p.running = true;
+                                        }
+                                    }
+                                    
+                                    // Regenerate (Assistant only)
+                                    Button {
+                                        visible: !isUser && !isSystem
+                                        width: 24; height: 24
+                                        flat: true
+                                        padding: 0
+                                        contentItem: Text { text: Icons.sync; font.family: Icons.font; color: Colors.surfaceDim; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                        background: Rectangle { color: parent.hovered ? Colors.surfaceBright : "transparent"; radius: 4 }
+                                        onClicked: {
+                                            // Hacky regenerate: delete this and following, then re-send last user msg?
+                                            // Better: just delete this and everything after, then re-trigger Ai.makeRequest()?
+                                            // Ai service doesn't expose clean regenerate yet.
+                                            // For now: No-op or TODO
+                                        }
+                                    }
+                                }
+
+                                StyledRect {
+                                    id: bubble
+                                    width: parent.width
+                                    height: bubbleContent.implicitHeight + 24
+                                    variant: isSystem ? "surface" : (isUser ? "primaryContainer" : "surfaceVariant")
+                                    radius: Styling.radius(12)
+                                    border.width: isSystem ? 1 : 0
+                                    border.color: Colors.surfaceDim
+                                    
+                                    ColumnLayout {
+                                        id: bubbleContent
+                                        anchors.centerIn: parent
+                                        width: parent.width - 24
+                                        spacing: 8
+                                        
+                                        // Text Content
+                                        TextEdit {
+                                            Layout.fillWidth: true
+                                            text: modelData.content || ""
+                                            textFormat: Text.MarkdownText
+                                            color: isSystem ? Colors.outline : (isUser ? Colors.overPrimaryContainer : Colors.overSurfaceVariant)
+                                            font.family: Config.theme.font
+                                            font.pixelSize: 14
+                                            wrapMode: Text.Wrap
+                                            readOnly: true
+                                            selectByMouse: true
+                                            visible: text !== ""
+                                        }
+                                        
+                                        // Function Call Block
+                                        ColumnLayout {
+                                            visible: modelData.functionCall !== undefined
+                                            Layout.fillWidth: true
+                                            spacing: 4
+                                            
+                                            Rectangle {
+                                                Layout.fillWidth: true
+                                                height: 1
+                                                color: Colors.outline
+                                                opacity: 0.2
+                                            }
+                                            
+                                            Text {
+                                                text: "Run Command"
+                                                color: Colors.primary
+                                                font.family: Config.theme.font
+                                                font.weight: Font.Bold
+                                                font.pixelSize: 12
+                                            }
+                                            
+                                            StyledRect {
+                                                Layout.fillWidth: true
+                                                variant: "surface"
+                                                color: Colors.surface // Ensure dark bg for code
+                                                radius: Styling.radius(4)
+                                                
+                                                TextEdit {
+                                                    padding: 8
+                                                    width: parent.width
+                                                    text: modelData.functionCall ? modelData.functionCall.args.command : ""
+                                                    font.family: "Monospace"
+                                                    color: Colors.overSurface
+                                                    readOnly: true
+                                                    wrapMode: Text.WrapAnywhere
+                                                }
+                                            }
+                                            
+                                            // Action Buttons
+                                            RowLayout {
+                                                visible: modelData.functionPending === true
+                                                Layout.alignment: Qt.AlignRight
+                                                spacing: 8
+                                                
+                                                Button {
+                                                    text: "Reject"
+                                                    highlighted: true
+                                                    flat: true
+                                                    onClicked: Ai.rejectCommand(index)
+                                                    
+                                                    background: StyledRect {
+                                                        variant: "error"
+                                                        opacity: parent.hovered ? 0.8 : 0.5
+                                                        radius: Styling.radius(4)
+                                                    }
+                                                    contentItem: Text { text: parent.text; color: Colors.overError; font.family: Config.theme.font; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                                }
+                                                
+                                                Button {
+                                                    text: "Approve"
+                                                    highlighted: true
+                                                    flat: true
+                                                    onClicked: Ai.approveCommand(index)
+                                                    
+                                                    background: StyledRect {
+                                                        variant: "primary"
+                                                        opacity: parent.hovered ? 1 : 0.8
+                                                        radius: Styling.radius(4)
+                                                    }
+                                                    contentItem: Text { text: parent.text; color: Colors.overPrimary; font.family: Config.theme.font; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                                }
+                                            }
+                                            
+                                            Text {
+                                                visible: modelData.functionApproved === true
+                                                text: "Command Approved"
+                                                color: Colors.success
+                                                font.pixelSize: 12
+                                            }
+                                            
+                                            Text {
+                                                visible: modelData.functionApproved === false && !modelData.functionPending
+                                                text: "Command Rejected"
+                                                color: Colors.error
+                                                font.pixelSize: 12
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }

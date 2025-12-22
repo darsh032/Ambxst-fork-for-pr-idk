@@ -68,7 +68,28 @@ Singleton {
     property string currentChatId: ""
     
     // Chat History List (files)
+    // Chat History List (files)
     property var chatHistory: [] 
+
+    // ============================================ 
+    // TOOLS
+    // ============================================
+    property var systemTools: [
+        {
+            name: "run_shell_command",
+            description: "Execute a shell command on the user's system (Linux/Hyprland). Use this to list files, control the system, or run utilities. Output will be returned.",
+            parameters: {
+                type: "OBJECT",
+                properties: {
+                    command: {
+                        type: "STRING",
+                        description: "The shell command to run (e.g. 'ls -la', 'ip addr', 'hyprctl clients')"
+                    }
+                },
+                required: ["command"]
+            }
+        }
+    ]
 
     // ============================================ 
     // INIT
@@ -164,11 +185,52 @@ Singleton {
         currentChat = newChat;
     }
 
+    // Function Call Handling
+    function approveCommand(index) {
+        let msg = currentChat[index];
+        if (!msg.functionCall) return;
+        
+        // Update message state
+        let newChat = Array.from(currentChat);
+        newChat[index].functionPending = false;
+        newChat[index].functionApproved = true;
+        currentChat = newChat;
+        saveCurrentChat();
+        
+        // Execute
+        let args = msg.functionCall.args;
+        if (msg.functionCall.name === "run_shell_command") {
+            commandExecutionProc.command = ["bash", "-c", args.command];
+            commandExecutionProc.targetIndex = index;
+            commandExecutionProc.running = true;
+        }
+    }
+    
+    function rejectCommand(index) {
+        let newChat = Array.from(currentChat);
+        newChat[index].functionPending = false;
+        newChat[index].functionApproved = false;
+        
+        // Add system message indicating rejection
+        newChat.push({
+            role: "function",
+            name: newChat[index].functionCall.name,
+            content: "User rejected the command execution."
+        });
+        
+        currentChat = newChat;
+        saveCurrentChat();
+        
+        // Continue conversation
+        makeRequest();
+    }
+
     function sendMessage(text) {
         if (text.trim() === "") return;
         
         if (processCommand(text)) return;
 
+        console.log("Ai: sendMessage called with '" + text + "'");
         isLoading = true;
         lastError = "";
         
@@ -178,6 +240,11 @@ Singleton {
         newChat.push(userMsg);
         currentChat = newChat;
         
+        makeRequest();
+    }
+    
+    function makeRequest() {
+        console.log("Ai: makeRequest called");
         // Prepare Request
         let apiKey = getApiKey(currentModel);
         if (!apiKey && currentModel.requires_key) {
@@ -204,7 +271,8 @@ Singleton {
             messages.push(currentChat[i]);
         }
         
-        let body = currentStrategy.getBody(messages, currentModel, []);
+        // Pass tools
+        let body = currentStrategy.getBody(messages, currentModel, systemTools);
         
         // Write body to temp file
         writeTempBody(JSON.stringify(body), headers, endpoint);
@@ -248,8 +316,15 @@ Singleton {
         property var payload: ({})
         
         onExited: exitCode => {
+            console.log("Ai: requestProcess (mkdir) exited with " + exitCode);
             if (exitCode === 0 && step === "mkdir") {
                 executeRequest(payload);
+            } else {
+                root.lastError = "Failed to create temp directory (mkdir exited with " + exitCode + ")";
+                root.isLoading = false;
+                let errChat = Array.from(root.currentChat);
+                errChat.push({ role: "assistant", content: "Error: " + root.lastError });
+                root.currentChat = errChat;
             }
         }
     }
@@ -257,13 +332,18 @@ Singleton {
     Process {
         id: writeBodyProcess
         property var payload: ({})
+        stderr: StdioCollector { id: writeBodyStderr }
         
         onExited: exitCode => {
+            console.log("Ai: writeBodyProcess exited with " + exitCode);
             if (exitCode === 0) {
                 runCurl(payload);
             } else {
-                root.lastError = "Failed to write request body";
+                root.lastError = "Failed to write request body: " + writeBodyStderr.text;
                 root.isLoading = false;
+                let errChat = Array.from(root.currentChat);
+                errChat.push({ role: "assistant", content: "Error: " + root.lastError });
+                root.currentChat = errChat;
             }
         }
     }
@@ -275,27 +355,77 @@ Singleton {
         stderr: StdioCollector { id: curlStderr }
         
         onExited: exitCode => {
+            console.log("Ai: curlProcess exited with " + exitCode);
             root.isLoading = false;
             if (exitCode === 0) {
                 let responseText = curlStdout.text;
-                // Debug log
-
+                console.log("Ai: curl response length: " + responseText.length); 
+                console.log("Ai: Strategy object: " + root.currentStrategy);
+                console.log("Ai: Raw response: " + responseText);
                 
                 let reply = root.currentStrategy.parseResponse(responseText);
                 
-                // Add assistant message
                 let newChat = Array.from(root.currentChat);
-                newChat.push({ role: "assistant", content: reply });
-                root.currentChat = newChat;
                 
+                if (reply.content) {
+                    newChat.push({ role: "assistant", content: reply.content });
+                }
+                
+                if (reply.functionCall) {
+                    // It's a tool call
+                    let funcMsg = {
+                        role: "assistant",
+                        content: "I want to run a command: `" + reply.functionCall.name + "`",
+                        functionCall: reply.functionCall,
+                        functionPending: true // UI will show Approve/Reject
+                    };
+                    newChat.push(funcMsg);
+                }
+                
+                root.currentChat = newChat;
                 root.saveCurrentChat();
+                
+                // If it was just a text reply, stop loading. If it's a function, we wait for user.
+                if (!reply.functionCall) {
+                    root.isLoading = false;
+                }
             } else {
+                root.isLoading = false;
                 root.lastError = "Network Request Failed: " + curlStderr.text;
                 
                 let errChat = Array.from(root.currentChat);
                 errChat.push({ role: "assistant", content: "Error: " + root.lastError });
                 root.currentChat = errChat;
             }
+        }
+    }
+    
+    Process {
+        id: commandExecutionProc
+        property int targetIndex: -1
+        
+        stdout: StdioCollector { id: cmdStdout }
+        stderr: StdioCollector { id: cmdStderr }
+        
+        onExited: exitCode => {
+             let output = cmdStdout.text + "\n" + cmdStderr.text;
+             if (output.trim() === "") output = "Command executed successfully (no output).";
+             
+             // Add function response
+             let msg = currentChat[targetIndex];
+             let newChat = Array.from(currentChat);
+             
+             newChat.push({
+                 role: "function",
+                 name: msg.functionCall.name,
+                 content: output
+             });
+             
+             root.currentChat = newChat;
+             root.saveCurrentChat();
+             
+             // Continue conversation
+             root.makeRequest();
         }
     }
 

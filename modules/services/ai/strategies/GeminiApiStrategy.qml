@@ -13,16 +13,40 @@ ApiStrategy {
     function getBody(messages, model, tools) {
         // Convert messages to Gemini format
         // Gemini expects { role: "user"|"model", parts: [{ text: "..." }] }
+        // For function calls: { role: "model", parts: [{ functionCall: { ... } }] }
+        // For function responses: { role: "function", parts: [{ functionResponse: { ... } }] }
         let contents = messages.map(msg => {
-            return {
-                role: msg.role === "assistant" ? "model" : "user",
-                parts: [{ text: msg.content }]
-            };
+            if (msg.role === "assistant") {
+                if (msg.functionCall) {
+                    return {
+                        role: "model",
+                        parts: [{ functionCall: msg.functionCall }]
+                    };
+                }
+                return {
+                    role: "model",
+                    parts: [{ text: msg.content }]
+                };
+            } else if (msg.role === "function") {
+                return {
+                    role: "function",
+                    parts: [{
+                        functionResponse: {
+                            name: msg.name,
+                            response: {
+                                name: msg.name,
+                                content: msg.content
+                            }
+                        }
+                    }]
+                };
+            } else {
+                return {
+                    role: "user",
+                    parts: [{ text: msg.content }]
+                };
+            }
         });
-        
-        // Add system instruction if present (Gemini 1.5 Pro/Flash supports it)
-        // For now, let's just prepend it to the first message or use systemInstruction field if supported
-        // But the simplest way is to prepend to history or use systemInstruction
         
         let body = {
             contents: contents,
@@ -32,33 +56,45 @@ ApiStrategy {
             }
         };
 
+        if (tools && tools.length > 0) {
+            body.tools = [{ function_declarations: tools }];
+        }
+
         return body;
     }
     
     function parseResponse(response) {
         try {
-            if (!response || response.trim() === "") return "Error: Empty response from API";
+            console.log("Gemini: Parsing response...");
+            if (!response || response.trim() === "") return { content: "Error: Empty response from API" };
             
             let json = JSON.parse(response);
             
             if (json.error) {
-                return "API Error (" + json.error.code + "): " + json.error.message;
+                return { content: "API Error (" + json.error.code + "): " + json.error.message };
             }
             
             if (json.candidates && json.candidates.length > 0) {
                 let content = json.candidates[0].content;
                 if (content && content.parts && content.parts.length > 0) {
-                    return content.parts[0].text;
+                    let part = content.parts[0];
+                    if (part.functionCall) {
+                        return {
+                            functionCall: part.functionCall,
+                            content: null // No text content for function calls typically
+                        };
+                    }
+                    return { content: part.text };
                 }
                 // Handle case where content is present but parts are missing or blocked
                 if (json.candidates[0].finishReason) {
-                    return "Response finished with reason: " + json.candidates[0].finishReason;
+                    return { content: "Response finished with reason: " + json.candidates[0].finishReason };
                 }
             }
             
-            return "Error: Unexpected response format. Raw: " + response;
+            return { content: "Error: Unexpected response format. Raw: " + response };
         } catch (e) {
-            return "Error parsing response: " + e.message + ". Raw: " + response;
+            return { content: "Error parsing response: " + e.message + ". Raw: " + response };
         }
     }
 }

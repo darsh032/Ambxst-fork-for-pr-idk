@@ -23,13 +23,15 @@ ApiStrategy {
     
     function parseResponse(response) {
         try {
+            console.log("Mistral: Parsing response...");
             let json = JSON.parse(response);
             if (json.choices && json.choices.length > 0) {
-                return json.choices[0].message.content;
+                return { content: json.choices[0].message.content };
             }
-            return "Error: No content";
+            if (json.error) return { content: "API Error: " + json.error.message };
+            return { content: "Error: No content" };
         } catch (e) {
-            return "Error parsing response";
+            return { content: "Error parsing response: " + e.message };
         }
     }
 }
