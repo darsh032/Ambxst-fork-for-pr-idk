@@ -91,14 +91,9 @@ Singleton {
         createNewChat();
     }
 
-    property ApiStrategy currentStrategy: {
-        if (!currentModel) return geminiStrategy;
-        switch (currentModel.api_format) {
-            case "openai": return openaiStrategy;
-            case "mistral": return mistralStrategy;
-            default: return geminiStrategy;
-        }
-    }
+    property ApiStrategy currentStrategy: !currentModel ? geminiStrategy : 
+                                          (currentModel.api_format === "openai" ? openaiStrategy : 
+                                          (currentModel.api_format === "mistral" ? mistralStrategy : geminiStrategy))
 
     // Strategies
     property GeminiApiStrategy geminiStrategy: GeminiApiStrategy {}
