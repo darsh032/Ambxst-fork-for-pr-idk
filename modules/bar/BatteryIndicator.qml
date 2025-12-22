@@ -19,6 +19,24 @@ Item {
     // Popup visibility state
     property bool popupOpen: batteryPopup.isOpen
 
+    // Function to interpolate color between green and red based on battery percentage
+    function getBatteryColor() {
+        if (!Battery.available) return Colors.overBackground;
+        
+        const pct = Battery.percentage;
+        if (pct <= 15) return Colors.red;
+        if (pct >= 85) return Colors.green;
+        
+        // Linear interpolation between red (15%) and green (85%)
+        const ratio = (pct - 15) / (85 - 15);
+        return Qt.rgba(
+            Colors.red.r + (Colors.green.r - Colors.red.r) * ratio,
+            Colors.red.g + (Colors.green.g - Colors.red.g) * ratio,
+            Colors.red.b + (Colors.green.b - Colors.red.b) * ratio,
+            1
+        );
+    }
+
     Layout.preferredWidth: 36
     Layout.preferredHeight: 36
     Layout.fillWidth: vertical
@@ -94,7 +112,7 @@ Item {
 
                     // Draw progress
                     if (progressCanvas.angle > 0) {
-                        ctx.strokeStyle = Colors.green;
+                        ctx.strokeStyle = root.getBatteryColor();
                         ctx.lineWidth = lineWidth;
                         ctx.beginPath();
                         ctx.arc(centerX, centerY, radius, baseStartAngle, baseStartAngle + progressAngleRad, false);
@@ -198,7 +216,7 @@ Item {
                         text: Battery.getBatteryIcon()
                         font.family: Icons.font
                         font.pixelSize: 24
-                        color: Colors.overBackground
+                        color: root.getBatteryColor()
                     }
 
                     ColumnLayout {
