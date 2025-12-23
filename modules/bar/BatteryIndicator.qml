@@ -255,7 +255,7 @@ Item {
                 Repeater {
                     model: PowerProfile.availableProfiles
 
-                delegate: StyledRect {
+                    delegate: StyledRect {
                     id: profileButton
                     required property string modelData
                     required property int index
@@ -265,12 +265,20 @@ Item {
                     height: 36
 
                     readonly property bool isSelected: PowerProfile.currentProfile === modelData
+                    readonly property bool isFirst: index === 0
+                    readonly property bool isLast: index === PowerProfile.availableProfiles.length - 1
                     property bool buttonHovered: false
+
+                    readonly property real defaultRadius: Styling.radius(0)
+                    readonly property real selectedRadius: Styling.radius(0) / 2
 
                     variant: isSelected ? "primary" : (buttonHovered ? "focus" : "common")
                     enableShadow: false
 
-                    radius: Styling.radius(0)
+                    topLeftRadius: isSelected ? (isFirst ? defaultRadius : selectedRadius) : defaultRadius
+                    bottomLeftRadius: isSelected ? (isFirst ? defaultRadius : selectedRadius) : defaultRadius
+                    topRightRadius: isSelected ? (isLast ? defaultRadius : selectedRadius) : defaultRadius
+                    bottomRightRadius: isSelected ? (isLast ? defaultRadius : selectedRadius) : defaultRadius
 
                     RowLayout {
                         anchors.centerIn: parent
