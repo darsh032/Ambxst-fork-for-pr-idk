@@ -22,25 +22,58 @@ Singleton {
 
     property AiModel currentModel: models.length > 0 ? models[0] : null
     property bool persistenceReady: false
+    property string savedModelId: ""
+    property bool isRestored: false
 
     onCurrentModelChanged: {
-        if (persistenceReady && currentModel) {
+        if (persistenceReady && currentModel && isRestored) {
             StateService.set("lastAiModel", currentModel.model)
+        }
+    }
+
+    function restoreModel() {
+        const lastModelId = StateService.get("lastAiModel", "gemini-pro");
+        savedModelId = lastModelId;
+        
+        // Attempt immediate restoration if models are already loaded
+        tryRestore();
+        
+        persistenceReady = true;
+    }
+    
+    function tryRestore() {
+        if (isRestored || models.length === 0) return;
+        
+        let found = false;
+        
+        // 1. Exact match
+        for (let i = 0; i < models.length; i++) {
+            if (models[i].model === savedModelId) {
+                currentModel = models[i];
+                found = true;
+                break;
+            }
+        }
+        
+        // 2. Fuzzy/Migration match (e.g. "gemini-pro" -> "gemini/gemini-pro")
+        if (!found && savedModelId) {
+             for (let i = 0; i < models.length; i++) {
+                if (models[i].model.endsWith(savedModelId) || models[i].model.endsWith("/" + savedModelId)) {
+                    currentModel = models[i];
+                    found = true;
+                    break;
+                }
+            }
+        }
+        
+        if (found) {
+            isRestored = true;
         }
     }
     
 
 
-    function restoreModel() {
-        const lastModelId = StateService.get("lastAiModel", "gemini-pro");
-        for (let i = 0; i < models.length; i++) {
-            if (models[i].model === lastModelId) {
-                currentModel = models[i];
-                break;
-            }
-        }
-        persistenceReady = true;
-    }
+
 
     Connections {
         target: StateService
@@ -835,9 +868,16 @@ Singleton {
             fetchingModels = false;
             pendingFetches = 0;
             
-            // Auto-select first model if none selected
+            // Try to restore user preference one last time with full list
+            tryRestore();
+            
+            // Auto-select first model if restoration failed and nothing is selected
             if (!currentModel && models.length > 0) {
                  currentModel = models[0];
+                 isRestored = true; // Mark as settled so future changes are saved
+            } else if (!isRestored && currentModel) {
+                 // Current model exists (maybe default) but restoration wasn't explicit match
+                 isRestored = true; 
             }
         }
     }
@@ -873,6 +913,9 @@ Singleton {
         }
         
         models = updatedList;
+        
+        // Try to restore as soon as new models arrive
+        if (!isRestored) tryRestore();
     }
 
     // Signals
