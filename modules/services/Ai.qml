@@ -215,7 +215,7 @@ Singleton {
         let args = parts.slice(1).join(" ");
         
         switch (command) {
-            case "/clear":
+            case "/new":
                 createNewChat();
                 return true;
 
@@ -244,8 +244,8 @@ Singleton {
             case "/help":
                 pushSystemMessage(
                     "🤖 **Assistant Commands**\n\n" +
-                    "**`/clear`**\n" +
-                    "Resets the current session and starts a fresh conversation context.\n\n" +
+                    "**`/new`**\n" +
+                    "Starts a fresh conversation context.\n\n" +
                     "**`/model [name]`**\n" +
                     "Switches the active AI model.\n" +
                     "• **List models:** Type `/model` without arguments.\n" +

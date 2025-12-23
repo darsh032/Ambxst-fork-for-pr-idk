@@ -19,7 +19,7 @@ Item {
     property var slashCommands: [
         { name: "model", description: "Switch AI model" },
         { name: "help", description: "Show help" },
-        { name: "clear", description: "Clear chat history" },
+        { name: "new", description: "Start new chat" },
         { name: "key", description: "Set API key" },
         { name: "prompt", description: "Set system prompt" }
     ]
