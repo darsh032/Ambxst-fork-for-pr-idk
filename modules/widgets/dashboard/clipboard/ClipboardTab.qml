@@ -2031,6 +2031,7 @@ Item {
                                 StyledRect {
                                     id: iconBackground
                                     anchors.fill: parent
+                                    visible: !faviconImage.visible
                                     variant: {
                                         if (isInDeleteMode) {
                                             return "overerror";
@@ -2073,54 +2074,12 @@ Item {
                                     property bool faviconLoaded: false
                                     property bool triedFallback: false
 
-                                    // Favicon for URLs
-                                    Image {
-                                        id: faviconImage
-                                        anchors.centerIn: parent
-                                        width: 20
-                                        height: 20
-                                        sourceSize.width: 40
-                                        sourceSize.height: 40
-                                        visible: iconBackground.iconType === "link" && iconBackground.faviconLoaded && status === Image.Ready
-                                        fillMode: Image.PreserveAspectFit
-                                        asynchronous: true
-                                        cache: true
-
-                                        onStatusChanged: {
-                                            if (status === Image.Ready) {
-                                                iconBackground.faviconLoaded = true;
-                                            } else if (status === Image.Error) {
-                                                // Try fallback URL if not already tried
-                                                if (!iconBackground.triedFallback && iconBackground.faviconFallbackUrl !== "") {
-                                                    iconBackground.triedFallback = true;
-                                                    faviconImage.source = iconBackground.faviconFallbackUrl;
-                                                } else {
-                                                    iconBackground.faviconLoaded = false;
-                                                }
-                                            } else if (status === Image.Null || status === Image.Loading) {
-                                                iconBackground.faviconLoaded = false;
-                                            }
-                                        }
-                                    }
-
                                     // Update favicon when URL changes (e.g., from cache update)
                                     onFaviconUrlChanged: {
                                         if (faviconUrl !== "" && faviconUrl !== faviconImage.source) {
                                             faviconLoaded = false;
                                             triedFallback = false;
                                             faviconImage.source = faviconUrl;
-                                        }
-                                    }
-
-                                    Timer {
-                                        id: faviconLoader
-                                        interval: 1
-                                        running: iconBackground.iconType === "link" && iconBackground.faviconUrl !== "" && faviconImage.source === ""
-                                        onTriggered: {
-                                            if (iconBackground.faviconUrl !== "") {
-                                                iconBackground.triedFallback = false;
-                                                faviconImage.source = iconBackground.faviconUrl;
-                                            }
                                         }
                                     }
 
@@ -2147,6 +2106,46 @@ Item {
                                         font.family: Icons.font
                                         font.pixelSize: 16
                                         textFormat: Text.RichText
+                                    }
+                                }
+
+                                // Favicon for URLs (now outside StyledRect for independent sizing/background)
+                                Image {
+                                    id: faviconImage
+                                    anchors.fill: parent
+                                    sourceSize.width: 32
+                                    sourceSize.height: 32
+                                    visible: iconBackground.iconType === "link" && iconBackground.faviconLoaded && status === Image.Ready
+                                    fillMode: Image.PreserveAspectFit
+                                    asynchronous: true
+                                    cache: true
+
+                                    onStatusChanged: {
+                                        if (status === Image.Ready) {
+                                            iconBackground.faviconLoaded = true;
+                                        } else if (status === Image.Error) {
+                                            // Try fallback URL if not already tried
+                                            if (!iconBackground.triedFallback && iconBackground.faviconFallbackUrl !== "") {
+                                                iconBackground.triedFallback = true;
+                                                faviconImage.source = iconBackground.faviconFallbackUrl;
+                                            } else {
+                                                iconBackground.faviconLoaded = false;
+                                            }
+                                        } else if (status === Image.Null || status === Image.Loading) {
+                                            iconBackground.faviconLoaded = false;
+                                        }
+                                    }
+                                }
+
+                                Timer {
+                                    id: faviconLoader
+                                    interval: 1
+                                    running: iconBackground.iconType === "link" && iconBackground.faviconUrl !== "" && faviconImage.source === ""
+                                    onTriggered: {
+                                        if (iconBackground.faviconUrl !== "") {
+                                            iconBackground.triedFallback = false;
+                                            faviconImage.source = iconBackground.faviconUrl;
+                                        }
                                     }
                                 }
 
