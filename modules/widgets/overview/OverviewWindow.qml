@@ -101,7 +101,7 @@ Item {
         radius: root.calculatedRadius
         antialiasing: true
         border.color: Colors.background
-        border.width: windowPreview.hasContent && Config.performance.windowPreview ? 1 : 0
+        border.width: 0
 
         ScreencopyView {
             id: windowPreview

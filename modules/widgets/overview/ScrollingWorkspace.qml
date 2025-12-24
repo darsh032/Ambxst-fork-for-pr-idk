@@ -333,7 +333,7 @@ Item {
                         antialiasing: true
                         color: "transparent"
                         border.color: Colors.background
-                        border.width: windowPreview.hasContent && Config.performance.windowPreview ? 1 : 0
+                        border.width: 0
 
                         ScreencopyView {
                             id: windowPreview
