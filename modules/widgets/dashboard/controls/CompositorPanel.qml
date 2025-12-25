@@ -17,6 +17,52 @@ Item {
     readonly property int contentWidth: Math.min(width, maxContentWidth)
     readonly property real sideMargin: (width - contentWidth) / 2
 
+    property string currentSection: ""
+
+    component SectionButton: StyledRect {
+        id: sectionBtn
+        required property string text
+        required property string sectionId
+        
+        property bool isHovered: false
+        
+        variant: isHovered ? "focus" : "pane"
+        Layout.fillWidth: true
+        Layout.preferredHeight: 56
+        radius: Styling.radius(0)
+        
+        RowLayout {
+            anchors.fill: parent
+            anchors.margins: 16
+            spacing: 16
+            
+            Text {
+                text: sectionBtn.text
+                font.family: Config.theme.font
+                font.pixelSize: Styling.fontSize(0)
+                font.bold: true
+                color: Colors.overBackground
+                Layout.fillWidth: true
+            }
+            
+            Text {
+                text: Icons.caretRight
+                font.family: Icons.font
+                font.pixelSize: 20
+                color: Colors.overSurfaceVariant
+            }
+        }
+        
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onEntered: sectionBtn.isHovered = true
+            onExited: sectionBtn.isHovered = false
+            onClicked: root.currentSection = sectionBtn.sectionId
+        }
+    }
+
     // Available color names for color picker
     readonly property var colorNames: Colors.availableColorNames
 
@@ -493,33 +539,46 @@ Item {
                     id: titlebar
                     width: root.contentWidth
                     anchors.horizontalCenter: parent.horizontalCenter
-                    title: "Compositor"
+                    title: root.currentSection === "" ? "Compositor" : (root.currentSection.charAt(0).toUpperCase() + root.currentSection.slice(1))
                     statusText: GlobalStates.compositorHasChanges ? "Unsaved changes" : ""
                     statusColor: Colors.error
 
-                    actions: [
-                        {
-                            icon: Icons.arrowCounterClockwise,
-                            tooltip: "Discard changes",
-                            enabled: GlobalStates.compositorHasChanges,
-                            onClicked: function () {
-                                GlobalStates.discardCompositorChanges();
+                    actions: {
+                        let baseActions = [
+                            {
+                                icon: Icons.arrowCounterClockwise,
+                                tooltip: "Discard changes",
+                                enabled: GlobalStates.compositorHasChanges,
+                                onClicked: function () {
+                                    GlobalStates.discardCompositorChanges();
+                                }
+                            },
+                            {
+                                icon: Icons.disk,
+                                tooltip: "Apply changes",
+                                enabled: GlobalStates.compositorHasChanges,
+                                onClicked: function () {
+                                    GlobalStates.applyCompositorChanges();
+                                }
                             }
-                        },
-                        {
-                            icon: Icons.disk,
-                            tooltip: "Apply changes",
-                            enabled: GlobalStates.compositorHasChanges,
-                            onClicked: function () {
-                                GlobalStates.applyCompositorChanges();
-                            }
+                        ];
+                        
+                        if (root.currentSection !== "") {
+                            return [{
+                                icon: Icons.arrowLeft,
+                                tooltip: "Back",
+                                onClicked: function() { root.currentSection = ""; }
+                            }].concat(baseActions);
                         }
-                    ]
+                        
+                        return baseActions;
+                    }
                 }
             }
 
             // Tabs Switch
             Item {
+                visible: root.currentSection === ""
                 Layout.fillWidth: true
                 Layout.preferredHeight: 40
                 
@@ -563,8 +622,21 @@ Item {
                         Layout.fillWidth: true
                         spacing: 16
 
+                        // Menu Section
+                        ColumnLayout {
+                            visible: root.currentSection === ""
+                            Layout.fillWidth: true
+                            spacing: 8
+
+                            SectionButton { text: "General"; sectionId: "general" }
+                            SectionButton { text: "Colors"; sectionId: "colors" }
+                            SectionButton { text: "Shadows"; sectionId: "shadows" }
+                            SectionButton { text: "Blur"; sectionId: "blur" }
+                        }
+
                         // General Section
                     ColumnLayout {
+                        visible: root.currentSection === "general"
                         Layout.fillWidth: true
                         spacing: 8
 
@@ -670,10 +742,11 @@ Item {
                         }
                     }
 
-                    Separator { Layout.fillWidth: true }
+                    Separator { Layout.fillWidth: true; visible: false }
 
                     // Colors Section
                     ColumnLayout {
+                        visible: root.currentSection === "colors"
                         Layout.fillWidth: true
                         spacing: 8
 
@@ -719,10 +792,11 @@ Item {
                         }
                     }
 
-                    Separator { Layout.fillWidth: true }
+                    Separator { Layout.fillWidth: true; visible: false }
 
                     // Shadows Section
                     ColumnLayout {
+                        visible: root.currentSection === "shadows"
                         Layout.fillWidth: true
                         spacing: 8
 
@@ -827,10 +901,11 @@ Item {
                         }
                     }
 
-                    Separator { Layout.fillWidth: true }
+                    Separator { Layout.fillWidth: true; visible: false }
 
                     // Blur Section
                     ColumnLayout {
+                        visible: root.currentSection === "blur"
                         Layout.fillWidth: true
                         spacing: 8
 

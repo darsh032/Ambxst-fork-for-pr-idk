@@ -15,7 +15,52 @@ Item {
     readonly property int contentWidth: Math.min(width, maxContentWidth)
     readonly property real sideMargin: (width - contentWidth) / 2
 
+    property string currentSection: ""
     property string selectedVariant: "bg"
+
+    component SectionButton: StyledRect {
+        id: sectionBtn
+        required property string text
+        required property string sectionId
+        
+        property bool isHovered: false
+        
+        variant: isHovered ? "focus" : "pane"
+        Layout.fillWidth: true
+        Layout.preferredHeight: 56
+        radius: Styling.radius(0)
+        
+        RowLayout {
+            anchors.fill: parent
+            anchors.margins: 16
+            spacing: 16
+            
+            Text {
+                text: sectionBtn.text
+                font.family: Config.theme.font
+                font.pixelSize: Styling.fontSize(0)
+                font.bold: true
+                color: Colors.overBackground
+                Layout.fillWidth: true
+            }
+            
+            Text {
+                text: Icons.caretRight
+                font.family: Icons.font
+                font.pixelSize: 20
+                color: Colors.overSurfaceVariant
+            }
+        }
+        
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onEntered: sectionBtn.isHovered = true
+            onExited: sectionBtn.isHovered = false
+            onClicked: root.currentSection = sectionBtn.sectionId
+        }
+    }
 
     // Color picker state
     property bool colorPickerActive: false
@@ -125,28 +170,40 @@ Item {
                     id: titlebar
                     width: root.contentWidth
                     anchors.horizontalCenter: parent.horizontalCenter
-                    title: "Theme"
+                    title: root.currentSection === "" ? "Theme" : (root.currentSection.charAt(0).toUpperCase() + root.currentSection.slice(1))
                     statusText: GlobalStates.themeHasChanges ? "Unsaved changes" : ""
                     statusColor: Colors.error
 
-                    actions: [
-                        {
-                            icon: Icons.arrowCounterClockwise,
-                            tooltip: "Discard changes",
-                            enabled: GlobalStates.themeHasChanges,
-                            onClicked: function () {
-                                GlobalStates.discardThemeChanges();
+                    actions: {
+                        let baseActions = [
+                            {
+                                icon: Icons.arrowCounterClockwise,
+                                tooltip: "Discard changes",
+                                enabled: GlobalStates.themeHasChanges,
+                                onClicked: function () {
+                                    GlobalStates.discardThemeChanges();
+                                }
+                            },
+                            {
+                                icon: Icons.disk,
+                                tooltip: "Apply changes",
+                                enabled: GlobalStates.themeHasChanges,
+                                onClicked: function () {
+                                    GlobalStates.applyThemeChanges();
+                                }
                             }
-                        },
-                        {
-                            icon: Icons.disk,
-                            tooltip: "Apply changes",
-                            enabled: GlobalStates.themeHasChanges,
-                            onClicked: function () {
-                                GlobalStates.applyThemeChanges();
-                            }
+                        ];
+                        
+                        if (root.currentSection !== "") {
+                            return [{
+                                icon: Icons.arrowLeft,
+                                tooltip: "Back",
+                                onClicked: function() { root.currentSection = ""; }
+                            }].concat(baseActions);
                         }
-                    ]
+                        
+                        return baseActions;
+                    }
                 }
             }
 
@@ -161,8 +218,24 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: 12
 
+                    // ═══════════════════════════════════════════════════════════════
+                    // MENU SECTION
+                    // ═══════════════════════════════════════════════════════════════
+                    ColumnLayout {
+                        visible: root.currentSection === ""
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        SectionButton { text: "General"; sectionId: "general" }
+                        SectionButton { text: "Fonts"; sectionId: "fonts" }
+                        SectionButton { text: "Roundness"; sectionId: "roundness" }
+                        SectionButton { text: "Shadow"; sectionId: "shadow" }
+                        SectionButton { text: "Colors"; sectionId: "colors" }
+                    }
+
                     // General section
                     Item {
+                        visible: root.currentSection === "general"
                         Layout.fillWidth: true
                         Layout.preferredHeight: generalContent.implicitHeight
 
@@ -366,6 +439,7 @@ Item {
 
                     // Fonts section
                     Item {
+                        visible: root.currentSection === "fonts"
                         Layout.fillWidth: true
                         Layout.preferredHeight: fontsContent.implicitHeight
 
@@ -581,6 +655,7 @@ Item {
 
                     // Roundness section
                     Item {
+                        visible: root.currentSection === "roundness"
                         Layout.fillWidth: true
                         Layout.preferredHeight: roundnessContent.implicitHeight
 
@@ -649,6 +724,7 @@ Item {
 
                     // Shadow section
                     Item {
+                        visible: root.currentSection === "shadow"
                         Layout.fillWidth: true
                         Layout.preferredHeight: shadowContent.implicitHeight
 
@@ -962,6 +1038,7 @@ Item {
 
                     // Variant selector section
                     Item {
+                        visible: root.currentSection === "colors"
                         id: variantSelectorPane
                         Layout.fillWidth: true
                         Layout.preferredHeight: variantSelectorContent.implicitHeight
@@ -1323,6 +1400,7 @@ Item {
 
                     // Editor section
                     Item {
+                        visible: root.currentSection === "colors"
                         Layout.fillWidth: true
                         Layout.preferredHeight: editorContent.implicitHeight
 

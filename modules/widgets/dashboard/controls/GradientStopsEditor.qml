@@ -27,11 +27,29 @@ Item {
 
     // Helper to get effective position for a stop (uses drag position if dragging)
     function getStopPosition(index) {
+        if (!stops || stops.length === 0) return 0;
+        
+        // Handle dragging
         if (draggingIndex === index)
             return dragPosition;
+            
+        // If index is within bounds, use actual position
         if (index >= 0 && index < stops.length)
             return stops[index][1];
-        return 0;
+            
+        // If index is out of bounds, map to the last stop's position (clamped)
+        return stops[stops.length - 1][1];
+    }
+    
+    function getStopColor(index) {
+        if (!stops || stops.length === 0) return "transparent";
+        
+        // If index is within bounds, use actual color
+        if (index >= 0 && index < stops.length)
+            return stops[index][0];
+            
+        // If index is out of bounds, map to the last stop's color
+        return stops[stops.length - 1][0];
     }
 
     // Get the default gradient for this variant
@@ -172,63 +190,53 @@ Item {
                         orientation: Gradient.Horizontal
 
                         GradientStop {
-                            property var stopData: root.stops[0] || ["surface", 0.0]
                             position: root.getStopPosition(0)
-                            color: Config.resolveColor(stopData[0])
+                            color: Config.resolveColor(root.getStopColor(0))
                         }
 
                         GradientStop {
-                            property var stopData: root.stops[1] || root.stops[root.stops.length - 1]
-                            position: root.stops[1] ? root.getStopPosition(1) : root.getStopPosition(root.stops.length - 1)
-                            color: Config.resolveColor(stopData[0])
+                            position: root.getStopPosition(1)
+                            color: Config.resolveColor(root.getStopColor(1))
                         }
 
                         GradientStop {
-                            property var stopData: root.stops[2] || root.stops[root.stops.length - 1]
-                            position: root.stops[2] ? root.getStopPosition(2) : root.getStopPosition(root.stops.length - 1)
-                            color: Config.resolveColor(stopData[0])
+                            position: root.getStopPosition(2)
+                            color: Config.resolveColor(root.getStopColor(2))
                         }
 
                         GradientStop {
-                            property var stopData: root.stops[3] || root.stops[root.stops.length - 1]
-                            position: root.stops[3] ? root.getStopPosition(3) : root.getStopPosition(root.stops.length - 1)
-                            color: Config.resolveColor(stopData[0])
+                            position: root.getStopPosition(3)
+                            color: Config.resolveColor(root.getStopColor(3))
                         }
 
                         GradientStop {
-                            property var stopData: root.stops[4] || root.stops[root.stops.length - 1]
-                            position: root.stops[4] ? root.getStopPosition(4) : root.getStopPosition(root.stops.length - 1)
-                            color: Config.resolveColor(stopData[0])
+                            position: root.getStopPosition(4)
+                            color: Config.resolveColor(root.getStopColor(4))
                         }
 
                         GradientStop {
-                            property var stopData: root.stops[5] || root.stops[root.stops.length - 1]
-                            position: root.stops[5] ? root.getStopPosition(5) : root.getStopPosition(root.stops.length - 1)
-                            color: Config.resolveColor(stopData[0])
+                            position: root.getStopPosition(5)
+                            color: Config.resolveColor(root.getStopColor(5))
                         }
 
                         GradientStop {
-                            property var stopData: root.stops[6] || root.stops[root.stops.length - 1]
-                            position: root.stops[6] ? root.getStopPosition(6) : root.getStopPosition(root.stops.length - 1)
-                            color: Config.resolveColor(stopData[0])
+                            position: root.getStopPosition(6)
+                            color: Config.resolveColor(root.getStopColor(6))
                         }
 
                         GradientStop {
-                            property var stopData: root.stops[7] || root.stops[root.stops.length - 1]
-                            position: root.stops[7] ? root.getStopPosition(7) : root.getStopPosition(root.stops.length - 1)
-                            color: Config.resolveColor(stopData[0])
+                            position: root.getStopPosition(7)
+                            color: Config.resolveColor(root.getStopColor(7))
                         }
 
                         GradientStop {
-                            property var stopData: root.stops[8] || root.stops[root.stops.length - 1]
-                            position: root.stops[8] ? root.getStopPosition(8) : root.getStopPosition(root.stops.length - 1)
-                            color: Config.resolveColor(stopData[0])
+                            position: root.getStopPosition(8)
+                            color: Config.resolveColor(root.getStopColor(8))
                         }
 
                         GradientStop {
-                            property var stopData: root.stops[9] || root.stops[root.stops.length - 1]
-                            position: root.stops[9] ? root.getStopPosition(9) : root.getStopPosition(root.stops.length - 1)
-                            color: Config.resolveColor(stopData[0])
+                            position: root.getStopPosition(9)
+                            color: Config.resolveColor(root.getStopColor(9))
                         }
                     }
                 }
