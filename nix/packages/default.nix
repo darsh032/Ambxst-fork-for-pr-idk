@@ -24,6 +24,7 @@ let
   mediaPkgs = import ./media.nix { inherit pkgs wrapWithNixGL; };
   appsPkgs = import ./apps.nix { inherit pkgs wrapWithNixGL; };
   fontsPkgs = import ./fonts.nix { inherit pkgs ttf-phosphor-icons; };
+  tesseractPkgs = import ./tesseract.nix { inherit pkgs; };
 
   # NixOS-specific packages
   nixosPkgs = [
@@ -41,6 +42,7 @@ let
     ++ mediaPkgs
     ++ appsPkgs
     ++ fontsPkgs
+    ++ tesseractPkgs
     ++ (if isNixOS then nixosPkgs else nonNixosPkgs);
 
   envAmbxst = pkgs.buildEnv {
