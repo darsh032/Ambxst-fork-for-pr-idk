@@ -194,6 +194,7 @@ QtObject {
     readonly property string qrCode: ""
     readonly property string webcam: ""
     readonly property string webcamSlash: ""
+    readonly property string flipX: ""
     readonly property string alignLeft: ""
     readonly property string alignCenter: ""
     readonly property string alignRight: ""
