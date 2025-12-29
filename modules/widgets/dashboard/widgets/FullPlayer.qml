@@ -235,10 +235,11 @@ StyledRect {
                         }
                     }
 
-                    Rectangle {
+                    StyledRect {
+                        id: playPauseButton
                         Layout.preferredWidth: 40
                         Layout.preferredHeight: 40
-                        color: playPauseHover.hovered ? Colors.overBackground : (player.hasArtwork ? Styling.styledRectItem("overprimary") : Styling.styledRectItem("overprimary"))
+                        variant: playPauseHover.hovered ? "primaryfocus" : "primary"
                         radius: player.isPlaying ? Styling.radius(-4) : Styling.radius(4)
                         opacity: MprisController.canTogglePlaying ? 1.0 : 0.3
 
@@ -251,20 +252,12 @@ StyledRect {
                             }
                         }
 
-                        Behavior on color {
-                            enabled: Config.animDuration > 0
-                            ColorAnimation {
-                                duration: Config.animDuration
-                                easing.type: Easing.OutQuart
-                            }
-                        }
-
                         Text {
                             id: playPauseBtn
                             anchors.centerIn: parent
                             text: player.isPlaying ? Icons.pause : Icons.play
                             textFormat: Text.RichText
-                            color: Styling.styledRectItem("primary")
+                            color: playPauseButton.item
                             font.pixelSize: 20
                             font.family: Icons.font
                         }
