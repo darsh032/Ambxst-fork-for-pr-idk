@@ -105,7 +105,7 @@ Scope {
             implicitWidth: root.isVertical ? dockSize + totalMargin + shadowSpace * 2 : dockContent.implicitWidth + shadowSpace * 2
             implicitHeight: root.isVertical ? dockContent.implicitHeight + shadowSpace * 2 : dockSize + totalMargin + shadowSpace * 2
 
-            WlrLayershell.namespace: "quickshell:dock"
+            WlrLayershell.namespace: "quickshell"
             color: "transparent"
 
             mask: Region {
