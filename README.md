@@ -95,6 +95,7 @@ On **NixOS**:
 * [x] Multi-monitor support
 * [x] Customizable keybindings
 * [ ] Plugin and extension system
+* [ ] Polkit
 * [ ] Compatibility with other Wayland compositors
 
 ---
