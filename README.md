@@ -37,6 +37,9 @@ curl -L get.axeni.de/ambxst | sh
 
 ### What does the installation do?
 
+> [!IMPORTANT]
+> For now Ambxst is installed via Nix flakes, so **Nix is required** for supporting it on as many distros as possible. But we are looking for contributions to support other package managers (and make this easier for everyone).
+
 On **non-NixOS** distros, the installation script does the following:
 
 * Installs [Nix](https://en.wikipedia.org/wiki/Nix_%28package_manager%29) if it's not already installed.
