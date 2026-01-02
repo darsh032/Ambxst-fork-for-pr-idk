@@ -55,7 +55,7 @@
           pkgs.wtype
           pkgs.tmux
           pkgs.imagemagick
-          pkgs.slurm
+          pkgs.slurp
         ]; 
 
         nativeBuildInputs = [ pkgs.makeWrapper ];
