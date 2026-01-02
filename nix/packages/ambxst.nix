@@ -1,0 +1,61 @@
+# Though i didn't copy the code directly the code's structure is heavily inspired from rexi's kurukuru bar https://github.com/Rexcrazy804/Zaphkiel/blob/master/pkgs/kurukurubar.nix
+
+{ inputs, ... }: {
+  perSystem = { pkgs, lib, self', inputs', ... }: 
+    let
+      quickshellPkg = inputs'.quickshell.packages.default;
+
+      fontconfig = pkgs.makeFontsConf {
+        fontDirectories = [
+          self'.packages.phosphor-icons
+        ];
+      };
+
+      qsConfig = pkgs.stdenvNoCC.mkDerivation {
+        name = "ambxst-config";
+        src = inputs.ambxst;
+        installPhase = ''
+          mkdir -p $out
+          cp -r ./. $out
+        '';
+      };
+
+      qmlPath = lib.makeSearchPath "lib/qt-6/qml" [
+        pkgs.kdePackages.qtbase
+        pkgs.kdePackages.qtdeclarative
+        pkgs.kdePackages.qtmultimedia
+        pkgs.kdePackages.syntax-highlighting
+      ];
+
+    in {
+      packages.ambxst = pkgs.symlinkJoin {
+        pname = "ambxst";
+        version = "0.1.0"; 
+        paths = [
+          quickshellPkg
+          pkgs.tesseract
+          pkgs.power-profiles-daemon
+          pkgs.brightnessctl
+          pkgs.matugen
+          pkgs.pipewire
+          pkgs.wlsunset
+          pkgs.upower
+        ]; 
+
+        nativeBuildInputs = [ pkgs.makeWrapper ];
+
+        postBuild = ''
+          makeWrapper ${lib.getExe quickshellPkg} $out/bin/ambxst \
+            --set FONTCONFIG_FILE "${fontconfig}" \
+            --set QML2_IMPORT_PATH "${qmlPath}" \
+            --add-flags "-p ${qsConfig}" \
+            --prefix PATH : "$out/bin"
+          rm $out/bin/quickshell
+        '';
+
+        meta.mainProgram = "ambxst";
+      };
+
+      packages.default = self'.packages.ambxst;
+    };
+}
