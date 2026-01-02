@@ -15,7 +15,6 @@
       
       text = ''
         QS_BIN="ambxst-shell"
-        BRIGHTNESS_SAVE_FILE="/tmp/ambxst_brightness_saved.txt"
 
         find_ambxst_pid() {
             local pid
