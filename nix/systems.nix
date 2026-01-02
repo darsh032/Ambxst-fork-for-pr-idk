@@ -1,5 +1,3 @@
-{
-  systems = [
-    "x86_64-linux"
-  ];
+{inputs, ...}: {
+  systems = import inputs.systems;
 }
