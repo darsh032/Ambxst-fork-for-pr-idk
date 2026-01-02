@@ -4,7 +4,6 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
     quickshell.url = "github:quickshell-mirror/quickshell";
-    systems.url = "github:nix-systems/default";
     ambxst = {
       url = "github:axenide/ambxst";
       flake = false;
