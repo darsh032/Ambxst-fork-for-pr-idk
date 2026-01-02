@@ -29,7 +29,7 @@
 
     in {
       packages.ambxst = pkgs.symlinkJoin {
-        pname = "ambxst";
+        pname = "ambxst-shell";
         version = "0.1.0"; 
         paths = [
           quickshellPkg
@@ -69,7 +69,7 @@
           rm $out/bin/quickshell
         '';
 
-        meta.mainProgram = "ambxst";
+        meta.mainProgram = "ambxst-shell";
       };
 
       packages.default = self'.packages.ambxst;
