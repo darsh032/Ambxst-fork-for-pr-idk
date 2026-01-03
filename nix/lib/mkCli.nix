@@ -75,7 +75,7 @@ in {
     ];
   in
   pkgs.writeShellApplication {
-    name = "ambxst-cli";
+    name = "ambxst";
     runtimeInputs = baseDeps ++ extraDeps;
     text = script;
   };
