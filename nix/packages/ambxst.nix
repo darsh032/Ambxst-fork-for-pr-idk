@@ -76,6 +76,7 @@
           pkgs.playerctl
           pkgs.pipewire
           pkgs.wireplumber
+          pkgs.ddcutil
         ]; 
 
         nativeBuildInputs = [ pkgs.makeWrapper ];
