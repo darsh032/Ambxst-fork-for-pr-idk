@@ -72,6 +72,7 @@
           pkgs.imagemagick
           pkgs.slurp
           pkgs.zbar
+          pkgs.sqlite
         ]; 
 
         nativeBuildInputs = [ pkgs.makeWrapper ];
