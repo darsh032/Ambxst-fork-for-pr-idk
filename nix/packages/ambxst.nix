@@ -8,6 +8,22 @@
       fontconfig = pkgs.makeFontsConf {
         fontDirectories = [
           self'.packages.phosphor-icons
+          pkgs.roboto
+          pkgs.roboto-mono
+          pkgs.league-gothic
+          pkgs.terminus_font
+          pkgs.terminus_font_ttf
+          pkgs.dejavu_fonts
+          pkgs.liberation_ttf
+
+          pkgs.# Nerd Fonts
+          pkgs.nerd-fonts.symbols-only
+
+          pkgs.# Noto family
+          pkgs.noto-fonts
+          pkgs.noto-fonts-color-emoji
+          pkgs.noto-fonts-cjk-sans
+          pkgs.noto-fonts-cjk-serif
         ];
       };
 
