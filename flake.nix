@@ -3,7 +3,10 @@
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
-    quickshell.url = "github:quickshell-mirror/quickshell";
+    quickshell = {
+      url = "github:quickshell-mirror/quickshell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     ambxst = {
       url = "github:axenide/ambxst";
       flake = false;

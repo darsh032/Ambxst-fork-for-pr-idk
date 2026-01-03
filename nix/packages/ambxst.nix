@@ -4,6 +4,7 @@
   perSystem = { pkgs, lib, self', inputs', ... }: 
     let
       quickshellPkg = inputs'.quickshell.packages.default;
+      qt6 = pkgs.kdePackages;
 
       fontconfig = pkgs.makeFontsConf {
         fontDirectories = [
@@ -37,10 +38,10 @@
       };
 
       qmlPath = lib.makeSearchPath "lib/qt-6/qml" [
-        pkgs.kdePackages.qtbase
-        pkgs.kdePackages.qtdeclarative
-        pkgs.kdePackages.qtmultimedia
-        pkgs.kdePackages.syntax-highlighting
+        qt6.qtbase
+        qt6.qtdeclarative
+        qt6.syntax-highlighting
+        qt6.qtmultimedia 
       ];
     in {
       packages.ambxst = pkgs.symlinkJoin {
@@ -77,6 +78,7 @@
           pkgs.pipewire
           pkgs.wireplumber
           pkgs.ddcutil
+          qt6.qtmultimedia
         ]; 
 
         nativeBuildInputs = [ pkgs.makeWrapper ];
