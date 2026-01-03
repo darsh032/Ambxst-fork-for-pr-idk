@@ -52,7 +52,6 @@
           pkgs.power-profiles-daemon
           pkgs.brightnessctl
           pkgs.matugen
-          pkgs.pipewire
           pkgs.upower
           pkgs.jq                            
           pkgs.procps                        
@@ -63,7 +62,6 @@
           pkgs.blueman
           pkgs.mpvpaper
           pkgs.pwvucontrol
-          pkgs.wireplumber
           pkgs.wl-clip-persist
           pkgs.wl-clipboard
           pkgs.wlsunset
@@ -73,6 +71,11 @@
           pkgs.slurp
           pkgs.zbar
           pkgs.sqlite
+          pkgs.x264
+          pkgs.ffmpeg
+          pkgs.playerctl
+          pkgs.pipewire
+          pkgs.wireplumber
         ]; 
 
         nativeBuildInputs = [ pkgs.makeWrapper ];
